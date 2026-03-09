@@ -53,7 +53,25 @@ class QueryExecutor:
         
         # Filter rows based on WHERE condition
         if where is not None:
-            table = [row for row in table if row.get(where.column) == where.value]
+            def matches(row):
+                col_value = row.get(where.column)
+                if col_value is None:
+                    return False
+                op = where.operator
+                value = where.value
+                if op == '=':
+                    return col_value == value
+                elif op == '>':
+                    return col_value > value
+                elif op == '<':
+                    return col_value < value
+                elif op == '>=':
+                    return col_value >= value
+                elif op == '<=':
+                    return col_value <= value
+                else:
+                    raise ValueError(f"Unknown operator: {op}")
+            table = [row for row in table if matches(row)]
         
         # Handle SELECT *
         if columns == '*':

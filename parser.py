@@ -52,8 +52,16 @@ class SQLParser:
         p[0] = p[1] + [p[3]]
     
     def p_condition(self, p):
-        'condition : ID EQUAL value'
-        p[0] = Condition(column=p[1], value=p[3])
+        'condition : ID comparator value'
+        p[0] = Condition(column=p[1], operator=p[2], value=p[3])
+    
+    def p_comparator(self, p):
+        '''comparator : EQUAL
+                      | GT
+                      | LT
+                      | GE
+                      | LE'''
+        p[0] = p[1]
     
     def p_value_number(self, p):
         'value : NUMBER'

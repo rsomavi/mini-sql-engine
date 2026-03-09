@@ -10,26 +10,36 @@ Rule 4     select_list -> STAR
 Rule 5     select_list -> column_list
 Rule 6     column_list -> ID
 Rule 7     column_list -> column_list COMMA ID
-Rule 8     condition -> ID EQUAL value
-Rule 9     value -> NUMBER
-Rule 10    value -> STRING
+Rule 8     condition -> ID comparator value
+Rule 9     comparator -> EQUAL
+Rule 10    comparator -> GT
+Rule 11    comparator -> LT
+Rule 12    comparator -> GE
+Rule 13    comparator -> LE
+Rule 14    value -> NUMBER
+Rule 15    value -> STRING
 
 Terminals, with rules where they appear
 
 COMMA                : 7
-EQUAL                : 8
+EQUAL                : 9
 FROM                 : 2 3
+GE                   : 12
+GT                   : 10
 ID                   : 2 3 6 7 8
-NUMBER               : 9
+LE                   : 13
+LT                   : 11
+NUMBER               : 14
 SELECT               : 2 3
 STAR                 : 4
-STRING               : 10
+STRING               : 15
 WHERE                : 3
 error                : 
 
 Nonterminals, with rules where they appear
 
 column_list          : 5 7
+comparator           : 8
 condition            : 3
 query                : 0
 select_list          : 2 3
@@ -145,7 +155,7 @@ state 11
 state 12
 
     (3) select_stmt -> SELECT select_list FROM ID WHERE . condition
-    (8) condition -> . ID EQUAL value
+    (8) condition -> . ID comparator value
 
     ID              shift and go to state 13
 
@@ -153,10 +163,20 @@ state 12
 
 state 13
 
-    (8) condition -> ID . EQUAL value
+    (8) condition -> ID . comparator value
+    (9) comparator -> . EQUAL
+    (10) comparator -> . GT
+    (11) comparator -> . LT
+    (12) comparator -> . GE
+    (13) comparator -> . LE
 
-    EQUAL           shift and go to state 15
+    EQUAL           shift and go to state 16
+    GT              shift and go to state 17
+    LT              shift and go to state 18
+    GE              shift and go to state 19
+    LE              shift and go to state 20
 
+    comparator                     shift and go to state 15
 
 state 14
 
@@ -167,32 +187,72 @@ state 14
 
 state 15
 
-    (8) condition -> ID EQUAL . value
-    (9) value -> . NUMBER
-    (10) value -> . STRING
+    (8) condition -> ID comparator . value
+    (14) value -> . NUMBER
+    (15) value -> . STRING
 
-    NUMBER          shift and go to state 17
-    STRING          shift and go to state 18
+    NUMBER          shift and go to state 22
+    STRING          shift and go to state 23
 
-    value                          shift and go to state 16
+    value                          shift and go to state 21
 
 state 16
 
-    (8) condition -> ID EQUAL value .
+    (9) comparator -> EQUAL .
 
-    $end            reduce using rule 8 (condition -> ID EQUAL value .)
+    NUMBER          reduce using rule 9 (comparator -> EQUAL .)
+    STRING          reduce using rule 9 (comparator -> EQUAL .)
 
 
 state 17
 
-    (9) value -> NUMBER .
+    (10) comparator -> GT .
 
-    $end            reduce using rule 9 (value -> NUMBER .)
+    NUMBER          reduce using rule 10 (comparator -> GT .)
+    STRING          reduce using rule 10 (comparator -> GT .)
 
 
 state 18
 
-    (10) value -> STRING .
+    (11) comparator -> LT .
 
-    $end            reduce using rule 10 (value -> STRING .)
+    NUMBER          reduce using rule 11 (comparator -> LT .)
+    STRING          reduce using rule 11 (comparator -> LT .)
+
+
+state 19
+
+    (12) comparator -> GE .
+
+    NUMBER          reduce using rule 12 (comparator -> GE .)
+    STRING          reduce using rule 12 (comparator -> GE .)
+
+
+state 20
+
+    (13) comparator -> LE .
+
+    NUMBER          reduce using rule 13 (comparator -> LE .)
+    STRING          reduce using rule 13 (comparator -> LE .)
+
+
+state 21
+
+    (8) condition -> ID comparator value .
+
+    $end            reduce using rule 8 (condition -> ID comparator value .)
+
+
+state 22
+
+    (14) value -> NUMBER .
+
+    $end            reduce using rule 14 (value -> NUMBER .)
+
+
+state 23
+
+    (15) value -> STRING .
+
+    $end            reduce using rule 15 (value -> STRING .)
 

@@ -15,6 +15,10 @@ class SQLLexer:
         'STAR',
         'COMMA',
         'EQUAL',
+        'GT',
+        'LT',
+        'GE',
+        'LE',
         'NUMBER',
         'STRING',
     )
@@ -27,12 +31,17 @@ class SQLLexer:
     }
     
     # Regular expression rules for simple tokens
+    # Note: GE and LE must be defined before GT and LT to avoid incorrect matching
     t_SELECT = r'SELECT'
     t_FROM = r'FROM'
     t_WHERE = r'WHERE'
     t_STAR = r'\*'
     t_COMMA = r','
     t_EQUAL = r'='
+    t_GE = r'>='
+    t_LE = r'<='
+    t_GT = r'>'
+    t_LT = r'<'
     
     # Number (integer)
     def t_NUMBER(self, t):

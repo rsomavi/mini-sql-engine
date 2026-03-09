@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'COMMA EQUAL FROM ID NUMBER SELECT STAR STRING WHEREquery : select_stmtselect_stmt : SELECT select_list FROM IDselect_stmt : SELECT select_list FROM ID WHERE conditionselect_list : STARselect_list : column_listcolumn_list : IDcolumn_list : column_list COMMA IDcondition : ID EQUAL valuevalue : NUMBERvalue : STRING'
+_lr_signature = 'COMMA EQUAL FROM GE GT ID LE LT NUMBER SELECT STAR STRING WHEREquery : select_stmtselect_stmt : SELECT select_list FROM IDselect_stmt : SELECT select_list FROM ID WHERE conditionselect_list : STARselect_list : column_listcolumn_list : IDcolumn_list : column_list COMMA IDcondition : ID comparator valuecomparator : EQUAL\n                      | GT\n                      | LT\n                      | GE\n                      | LEvalue : NUMBERvalue : STRING'
     
-_lr_action_items = {'SELECT':([0,],[3,]),'$end':([1,2,10,14,16,17,18,],[0,-1,-2,-3,-8,-9,-10,]),'STAR':([3,],[6,]),'ID':([3,8,9,12,],[5,10,11,13,]),'FROM':([4,5,6,7,11,],[8,-6,-4,-5,-7,]),'COMMA':([5,7,11,],[-6,9,-7,]),'WHERE':([10,],[12,]),'EQUAL':([13,],[15,]),'NUMBER':([15,],[17,]),'STRING':([15,],[18,]),}
+_lr_action_items = {'SELECT':([0,],[3,]),'$end':([1,2,10,14,21,22,23,],[0,-1,-2,-3,-8,-14,-15,]),'STAR':([3,],[6,]),'ID':([3,8,9,12,],[5,10,11,13,]),'FROM':([4,5,6,7,11,],[8,-6,-4,-5,-7,]),'COMMA':([5,7,11,],[-6,9,-7,]),'WHERE':([10,],[12,]),'EQUAL':([13,],[16,]),'GT':([13,],[17,]),'LT':([13,],[18,]),'GE':([13,],[19,]),'LE':([13,],[20,]),'NUMBER':([15,16,17,18,19,20,],[22,-9,-10,-11,-12,-13,]),'STRING':([15,16,17,18,19,20,],[23,-9,-10,-11,-12,-13,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'query':([0,],[1,]),'select_stmt':([0,],[2,]),'select_list':([3,],[4,]),'column_list':([3,],[7,]),'condition':([12,],[14,]),'value':([15,],[16,]),}
+_lr_goto_items = {'query':([0,],[1,]),'select_stmt':([0,],[2,]),'select_list':([3,],[4,]),'column_list':([3,],[7,]),'condition':([12,],[14,]),'comparator':([13,],[15,]),'value':([15,],[21,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -34,7 +34,12 @@ _lr_productions = [
   ('select_list -> column_list','select_list',1,'p_select_list_column_list','parser.py',43),
   ('column_list -> ID','column_list',1,'p_column_list_single','parser.py',47),
   ('column_list -> column_list COMMA ID','column_list',3,'p_column_list_multiple','parser.py',51),
-  ('condition -> ID EQUAL value','condition',3,'p_condition','parser.py',55),
-  ('value -> NUMBER','value',1,'p_value_number','parser.py',59),
-  ('value -> STRING','value',1,'p_value_string','parser.py',63),
+  ('condition -> ID comparator value','condition',3,'p_condition','parser.py',55),
+  ('comparator -> EQUAL','comparator',1,'p_comparator','parser.py',59),
+  ('comparator -> GT','comparator',1,'p_comparator','parser.py',60),
+  ('comparator -> LT','comparator',1,'p_comparator','parser.py',61),
+  ('comparator -> GE','comparator',1,'p_comparator','parser.py',62),
+  ('comparator -> LE','comparator',1,'p_comparator','parser.py',63),
+  ('value -> NUMBER','value',1,'p_value_number','parser.py',67),
+  ('value -> STRING','value',1,'p_value_string','parser.py',71),
 ]

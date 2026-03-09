@@ -6,14 +6,15 @@ class ASTNode:
     pass
 
 class Condition(ASTNode):
-    """Represents a WHERE condition: column = value"""
+    """Represents a WHERE condition: column operator value"""
     
-    def __init__(self, column, value):
+    def __init__(self, column, operator, value):
         self.column = column
+        self.operator = operator
         self.value = value
     
     def __repr__(self):
-        return f"Condition(column={self.column!r}, value={self.value!r})"
+        return f"Condition(column={self.column!r}, operator={self.operator!r}, value={self.value!r})"
 
 class SelectQuery(ASTNode):
     """Represents a SELECT query: SELECT columns FROM table [WHERE condition];"""
