@@ -1,0 +1,73 @@
+Created by PLY version 3.11 (http://www.dabeaz.com/ply)
+
+Grammar
+
+Rule 0     S' -> query
+Rule 1     query -> select_stmt
+Rule 2     select_stmt -> SELECT ID FROM ID
+
+Terminals, with rules where they appear
+
+FROM                 : 2
+ID                   : 2 2
+SELECT               : 2
+error                : 
+
+Nonterminals, with rules where they appear
+
+query                : 0
+select_stmt          : 1
+
+Parsing method: LALR
+
+state 0
+
+    (0) S' -> . query
+    (1) query -> . select_stmt
+    (2) select_stmt -> . SELECT ID FROM ID
+
+    SELECT          shift and go to state 3
+
+    query                          shift and go to state 1
+    select_stmt                    shift and go to state 2
+
+state 1
+
+    (0) S' -> query .
+
+
+
+state 2
+
+    (1) query -> select_stmt .
+
+    $end            reduce using rule 1 (query -> select_stmt .)
+
+
+state 3
+
+    (2) select_stmt -> SELECT . ID FROM ID
+
+    ID              shift and go to state 4
+
+
+state 4
+
+    (2) select_stmt -> SELECT ID . FROM ID
+
+    FROM            shift and go to state 5
+
+
+state 5
+
+    (2) select_stmt -> SELECT ID FROM . ID
+
+    ID              shift and go to state 6
+
+
+state 6
+
+    (2) select_stmt -> SELECT ID FROM ID .
+
+    $end            reduce using rule 2 (select_stmt -> SELECT ID FROM ID .)
+
