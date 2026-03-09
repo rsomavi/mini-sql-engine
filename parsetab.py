@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'COMMA FROM ID SELECT STARquery : select_stmtselect_stmt : SELECT select_list FROM IDselect_list : STARselect_list : column_listcolumn_list : IDcolumn_list : column_list COMMA ID'
+_lr_signature = 'COMMA EQUAL FROM ID NUMBER SELECT STAR STRING WHEREquery : select_stmtselect_stmt : SELECT select_list FROM IDselect_stmt : SELECT select_list FROM ID WHERE conditionselect_list : STARselect_list : column_listcolumn_list : IDcolumn_list : column_list COMMA IDcondition : ID EQUAL valuevalue : NUMBERvalue : STRING'
     
-_lr_action_items = {'SELECT':([0,],[3,]),'$end':([1,2,10,],[0,-1,-2,]),'STAR':([3,],[6,]),'ID':([3,8,9,],[5,10,11,]),'FROM':([4,5,6,7,11,],[8,-5,-3,-4,-6,]),'COMMA':([5,7,11,],[-5,9,-6,]),}
+_lr_action_items = {'SELECT':([0,],[3,]),'$end':([1,2,10,14,16,17,18,],[0,-1,-2,-3,-8,-9,-10,]),'STAR':([3,],[6,]),'ID':([3,8,9,12,],[5,10,11,13,]),'FROM':([4,5,6,7,11,],[8,-6,-4,-5,-7,]),'COMMA':([5,7,11,],[-6,9,-7,]),'WHERE':([10,],[12,]),'EQUAL':([13,],[15,]),'NUMBER':([15,],[17,]),'STRING':([15,],[18,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'query':([0,],[1,]),'select_stmt':([0,],[2,]),'select_list':([3,],[4,]),'column_list':([3,],[7,]),}
+_lr_goto_items = {'query':([0,],[1,]),'select_stmt':([0,],[2,]),'select_list':([3,],[4,]),'column_list':([3,],[7,]),'condition':([12,],[14,]),'value':([15,],[16,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -29,8 +29,12 @@ _lr_productions = [
   ("S' -> query","S'",1,None,None,None),
   ('query -> select_stmt','query',1,'p_query','parser.py',25),
   ('select_stmt -> SELECT select_list FROM ID','select_stmt',4,'p_select_stmt','parser.py',29),
-  ('select_list -> STAR','select_list',1,'p_select_list_star','parser.py',34),
-  ('select_list -> column_list','select_list',1,'p_select_list_column_list','parser.py',38),
-  ('column_list -> ID','column_list',1,'p_column_list_single','parser.py',42),
-  ('column_list -> column_list COMMA ID','column_list',3,'p_column_list_multiple','parser.py',46),
+  ('select_stmt -> SELECT select_list FROM ID WHERE condition','select_stmt',6,'p_select_stmt_where','parser.py',34),
+  ('select_list -> STAR','select_list',1,'p_select_list_star','parser.py',39),
+  ('select_list -> column_list','select_list',1,'p_select_list_column_list','parser.py',43),
+  ('column_list -> ID','column_list',1,'p_column_list_single','parser.py',47),
+  ('column_list -> column_list COMMA ID','column_list',3,'p_column_list_multiple','parser.py',51),
+  ('condition -> ID EQUAL value','condition',3,'p_condition','parser.py',55),
+  ('value -> NUMBER','value',1,'p_value_number','parser.py',59),
+  ('value -> STRING','value',1,'p_value_string','parser.py',63),
 ]

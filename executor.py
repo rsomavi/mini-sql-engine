@@ -1,7 +1,7 @@
 # SQL Executor - Query Execution Layer
 # Executes AST nodes against an in-memory database
 
-from ast_nodes import SelectQuery
+from ast_nodes import SelectQuery, Condition
 
 class QueryExecutor:
     """Minimal executor for SQL queries"""
@@ -43,12 +43,17 @@ class QueryExecutor:
         """
         table_name = select_node.table
         columns = select_node.columns
+        where = select_node.where
         
         # Check if table exists
         if table_name not in self.database:
             raise ValueError(f"Table not found: {table_name}")
         
         table = self.database[table_name]
+        
+        # Filter rows based on WHERE condition
+        if where is not None:
+            table = [row for row in table if row.get(where.column) == where.value]
         
         # Handle SELECT *
         if columns == '*':

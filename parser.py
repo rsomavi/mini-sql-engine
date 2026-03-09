@@ -3,7 +3,7 @@
 
 import ply.yacc as yacc
 from lexer import SQLLexer
-from ast_nodes import SelectQuery
+from ast_nodes import SelectQuery, Condition
 
 class SQLParser:
     """SQL Parser that builds AST from tokens"""
@@ -30,6 +30,11 @@ class SQLParser:
         # SELECT columns FROM table;
         p[0] = SelectQuery(columns=p[2], table=p[4])
     
+    def p_select_stmt_where(self, p):
+        'select_stmt : SELECT select_list FROM ID WHERE condition'
+        # SELECT columns FROM table WHERE condition;
+        p[0] = SelectQuery(columns=p[2], table=p[4], where=p[6])
+    
     def p_select_list_star(self, p):
         'select_list : STAR'
         p[0] = '*'
@@ -45,6 +50,18 @@ class SQLParser:
     def p_column_list_multiple(self, p):
         'column_list : column_list COMMA ID'
         p[0] = p[1] + [p[3]]
+    
+    def p_condition(self, p):
+        'condition : ID EQUAL value'
+        p[0] = Condition(column=p[1], value=p[3])
+    
+    def p_value_number(self, p):
+        'value : NUMBER'
+        p[0] = p[1]
+    
+    def p_value_string(self, p):
+        'value : STRING'
+        p[0] = p[1]
     
     # Error handling
     def p_error(self, p):

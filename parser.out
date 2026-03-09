@@ -5,26 +5,36 @@ Grammar
 Rule 0     S' -> query
 Rule 1     query -> select_stmt
 Rule 2     select_stmt -> SELECT select_list FROM ID
-Rule 3     select_list -> STAR
-Rule 4     select_list -> column_list
-Rule 5     column_list -> ID
-Rule 6     column_list -> column_list COMMA ID
+Rule 3     select_stmt -> SELECT select_list FROM ID WHERE condition
+Rule 4     select_list -> STAR
+Rule 5     select_list -> column_list
+Rule 6     column_list -> ID
+Rule 7     column_list -> column_list COMMA ID
+Rule 8     condition -> ID EQUAL value
+Rule 9     value -> NUMBER
+Rule 10    value -> STRING
 
 Terminals, with rules where they appear
 
-COMMA                : 6
-FROM                 : 2
-ID                   : 2 5 6
-SELECT               : 2
-STAR                 : 3
+COMMA                : 7
+EQUAL                : 8
+FROM                 : 2 3
+ID                   : 2 3 6 7 8
+NUMBER               : 9
+SELECT               : 2 3
+STAR                 : 4
+STRING               : 10
+WHERE                : 3
 error                : 
 
 Nonterminals, with rules where they appear
 
-column_list          : 4 6
+column_list          : 5 7
+condition            : 3
 query                : 0
-select_list          : 2
+select_list          : 2 3
 select_stmt          : 1
+value                : 8
 
 Parsing method: LALR
 
@@ -33,6 +43,7 @@ state 0
     (0) S' -> . query
     (1) query -> . select_stmt
     (2) select_stmt -> . SELECT select_list FROM ID
+    (3) select_stmt -> . SELECT select_list FROM ID WHERE condition
 
     SELECT          shift and go to state 3
 
@@ -55,10 +66,11 @@ state 2
 state 3
 
     (2) select_stmt -> SELECT . select_list FROM ID
-    (3) select_list -> . STAR
-    (4) select_list -> . column_list
-    (5) column_list -> . ID
-    (6) column_list -> . column_list COMMA ID
+    (3) select_stmt -> SELECT . select_list FROM ID WHERE condition
+    (4) select_list -> . STAR
+    (5) select_list -> . column_list
+    (6) column_list -> . ID
+    (7) column_list -> . column_list COMMA ID
 
     STAR            shift and go to state 6
     ID              shift and go to state 5
@@ -69,44 +81,46 @@ state 3
 state 4
 
     (2) select_stmt -> SELECT select_list . FROM ID
+    (3) select_stmt -> SELECT select_list . FROM ID WHERE condition
 
     FROM            shift and go to state 8
 
 
 state 5
 
-    (5) column_list -> ID .
+    (6) column_list -> ID .
 
-    COMMA           reduce using rule 5 (column_list -> ID .)
-    FROM            reduce using rule 5 (column_list -> ID .)
+    COMMA           reduce using rule 6 (column_list -> ID .)
+    FROM            reduce using rule 6 (column_list -> ID .)
 
 
 state 6
 
-    (3) select_list -> STAR .
+    (4) select_list -> STAR .
 
-    FROM            reduce using rule 3 (select_list -> STAR .)
+    FROM            reduce using rule 4 (select_list -> STAR .)
 
 
 state 7
 
-    (4) select_list -> column_list .
-    (6) column_list -> column_list . COMMA ID
+    (5) select_list -> column_list .
+    (7) column_list -> column_list . COMMA ID
 
-    FROM            reduce using rule 4 (select_list -> column_list .)
+    FROM            reduce using rule 5 (select_list -> column_list .)
     COMMA           shift and go to state 9
 
 
 state 8
 
     (2) select_stmt -> SELECT select_list FROM . ID
+    (3) select_stmt -> SELECT select_list FROM . ID WHERE condition
 
     ID              shift and go to state 10
 
 
 state 9
 
-    (6) column_list -> column_list COMMA . ID
+    (7) column_list -> column_list COMMA . ID
 
     ID              shift and go to state 11
 
@@ -114,14 +128,71 @@ state 9
 state 10
 
     (2) select_stmt -> SELECT select_list FROM ID .
+    (3) select_stmt -> SELECT select_list FROM ID . WHERE condition
 
     $end            reduce using rule 2 (select_stmt -> SELECT select_list FROM ID .)
+    WHERE           shift and go to state 12
 
 
 state 11
 
-    (6) column_list -> column_list COMMA ID .
+    (7) column_list -> column_list COMMA ID .
 
-    COMMA           reduce using rule 6 (column_list -> column_list COMMA ID .)
-    FROM            reduce using rule 6 (column_list -> column_list COMMA ID .)
+    COMMA           reduce using rule 7 (column_list -> column_list COMMA ID .)
+    FROM            reduce using rule 7 (column_list -> column_list COMMA ID .)
+
+
+state 12
+
+    (3) select_stmt -> SELECT select_list FROM ID WHERE . condition
+    (8) condition -> . ID EQUAL value
+
+    ID              shift and go to state 13
+
+    condition                      shift and go to state 14
+
+state 13
+
+    (8) condition -> ID . EQUAL value
+
+    EQUAL           shift and go to state 15
+
+
+state 14
+
+    (3) select_stmt -> SELECT select_list FROM ID WHERE condition .
+
+    $end            reduce using rule 3 (select_stmt -> SELECT select_list FROM ID WHERE condition .)
+
+
+state 15
+
+    (8) condition -> ID EQUAL . value
+    (9) value -> . NUMBER
+    (10) value -> . STRING
+
+    NUMBER          shift and go to state 17
+    STRING          shift and go to state 18
+
+    value                          shift and go to state 16
+
+state 16
+
+    (8) condition -> ID EQUAL value .
+
+    $end            reduce using rule 8 (condition -> ID EQUAL value .)
+
+
+state 17
+
+    (9) value -> NUMBER .
+
+    $end            reduce using rule 9 (value -> NUMBER .)
+
+
+state 18
+
+    (10) value -> STRING .
+
+    $end            reduce using rule 10 (value -> STRING .)
 

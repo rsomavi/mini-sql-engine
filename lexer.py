@@ -10,22 +10,41 @@ class SQLLexer:
     tokens = (
         'SELECT',
         'FROM',
+        'WHERE',
         'ID',
         'STAR',
         'COMMA',
+        'EQUAL',
+        'NUMBER',
+        'STRING',
     )
     
     # Reserved words
     reserved = {
         'SELECT': 'SELECT',
         'FROM': 'FROM',
+        'WHERE': 'WHERE',
     }
     
     # Regular expression rules for simple tokens
     t_SELECT = r'SELECT'
     t_FROM = r'FROM'
+    t_WHERE = r'WHERE'
     t_STAR = r'\*'
     t_COMMA = r','
+    t_EQUAL = r'='
+    
+    # Number (integer)
+    def t_NUMBER(self, t):
+        r'\d+'
+        t.value = int(t.value)
+        return t
+    
+    # String (double quoted)
+    def t_STRING(self, t):
+        r'"[^"]*"'
+        t.value = t.value[1:-1]  # Remove quotes
+        return t
     
     # Identifier (table/column names)
     def t_ID(self, t):

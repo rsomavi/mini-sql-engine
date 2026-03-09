@@ -25,7 +25,12 @@ def main():
         "SELECT name, city FROM users",
         "SELECT * FROM users",
         "SELECT name, price FROM products",
-        "SELECT * FROM products"
+        "SELECT * FROM products",
+        "SELECT name FROM users WHERE age = 25",
+        "SELECT name, city FROM users WHERE age = 30",
+        "SELECT name, city FROM users WHERE age = 30",
+        "SELECT * FROM users WHERE age = 28",
+        'SELECT name, city FROM users WHERE name = "Ana"'
     ]
 
     # Create parser and executor
