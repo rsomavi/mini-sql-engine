@@ -21,6 +21,8 @@ class SQLLexer:
         'LE',
         'NUMBER',
         'STRING',
+        'AND',
+        'OR',
     )
     
     # Reserved words
@@ -28,6 +30,8 @@ class SQLLexer:
         'SELECT': 'SELECT',
         'FROM': 'FROM',
         'WHERE': 'WHERE',
+        'AND': 'AND',
+        'OR': 'OR',
     }
     
     # Regular expression rules for simple tokens
@@ -42,6 +46,8 @@ class SQLLexer:
     t_LE = r'<='
     t_GT = r'>'
     t_LT = r'<'
+    t_AND = r'AND'
+    t_OR = r'OR'
     
     # Number (integer)
     def t_NUMBER(self, t):

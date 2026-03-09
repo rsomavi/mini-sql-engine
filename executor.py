@@ -1,7 +1,7 @@
 # SQL Executor - Query Execution Layer
 # Executes AST nodes against an in-memory database
 
-from ast_nodes import SelectQuery, Condition
+from ast_nodes import SelectQuery, Condition, LogicalCondition
 
 class QueryExecutor:
     """Minimal executor for SQL queries"""
@@ -54,23 +54,7 @@ class QueryExecutor:
         # Filter rows based on WHERE condition
         if where is not None:
             def matches(row):
-                col_value = row.get(where.column)
-                if col_value is None:
-                    return False
-                op = where.operator
-                value = where.value
-                if op == '=':
-                    return col_value == value
-                elif op == '>':
-                    return col_value > value
-                elif op == '<':
-                    return col_value < value
-                elif op == '>=':
-                    return col_value >= value
-                elif op == '<=':
-                    return col_value <= value
-                else:
-                    raise ValueError(f"Unknown operator: {op}")
+                return self._evaluate_condition(row, where)
             table = [row for row in table if matches(row)]
         
         # Handle SELECT *
@@ -88,3 +72,35 @@ class QueryExecutor:
             results.append(result_row)
         
         return results
+    
+    def _evaluate_condition(self, row, condition):
+        """Recursively evaluate a condition (simple or logical)."""
+        if isinstance(condition, Condition):
+            col_value = row.get(condition.column)
+            if col_value is None:
+                return False
+            op = condition.operator
+            value = condition.value
+            if op == '=':
+                return col_value == value
+            elif op == '>':
+                return col_value > value
+            elif op == '<':
+                return col_value < value
+            elif op == '>=':
+                return col_value >= value
+            elif op == '<=':
+                return col_value <= value
+            else:
+                raise ValueError(f"Unknown operator: {op}")
+        elif isinstance(condition, LogicalCondition):
+            left_result = self._evaluate_condition(row, condition.left)
+            right_result = self._evaluate_condition(row, condition.right)
+            if condition.operator == 'AND':
+                return left_result and right_result
+            elif condition.operator == 'OR':
+                return left_result or right_result
+            else:
+                raise ValueError(f"Unknown logical operator: {condition.operator}")
+        else:
+            raise ValueError(f"Unknown condition type: {type(condition).__name__}")

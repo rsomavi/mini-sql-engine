@@ -3,7 +3,7 @@
 
 import ply.yacc as yacc
 from lexer import SQLLexer
-from ast_nodes import SelectQuery, Condition
+from ast_nodes import SelectQuery, Condition, LogicalCondition
 
 class SQLParser:
     """SQL Parser that builds AST from tokens"""
@@ -52,7 +52,18 @@ class SQLParser:
         p[0] = p[1] + [p[3]]
     
     def p_condition(self, p):
-        'condition : ID comparator value'
+        '''condition : simple_condition
+                     | condition AND condition
+                     | condition OR condition'''
+        if len(p) == 2:
+            # simple_condition
+            p[0] = p[1]
+        elif len(p) == 4:
+            # condition AND/OR condition
+            p[0] = LogicalCondition(left=p[1], operator=p[2], right=p[3])
+    
+    def p_simple_condition(self, p):
+        'simple_condition : ID comparator value'
         p[0] = Condition(column=p[1], operator=p[2], value=p[3])
     
     def p_comparator(self, p):

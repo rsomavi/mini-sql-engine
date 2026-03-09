@@ -10,41 +10,47 @@ Rule 4     select_list -> STAR
 Rule 5     select_list -> column_list
 Rule 6     column_list -> ID
 Rule 7     column_list -> column_list COMMA ID
-Rule 8     condition -> ID comparator value
-Rule 9     comparator -> EQUAL
-Rule 10    comparator -> GT
-Rule 11    comparator -> LT
-Rule 12    comparator -> GE
-Rule 13    comparator -> LE
-Rule 14    value -> NUMBER
-Rule 15    value -> STRING
+Rule 8     condition -> simple_condition
+Rule 9     condition -> condition AND condition
+Rule 10    condition -> condition OR condition
+Rule 11    simple_condition -> ID comparator value
+Rule 12    comparator -> EQUAL
+Rule 13    comparator -> GT
+Rule 14    comparator -> LT
+Rule 15    comparator -> GE
+Rule 16    comparator -> LE
+Rule 17    value -> NUMBER
+Rule 18    value -> STRING
 
 Terminals, with rules where they appear
 
+AND                  : 9
 COMMA                : 7
-EQUAL                : 9
+EQUAL                : 12
 FROM                 : 2 3
-GE                   : 12
-GT                   : 10
-ID                   : 2 3 6 7 8
-LE                   : 13
-LT                   : 11
-NUMBER               : 14
+GE                   : 15
+GT                   : 13
+ID                   : 2 3 6 7 11
+LE                   : 16
+LT                   : 14
+NUMBER               : 17
+OR                   : 10
 SELECT               : 2 3
 STAR                 : 4
-STRING               : 15
+STRING               : 18
 WHERE                : 3
 error                : 
 
 Nonterminals, with rules where they appear
 
 column_list          : 5 7
-comparator           : 8
-condition            : 3
+comparator           : 11
+condition            : 3 9 9 10 10
 query                : 0
 select_list          : 2 3
 select_stmt          : 1
-value                : 8
+simple_condition     : 8
+value                : 11
 
 Parsing method: LALR
 
@@ -155,104 +161,192 @@ state 11
 state 12
 
     (3) select_stmt -> SELECT select_list FROM ID WHERE . condition
-    (8) condition -> . ID comparator value
+    (8) condition -> . simple_condition
+    (9) condition -> . condition AND condition
+    (10) condition -> . condition OR condition
+    (11) simple_condition -> . ID comparator value
 
     ID              shift and go to state 13
 
     condition                      shift and go to state 14
+    simple_condition               shift and go to state 15
 
 state 13
 
-    (8) condition -> ID . comparator value
-    (9) comparator -> . EQUAL
-    (10) comparator -> . GT
-    (11) comparator -> . LT
-    (12) comparator -> . GE
-    (13) comparator -> . LE
+    (11) simple_condition -> ID . comparator value
+    (12) comparator -> . EQUAL
+    (13) comparator -> . GT
+    (14) comparator -> . LT
+    (15) comparator -> . GE
+    (16) comparator -> . LE
 
-    EQUAL           shift and go to state 16
-    GT              shift and go to state 17
-    LT              shift and go to state 18
-    GE              shift and go to state 19
-    LE              shift and go to state 20
+    EQUAL           shift and go to state 17
+    GT              shift and go to state 18
+    LT              shift and go to state 19
+    GE              shift and go to state 20
+    LE              shift and go to state 21
 
-    comparator                     shift and go to state 15
+    comparator                     shift and go to state 16
 
 state 14
 
     (3) select_stmt -> SELECT select_list FROM ID WHERE condition .
+    (9) condition -> condition . AND condition
+    (10) condition -> condition . OR condition
 
     $end            reduce using rule 3 (select_stmt -> SELECT select_list FROM ID WHERE condition .)
+    AND             shift and go to state 22
+    OR              shift and go to state 23
 
 
 state 15
 
-    (8) condition -> ID comparator . value
-    (14) value -> . NUMBER
-    (15) value -> . STRING
+    (8) condition -> simple_condition .
 
-    NUMBER          shift and go to state 22
-    STRING          shift and go to state 23
+    AND             reduce using rule 8 (condition -> simple_condition .)
+    OR              reduce using rule 8 (condition -> simple_condition .)
+    $end            reduce using rule 8 (condition -> simple_condition .)
 
-    value                          shift and go to state 21
 
 state 16
 
-    (9) comparator -> EQUAL .
+    (11) simple_condition -> ID comparator . value
+    (17) value -> . NUMBER
+    (18) value -> . STRING
 
-    NUMBER          reduce using rule 9 (comparator -> EQUAL .)
-    STRING          reduce using rule 9 (comparator -> EQUAL .)
+    NUMBER          shift and go to state 25
+    STRING          shift and go to state 26
 
+    value                          shift and go to state 24
 
 state 17
 
-    (10) comparator -> GT .
+    (12) comparator -> EQUAL .
 
-    NUMBER          reduce using rule 10 (comparator -> GT .)
-    STRING          reduce using rule 10 (comparator -> GT .)
+    NUMBER          reduce using rule 12 (comparator -> EQUAL .)
+    STRING          reduce using rule 12 (comparator -> EQUAL .)
 
 
 state 18
 
-    (11) comparator -> LT .
+    (13) comparator -> GT .
 
-    NUMBER          reduce using rule 11 (comparator -> LT .)
-    STRING          reduce using rule 11 (comparator -> LT .)
+    NUMBER          reduce using rule 13 (comparator -> GT .)
+    STRING          reduce using rule 13 (comparator -> GT .)
 
 
 state 19
 
-    (12) comparator -> GE .
+    (14) comparator -> LT .
 
-    NUMBER          reduce using rule 12 (comparator -> GE .)
-    STRING          reduce using rule 12 (comparator -> GE .)
+    NUMBER          reduce using rule 14 (comparator -> LT .)
+    STRING          reduce using rule 14 (comparator -> LT .)
 
 
 state 20
 
-    (13) comparator -> LE .
+    (15) comparator -> GE .
 
-    NUMBER          reduce using rule 13 (comparator -> LE .)
-    STRING          reduce using rule 13 (comparator -> LE .)
+    NUMBER          reduce using rule 15 (comparator -> GE .)
+    STRING          reduce using rule 15 (comparator -> GE .)
 
 
 state 21
 
-    (8) condition -> ID comparator value .
+    (16) comparator -> LE .
 
-    $end            reduce using rule 8 (condition -> ID comparator value .)
+    NUMBER          reduce using rule 16 (comparator -> LE .)
+    STRING          reduce using rule 16 (comparator -> LE .)
 
 
 state 22
 
-    (14) value -> NUMBER .
+    (9) condition -> condition AND . condition
+    (8) condition -> . simple_condition
+    (9) condition -> . condition AND condition
+    (10) condition -> . condition OR condition
+    (11) simple_condition -> . ID comparator value
 
-    $end            reduce using rule 14 (value -> NUMBER .)
+    ID              shift and go to state 13
 
+    condition                      shift and go to state 27
+    simple_condition               shift and go to state 15
 
 state 23
 
-    (15) value -> STRING .
+    (10) condition -> condition OR . condition
+    (8) condition -> . simple_condition
+    (9) condition -> . condition AND condition
+    (10) condition -> . condition OR condition
+    (11) simple_condition -> . ID comparator value
 
-    $end            reduce using rule 15 (value -> STRING .)
+    ID              shift and go to state 13
 
+    condition                      shift and go to state 28
+    simple_condition               shift and go to state 15
+
+state 24
+
+    (11) simple_condition -> ID comparator value .
+
+    AND             reduce using rule 11 (simple_condition -> ID comparator value .)
+    OR              reduce using rule 11 (simple_condition -> ID comparator value .)
+    $end            reduce using rule 11 (simple_condition -> ID comparator value .)
+
+
+state 25
+
+    (17) value -> NUMBER .
+
+    AND             reduce using rule 17 (value -> NUMBER .)
+    OR              reduce using rule 17 (value -> NUMBER .)
+    $end            reduce using rule 17 (value -> NUMBER .)
+
+
+state 26
+
+    (18) value -> STRING .
+
+    AND             reduce using rule 18 (value -> STRING .)
+    OR              reduce using rule 18 (value -> STRING .)
+    $end            reduce using rule 18 (value -> STRING .)
+
+
+state 27
+
+    (9) condition -> condition AND condition .
+    (9) condition -> condition . AND condition
+    (10) condition -> condition . OR condition
+
+  ! shift/reduce conflict for AND resolved as shift
+  ! shift/reduce conflict for OR resolved as shift
+    $end            reduce using rule 9 (condition -> condition AND condition .)
+    AND             shift and go to state 22
+    OR              shift and go to state 23
+
+  ! AND             [ reduce using rule 9 (condition -> condition AND condition .) ]
+  ! OR              [ reduce using rule 9 (condition -> condition AND condition .) ]
+
+
+state 28
+
+    (10) condition -> condition OR condition .
+    (9) condition -> condition . AND condition
+    (10) condition -> condition . OR condition
+
+  ! shift/reduce conflict for AND resolved as shift
+  ! shift/reduce conflict for OR resolved as shift
+    $end            reduce using rule 10 (condition -> condition OR condition .)
+    AND             shift and go to state 22
+    OR              shift and go to state 23
+
+  ! AND             [ reduce using rule 10 (condition -> condition OR condition .) ]
+  ! OR              [ reduce using rule 10 (condition -> condition OR condition .) ]
+
+WARNING: 
+WARNING: Conflicts:
+WARNING: 
+WARNING: shift/reduce conflict for AND in state 27 resolved as shift
+WARNING: shift/reduce conflict for OR in state 27 resolved as shift
+WARNING: shift/reduce conflict for AND in state 28 resolved as shift
+WARNING: shift/reduce conflict for OR in state 28 resolved as shift

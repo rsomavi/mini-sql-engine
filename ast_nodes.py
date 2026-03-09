@@ -16,6 +16,17 @@ class Condition(ASTNode):
     def __repr__(self):
         return f"Condition(column={self.column!r}, operator={self.operator!r}, value={self.value!r})"
 
+class LogicalCondition(ASTNode):
+    """Represents a logical condition: left AND/OR right"""
+    
+    def __init__(self, left, operator, right):
+        self.left = left
+        self.operator = operator
+        self.right = right
+    
+    def __repr__(self):
+        return f"LogicalCondition(left={self.left!r}, operator={self.operator!r}, right={self.right!r})"
+
 class SelectQuery(ASTNode):
     """Represents a SELECT query: SELECT columns FROM table [WHERE condition];"""
     
