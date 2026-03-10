@@ -11,6 +11,8 @@ class SQLLexer:
         'SELECT',
         'FROM',
         'WHERE',
+        'ORDER',
+        'BY',
         'ID',
         'STAR',
         'COMMA',
@@ -30,6 +32,8 @@ class SQLLexer:
         'SELECT': 'SELECT',
         'FROM': 'FROM',
         'WHERE': 'WHERE',
+        'ORDER': 'ORDER',
+        'BY': 'BY',
         'AND': 'AND',
         'OR': 'OR',
     }
@@ -39,6 +43,8 @@ class SQLLexer:
     t_SELECT = r'SELECT'
     t_FROM = r'FROM'
     t_WHERE = r'WHERE'
+    t_ORDER = r'ORDER'
+    t_BY = r'BY'
     t_STAR = r'\*'
     t_COMMA = r','
     t_EQUAL = r'='

@@ -1,4 +1,5 @@
 from parser import get_parser
+from planner import QueryPlanner
 from executor import QueryExecutor
 from storage import MemoryStorage
 
@@ -21,6 +22,11 @@ def main():
 
     # List of queries to test
     queries = [
+        # Error cases
+        "SELECT id FROM hola",
+        "SELECT mesa FROM users",
+        "SELECT id name FROM users",
+        # Valid queries
         "SELECT name FROM users",
         "SELECT name, age FROM users",
         "SELECT name, city FROM users",
@@ -48,11 +54,19 @@ def main():
         'SELECT * FROM users WHERE age > 25 AND city = "Sevilla"',
         'SELECT * FROM users WHERE city = "Madrid" OR city = "Valencia"',
         'SELECT name FROM products WHERE price >= 100 AND price <= 800',
-        'SELECT name FROM products WHERE price = 100 OR price = 1200'
+        'SELECT name FROM products WHERE price = 100 OR price = 1200',
+        # ORDER BY queries
+        "SELECT name FROM users ORDER BY age",
+        "SELECT name, age FROM users ORDER BY age",
+        "SELECT * FROM users ORDER BY age",
+        "SELECT name FROM users WHERE age > 20 ORDER BY age",
+        "SELECT name FROM products ORDER BY price",
+        "SELECT id, name FROM users ORDER BY id",
     ]
 
-    # Create parser, storage, and executor
+    # Create parser, planner, storage, and executor
     parser = get_parser()
+    planner = QueryPlanner()
     storage = MemoryStorage(database)
     executor = QueryExecutor(storage)
 
@@ -60,13 +74,41 @@ def main():
     for query in queries:
         print(f"Query: {query}")
         
-        # Generate AST
-        ast = parser.parse(query)
-        print(f"AST: {ast}")
+        try:
+            # Generate AST
+            ast = parser.parse(query)
+            if ast is None:
+                print("ERROR: invalid SQL syntax")
+                print()
+                continue
+            print(f"AST: {ast}")
+            
+            # Create query plan
+            plan = planner.plan(ast)
+            print(f"Plan: {plan}")
+            
+            # Execute query
+            result = executor.execute(plan)
+            print(f"Result: {result}")
+        except ValueError as e:
+            error_msg = str(e)
+            if "Table not found" in error_msg:
+                table_name = error_msg.split(":")[-1].strip()
+                print(f"ERROR: table '{table_name}' does not exist")
+            elif "Column" in error_msg and "not found" in error_msg:
+                # Extract column name from error message
+                import re
+                match = re.search(r"Column '(\w+)'", error_msg)
+                if match:
+                    col_name = match.group(1)
+                    print(f"ERROR: column '{col_name}' does not exist")
+                else:
+                    print("ERROR: query execution failed")
+            else:
+                print("ERROR: query execution failed")
+        except Exception:
+            print("ERROR: invalid SQL syntax")
         
-        # Execute query
-        result = executor.execute(ast)
-        print(f"Result: {result}")
         print()
 
 

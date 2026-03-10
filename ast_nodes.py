@@ -28,13 +28,14 @@ class LogicalCondition(ASTNode):
         return f"LogicalCondition(left={self.left!r}, operator={self.operator!r}, right={self.right!r})"
 
 class SelectQuery(ASTNode):
-    """Represents a SELECT query: SELECT columns FROM table [WHERE condition];"""
+    """Represents a SELECT query: SELECT columns FROM table [WHERE condition] [ORDER BY column];"""
     
-    def __init__(self, columns, table, where=None):
+    def __init__(self, columns, table, where=None, order_by=None):
         # columns can be a list of column names or "*" for SELECT *
         self.columns = columns
         self.table = table
         self.where = where  # Optional Condition
+        self.order_by = order_by  # Optional order by column
     
     def __repr__(self):
-        return f"SelectQuery(columns={self.columns!r}, table={self.table!r}, where={self.where!r})"
+        return f"SelectQuery(columns={self.columns!r}, table={self.table!r}, where={self.where!r}, order_by={self.order_by!r})"

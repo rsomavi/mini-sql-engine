@@ -1,7 +1,9 @@
 # SQL Executor - Query Execution Layer
-# Executes AST nodes against a storage backend
+# Executes query plans against a storage backend
 
-from ast_nodes import SelectQuery, Condition, LogicalCondition
+from ast_nodes import Condition, LogicalCondition
+from planner import SelectPlan
+
 
 class QueryExecutor:
     """Minimal executor for SQL queries"""
@@ -15,34 +17,35 @@ class QueryExecutor:
         """
         self.storage = storage
     
-    def execute(self, ast):
+    def execute(self, plan):
         """
-        Execute an AST node and return results.
+        Execute a query plan and return results.
         
         Args:
-            ast: AST node (SelectQuery, etc.)
+            plan: Query plan (SelectPlan, etc.)
             
         Returns:
             Query results (list of values for SELECT)
         """
-        if isinstance(ast, SelectQuery):
-            return self._execute_select(ast)
+        if isinstance(plan, SelectPlan):
+            return self._execute_select(plan)
         else:
-            raise ValueError(f"Unsupported AST node: {type(ast).__name__}")
+            raise ValueError(f"Unsupported plan: {type(plan).__name__}")
     
-    def _execute_select(self, select_node: SelectQuery):
+    def _execute_select(self, plan: SelectPlan):
         """
-        Execute a SELECT query.
+        Execute a SELECT query plan.
         
         Args:
-            select_node: SelectQuery AST node
+            plan: SelectPlan object
             
         Returns:
             List of values from the requested columns, or full rows for SELECT *
         """
-        table_name = select_node.table
-        columns = select_node.columns
-        where = select_node.where
+        table_name = plan.table
+        columns = plan.columns
+        where = plan.where
+        order_by = plan.order_by
         
         # Load table from storage
         table = self.storage.load_table(table_name)
@@ -53,6 +56,10 @@ class QueryExecutor:
             def matches(row):
                 return self._evaluate_condition(row, where)
             rows = [row for row in rows if matches(row)]
+        
+        # Sort rows based on ORDER BY column
+        if order_by is not None:
+            rows = sorted(rows, key=lambda r: r[order_by])
         
         # Handle SELECT *
         if columns == '*':
