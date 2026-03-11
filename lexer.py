@@ -14,6 +14,7 @@ class SQLLexer:
         'WHERE',
         'ORDER',
         'BY',
+        'LIMIT',
         'ID',
         'STAR',
         'COMMA',
@@ -26,6 +27,7 @@ class SQLLexer:
         'STRING',
         'AND',
         'OR',
+        'NOT',
     )
     
     # Reserved words
@@ -35,8 +37,10 @@ class SQLLexer:
         'WHERE': 'WHERE',
         'ORDER': 'ORDER',
         'BY': 'BY',
+        'LIMIT': 'LIMIT',
         'AND': 'AND',
         'OR': 'OR',
+        'NOT': 'NOT',
     }
     
     # Regular expression rules for simple tokens
@@ -47,6 +51,7 @@ class SQLLexer:
     t_WHERE = r'(?i)WHERE'
     t_ORDER = r'(?i)ORDER'
     t_BY = r'(?i)BY'
+    t_LIMIT = r'(?i)LIMIT'
     t_STAR = r'\*'
     t_COMMA = r','
     t_EQUAL = r'='
@@ -56,6 +61,7 @@ class SQLLexer:
     t_LT = r'<'
     t_AND = r'(?i)AND'
     t_OR = r'(?i)OR'
+    t_NOT = r'(?i)NOT'
     
     # Number (integer)
     def t_NUMBER(self, t):

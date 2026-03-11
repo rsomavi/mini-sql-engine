@@ -3,12 +3,19 @@
 
 import ply.yacc as yacc
 from lexer import SQLLexer
-from ast_nodes import SelectQuery, Condition, LogicalCondition
+from ast_nodes import SelectQuery, Condition, LogicalCondition, NotCondition
 
 class SQLParser:
     """SQL Parser that builds AST from tokens"""
     
     tokens = SQLLexer.tokens
+    
+    # Precedence: NOT > AND > OR
+    precedence = (
+        ('right', 'NOT'),
+        ('left', 'AND'),
+        ('left', 'OR'),
+    )
     
     def __init__(self):
         self.lexer = SQLLexer()
@@ -26,11 +33,12 @@ class SQLParser:
         p[0] = p[1]
     
     def p_select_stmt(self, p):
-        'select_stmt : SELECT select_list FROM ID optional_where optional_order'
-        # SELECT columns FROM table [WHERE condition] [ORDER BY column];
+        'select_stmt : SELECT select_list FROM ID optional_where optional_order optional_limit'
+        # SELECT columns FROM table [WHERE condition] [ORDER BY column] [LIMIT number];
         where_clause = p[5] if p[5] else None
         order_clause = p[6] if p[6] else None
-        p[0] = SelectQuery(columns=p[2], table=p[4], where=where_clause, order_by=order_clause)
+        limit_clause = p[7] if p[7] else None
+        p[0] = SelectQuery(columns=p[2], table=p[4], where=where_clause, order_by=order_clause, limit=limit_clause)
     
     def p_optional_where(self, p):
         'optional_where : WHERE condition'
@@ -46,6 +54,14 @@ class SQLParser:
     
     def p_optional_order_empty(self, p):
         'optional_order : empty'
+        p[0] = None
+    
+    def p_optional_limit(self, p):
+        'optional_limit : LIMIT NUMBER'
+        p[0] = p[2]
+    
+    def p_optional_limit_empty(self, p):
+        'optional_limit : empty'
         p[0] = None
     
     def p_empty(self, p):
@@ -69,15 +85,32 @@ class SQLParser:
         p[0] = p[1] + [p[3]]
     
     def p_condition(self, p):
-        '''condition : simple_condition
-                     | condition AND condition
-                     | condition OR condition'''
+        '''condition : or_condition'''
+        p[0] = p[1]
+    
+    def p_or_condition(self, p):
+        '''or_condition : and_condition
+                        | or_condition OR and_condition'''
         if len(p) == 2:
-            # simple_condition
             p[0] = p[1]
-        elif len(p) == 4:
-            # condition AND/OR condition
+        else:
             p[0] = LogicalCondition(left=p[1], operator=p[2], right=p[3])
+    
+    def p_and_condition(self, p):
+        '''and_condition : not_condition
+                         | and_condition AND not_condition'''
+        if len(p) == 2:
+            p[0] = p[1]
+        else:
+            p[0] = LogicalCondition(left=p[1], operator=p[2], right=p[3])
+    
+    def p_not_condition(self, p):
+        '''not_condition : simple_condition
+                         | NOT simple_condition'''
+        if len(p) == 2:
+            p[0] = p[1]
+        else:
+            p[0] = NotCondition(condition=p[2])
     
     def p_simple_condition(self, p):
         'simple_condition : ID comparator value'

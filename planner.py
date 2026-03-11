@@ -1,17 +1,18 @@
 # Query Planner Layer
 # Converts AST into logical query plan
 
-from ast_nodes import SelectQuery, Condition, LogicalCondition
+from ast_nodes import SelectQuery, Condition, LogicalCondition, NotCondition
 
 
 class SelectPlan:
     """Logical plan node for SELECT queries."""
     
-    def __init__(self, columns, table, where, order_by=None):
+    def __init__(self, columns, table, where, order_by=None, limit=None):
         self.columns = columns
         self.table = table
         self.where = where
         self.order_by = order_by
+        self.limit = limit
 
 
 class QueryPlanner:
@@ -46,5 +47,6 @@ class QueryPlanner:
             columns=select_node.columns,
             table=select_node.table,
             where=select_node.where,
-            order_by=select_node.order_by
+            order_by=select_node.order_by,
+            limit=select_node.limit
         )

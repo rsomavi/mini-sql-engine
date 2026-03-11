@@ -1,7 +1,7 @@
 # SQL Executor - Query Execution Layer
 # Executes query plans against a storage backend
 
-from ast_nodes import Condition, LogicalCondition
+from ast_nodes import Condition, LogicalCondition, NotCondition
 from planner import SelectPlan
 
 
@@ -46,6 +46,7 @@ class QueryExecutor:
         columns = plan.columns
         where = plan.where
         order_by = plan.order_by
+        limit = plan.limit
         
         # Load table from storage
         table = self.storage.load_table(table_name)
@@ -71,6 +72,10 @@ class QueryExecutor:
         # Sort rows based on ORDER BY column
         if order_by is not None:
             rows = sorted(rows, key=lambda r: r[order_by])
+        
+        # Apply LIMIT
+        if limit is not None:
+            rows = rows[:limit]
         
         # Handle SELECT *
         if columns == '*':
@@ -118,5 +123,7 @@ class QueryExecutor:
                 return left_result or right_result
             else:
                 raise ValueError(f"Unknown logical operator: {condition.operator}")
+        elif isinstance(condition, NotCondition):
+            return not self._evaluate_condition(row, condition.condition, table_name)
         else:
             raise ValueError(f"Unknown condition type: {type(condition).__name__}")

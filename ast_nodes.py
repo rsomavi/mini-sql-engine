@@ -27,15 +27,25 @@ class LogicalCondition(ASTNode):
     def __repr__(self):
         return f"LogicalCondition(left={self.left!r}, operator={self.operator!r}, right={self.right!r})"
 
-class SelectQuery(ASTNode):
-    """Represents a SELECT query: SELECT columns FROM table [WHERE condition] [ORDER BY column];"""
+class NotCondition(ASTNode):
+    """Represents a negated condition: NOT condition"""
     
-    def __init__(self, columns, table, where=None, order_by=None):
+    def __init__(self, condition):
+        self.condition = condition
+    
+    def __repr__(self):
+        return f"NotCondition(condition={self.condition!r})"
+
+class SelectQuery(ASTNode):
+    """Represents a SELECT query: SELECT columns FROM table [WHERE condition] [ORDER BY column] [LIMIT number];"""
+    
+    def __init__(self, columns, table, where=None, order_by=None, limit=None):
         # columns can be a list of column names or "*" for SELECT *
         self.columns = columns
         self.table = table
         self.where = where  # Optional Condition
         self.order_by = order_by  # Optional order by column
+        self.limit = limit  # Optional limit value
     
     def __repr__(self):
-        return f"SelectQuery(columns={self.columns!r}, table={self.table!r}, where={self.where!r}, order_by={self.order_by!r})"
+        return f"SelectQuery(columns={self.columns!r}, table={self.table!r}, where={self.where!r}, order_by={self.order_by!r}, limit={self.limit!r})"
