@@ -15,6 +15,8 @@ class SQLLexer:
         'ORDER',
         'BY',
         'LIMIT',
+        'COUNT',
+        'DISTINCT',
         'ID',
         'STAR',
         'COMMA',
@@ -28,6 +30,8 @@ class SQLLexer:
         'AND',
         'OR',
         'NOT',
+        'LPAREN',
+        'RPAREN',
     )
     
     # Reserved words
@@ -38,6 +42,8 @@ class SQLLexer:
         'ORDER': 'ORDER',
         'BY': 'BY',
         'LIMIT': 'LIMIT',
+        'COUNT': 'COUNT',
+        'DISTINCT': 'DISTINCT',
         'AND': 'AND',
         'OR': 'OR',
         'NOT': 'NOT',
@@ -52,7 +58,11 @@ class SQLLexer:
     t_ORDER = r'(?i)ORDER'
     t_BY = r'(?i)BY'
     t_LIMIT = r'(?i)LIMIT'
+    t_COUNT = r'(?i)COUNT'
+    t_DISTINCT = r'(?i)DISTINCT'
     t_STAR = r'\*'
+    t_LPAREN = r'\('
+    t_RPAREN = r'\)'
     t_COMMA = r','
     t_EQUAL = r'='
     t_GE = r'>='

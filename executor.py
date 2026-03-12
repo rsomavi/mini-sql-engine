@@ -2,7 +2,7 @@
 # Executes query plans against a storage backend
 
 from ast_nodes import Condition, LogicalCondition, NotCondition
-from planner import SelectPlan
+from planner import SelectPlan, CountPlan
 
 
 class QueryExecutor:
@@ -25,10 +25,12 @@ class QueryExecutor:
             plan: Query plan (SelectPlan, etc.)
             
         Returns:
-            Query results (list of values for SELECT)
+            Query results (list of values for SELECT) or count (int)
         """
         if isinstance(plan, SelectPlan):
             return self._execute_select(plan)
+        elif isinstance(plan, CountPlan):
+            return self._execute_count(plan)
         else:
             raise ValueError(f"Unsupported plan: {type(plan).__name__}")
     
@@ -47,6 +49,7 @@ class QueryExecutor:
         where = plan.where
         order_by = plan.order_by
         limit = plan.limit
+        distinct = getattr(plan, 'distinct', False)
         
         # Load table from storage
         table = self.storage.load_table(table_name)
@@ -57,6 +60,21 @@ class QueryExecutor:
             def matches(row):
                 return self._evaluate_condition(row, where, table_name)
             rows = [row for row in rows if matches(row)]
+        
+        # Apply DISTINCT
+        if distinct:
+            seen = set()
+            unique_rows = []
+            for row in rows:
+                # Create key from all column values
+                if columns == '*':
+                    key = tuple(sorted(row.items()))
+                else:
+                    key = tuple(row.get(col) for col in columns)
+                if key not in seen:
+                    seen.add(key)
+                    unique_rows.append(row)
+            rows = unique_rows
         
         # Validate ORDER BY column exists
         if order_by is not None:
@@ -127,3 +145,28 @@ class QueryExecutor:
             return not self._evaluate_condition(row, condition.condition, table_name)
         else:
             raise ValueError(f"Unknown condition type: {type(condition).__name__}")
+    
+    def _execute_count(self, plan: CountPlan):
+        """
+        Execute a COUNT(*) query plan.
+        
+        Args:
+            plan: CountPlan object
+            
+        Returns:
+            Integer count of rows
+        """
+        table_name = plan.table
+        where = plan.where
+        
+        # Load table from storage
+        table = self.storage.load_table(table_name)
+        rows = table.get_rows()
+        
+        # Filter rows based on WHERE condition
+        if where is not None:
+            def matches(row):
+                return self._evaluate_condition(row, where, table_name)
+            rows = [row for row in rows if matches(row)]
+        
+        return len(rows)

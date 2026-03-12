@@ -36,16 +36,27 @@ class NotCondition(ASTNode):
     def __repr__(self):
         return f"NotCondition(condition={self.condition!r})"
 
-class SelectQuery(ASTNode):
-    """Represents a SELECT query: SELECT columns FROM table [WHERE condition] [ORDER BY column] [LIMIT number];"""
+class CountQuery(ASTNode):
+    """Represents a COUNT(*) query: SELECT COUNT(*) FROM table [WHERE condition]"""
     
-    def __init__(self, columns, table, where=None, order_by=None, limit=None):
-        # columns can be a list of column names or "*" for SELECT *
+    def __init__(self, table, where=None):
+        self.table = table
+        self.where = where  # Optional Condition
+    
+    def __repr__(self):
+        return f"CountQuery(table={self.table!r}, where={self.where!r})"
+
+class SelectQuery(ASTNode):
+    """Represents a SELECT query: SELECT [DISTINCT] columns FROM table [WHERE condition] [ORDER BY column] [LIMIT number];"""
+    
+    def __init__(self, columns, table, where=None, order_by=None, limit=None, distinct=False):
+        # columns can be a list of column names, "*" for SELECT *, or "COUNT" for COUNT(*)
         self.columns = columns
         self.table = table
         self.where = where  # Optional Condition
         self.order_by = order_by  # Optional order by column
         self.limit = limit  # Optional limit value
+        self.distinct = distinct  # Whether DISTINCT is specified
     
     def __repr__(self):
-        return f"SelectQuery(columns={self.columns!r}, table={self.table!r}, where={self.where!r}, order_by={self.order_by!r}, limit={self.limit!r})"
+        return f"SelectQuery(columns={self.columns!r}, table={self.table!r}, where={self.where!r}, order_by={self.order_by!r}, limit={self.limit!r}, distinct={self.distinct!r})"

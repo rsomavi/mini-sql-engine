@@ -4,74 +4,82 @@ Grammar
 
 Rule 0     S' -> query
 Rule 1     query -> select_stmt
-Rule 2     select_stmt -> SELECT select_list FROM ID optional_where optional_order optional_limit
-Rule 3     optional_where -> WHERE condition
-Rule 4     optional_where -> empty
-Rule 5     optional_order -> ORDER BY ID
-Rule 6     optional_order -> empty
-Rule 7     optional_limit -> LIMIT NUMBER
-Rule 8     optional_limit -> empty
-Rule 9     empty -> <empty>
-Rule 10    select_list -> STAR
-Rule 11    select_list -> column_list
-Rule 12    column_list -> ID
-Rule 13    column_list -> column_list COMMA ID
-Rule 14    condition -> or_condition
-Rule 15    or_condition -> and_condition
-Rule 16    or_condition -> or_condition OR and_condition
-Rule 17    and_condition -> not_condition
-Rule 18    and_condition -> and_condition AND not_condition
-Rule 19    not_condition -> simple_condition
-Rule 20    not_condition -> NOT simple_condition
-Rule 21    simple_condition -> ID comparator value
-Rule 22    comparator -> EQUAL
-Rule 23    comparator -> GT
-Rule 24    comparator -> LT
-Rule 25    comparator -> GE
-Rule 26    comparator -> LE
-Rule 27    value -> NUMBER
-Rule 28    value -> STRING
+Rule 2     select_stmt -> SELECT optional_distinct select_list FROM ID optional_where optional_order optional_limit
+Rule 3     select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where
+Rule 4     optional_where -> WHERE condition
+Rule 5     optional_where -> empty
+Rule 6     optional_order -> ORDER BY ID
+Rule 7     optional_order -> empty
+Rule 8     optional_limit -> LIMIT NUMBER
+Rule 9     optional_limit -> empty
+Rule 10    empty -> <empty>
+Rule 11    optional_distinct -> DISTINCT
+Rule 12    optional_distinct -> empty
+Rule 13    select_list -> STAR
+Rule 14    select_list -> column_list
+Rule 15    column_list -> ID
+Rule 16    column_list -> column_list COMMA ID
+Rule 17    condition -> or_condition
+Rule 18    or_condition -> and_condition
+Rule 19    or_condition -> or_condition OR and_condition
+Rule 20    and_condition -> not_condition
+Rule 21    and_condition -> and_condition AND not_condition
+Rule 22    not_condition -> simple_condition
+Rule 23    not_condition -> NOT simple_condition
+Rule 24    simple_condition -> ID comparator value
+Rule 25    comparator -> EQUAL
+Rule 26    comparator -> GT
+Rule 27    comparator -> LT
+Rule 28    comparator -> GE
+Rule 29    comparator -> LE
+Rule 30    value -> NUMBER
+Rule 31    value -> STRING
 
 Terminals, with rules where they appear
 
-AND                  : 18
-BY                   : 5
-COMMA                : 13
-EQUAL                : 22
-FROM                 : 2
-GE                   : 25
-GT                   : 23
-ID                   : 2 5 12 13 21
-LE                   : 26
-LIMIT                : 7
-LT                   : 24
-NOT                  : 20
-NUMBER               : 7 27
-OR                   : 16
-ORDER                : 5
-SELECT               : 2
-STAR                 : 10
-STRING               : 28
-WHERE                : 3
+AND                  : 21
+BY                   : 6
+COMMA                : 16
+COUNT                : 3
+DISTINCT             : 11
+EQUAL                : 25
+FROM                 : 2 3
+GE                   : 28
+GT                   : 26
+ID                   : 2 3 6 15 16 24
+LE                   : 29
+LIMIT                : 8
+LPAREN               : 3
+LT                   : 27
+NOT                  : 23
+NUMBER               : 8 30
+OR                   : 19
+ORDER                : 6
+RPAREN               : 3
+SELECT               : 2 3
+STAR                 : 3 13
+STRING               : 31
+WHERE                : 4
 error                : 
 
 Nonterminals, with rules where they appear
 
-and_condition        : 15 16 18
-column_list          : 11 13
-comparator           : 21
-condition            : 3
-empty                : 4 6 8
-not_condition        : 17 18
+and_condition        : 18 19 21
+column_list          : 14 16
+comparator           : 24
+condition            : 4
+empty                : 5 7 9 12
+not_condition        : 20 21
+optional_distinct    : 2
 optional_limit       : 2
 optional_order       : 2
-optional_where       : 2
-or_condition         : 14 16
+optional_where       : 2 3
+or_condition         : 17 19
 query                : 0
 select_list          : 2
 select_stmt          : 1
-simple_condition     : 19 20
-value                : 21
+simple_condition     : 22 23
+value                : 24
 
 Parsing method: LALR
 
@@ -79,7 +87,8 @@ state 0
 
     (0) S' -> . query
     (1) query -> . select_stmt
-    (2) select_stmt -> . SELECT select_list FROM ID optional_where optional_order optional_limit
+    (2) select_stmt -> . SELECT optional_distinct select_list FROM ID optional_where optional_order optional_limit
+    (3) select_stmt -> . SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where
 
     SELECT          shift and go to state 3
 
@@ -101,424 +110,511 @@ state 2
 
 state 3
 
-    (2) select_stmt -> SELECT . select_list FROM ID optional_where optional_order optional_limit
-    (10) select_list -> . STAR
-    (11) select_list -> . column_list
-    (12) column_list -> . ID
-    (13) column_list -> . column_list COMMA ID
+    (2) select_stmt -> SELECT . optional_distinct select_list FROM ID optional_where optional_order optional_limit
+    (3) select_stmt -> SELECT . COUNT LPAREN STAR RPAREN FROM ID optional_where
+    (11) optional_distinct -> . DISTINCT
+    (12) optional_distinct -> . empty
+    (10) empty -> .
 
-    STAR            shift and go to state 6
-    ID              shift and go to state 5
+    COUNT           shift and go to state 5
+    DISTINCT        shift and go to state 6
+    STAR            reduce using rule 10 (empty -> .)
+    ID              reduce using rule 10 (empty -> .)
 
-    select_list                    shift and go to state 4
-    column_list                    shift and go to state 7
+    optional_distinct              shift and go to state 4
+    empty                          shift and go to state 7
 
 state 4
 
-    (2) select_stmt -> SELECT select_list . FROM ID optional_where optional_order optional_limit
+    (2) select_stmt -> SELECT optional_distinct . select_list FROM ID optional_where optional_order optional_limit
+    (13) select_list -> . STAR
+    (14) select_list -> . column_list
+    (15) column_list -> . ID
+    (16) column_list -> . column_list COMMA ID
 
-    FROM            shift and go to state 8
+    STAR            shift and go to state 10
+    ID              shift and go to state 9
 
+    select_list                    shift and go to state 8
+    column_list                    shift and go to state 11
 
 state 5
 
-    (12) column_list -> ID .
+    (3) select_stmt -> SELECT COUNT . LPAREN STAR RPAREN FROM ID optional_where
 
-    COMMA           reduce using rule 12 (column_list -> ID .)
-    FROM            reduce using rule 12 (column_list -> ID .)
+    LPAREN          shift and go to state 12
 
 
 state 6
 
-    (10) select_list -> STAR .
+    (11) optional_distinct -> DISTINCT .
 
-    FROM            reduce using rule 10 (select_list -> STAR .)
+    STAR            reduce using rule 11 (optional_distinct -> DISTINCT .)
+    ID              reduce using rule 11 (optional_distinct -> DISTINCT .)
 
 
 state 7
 
-    (11) select_list -> column_list .
-    (13) column_list -> column_list . COMMA ID
+    (12) optional_distinct -> empty .
 
-    FROM            reduce using rule 11 (select_list -> column_list .)
-    COMMA           shift and go to state 9
+    STAR            reduce using rule 12 (optional_distinct -> empty .)
+    ID              reduce using rule 12 (optional_distinct -> empty .)
 
 
 state 8
 
-    (2) select_stmt -> SELECT select_list FROM . ID optional_where optional_order optional_limit
+    (2) select_stmt -> SELECT optional_distinct select_list . FROM ID optional_where optional_order optional_limit
 
-    ID              shift and go to state 10
+    FROM            shift and go to state 13
 
 
 state 9
 
-    (13) column_list -> column_list COMMA . ID
+    (15) column_list -> ID .
 
-    ID              shift and go to state 11
+    COMMA           reduce using rule 15 (column_list -> ID .)
+    FROM            reduce using rule 15 (column_list -> ID .)
 
 
 state 10
 
-    (2) select_stmt -> SELECT select_list FROM ID . optional_where optional_order optional_limit
-    (3) optional_where -> . WHERE condition
-    (4) optional_where -> . empty
-    (9) empty -> .
+    (13) select_list -> STAR .
 
-    WHERE           shift and go to state 13
-    ORDER           reduce using rule 9 (empty -> .)
-    LIMIT           reduce using rule 9 (empty -> .)
-    $end            reduce using rule 9 (empty -> .)
+    FROM            reduce using rule 13 (select_list -> STAR .)
 
-    optional_where                 shift and go to state 12
-    empty                          shift and go to state 14
 
 state 11
 
-    (13) column_list -> column_list COMMA ID .
+    (14) select_list -> column_list .
+    (16) column_list -> column_list . COMMA ID
 
-    COMMA           reduce using rule 13 (column_list -> column_list COMMA ID .)
-    FROM            reduce using rule 13 (column_list -> column_list COMMA ID .)
+    FROM            reduce using rule 14 (select_list -> column_list .)
+    COMMA           shift and go to state 14
 
 
 state 12
 
-    (2) select_stmt -> SELECT select_list FROM ID optional_where . optional_order optional_limit
-    (5) optional_order -> . ORDER BY ID
-    (6) optional_order -> . empty
-    (9) empty -> .
+    (3) select_stmt -> SELECT COUNT LPAREN . STAR RPAREN FROM ID optional_where
 
-    ORDER           shift and go to state 16
-    LIMIT           reduce using rule 9 (empty -> .)
-    $end            reduce using rule 9 (empty -> .)
+    STAR            shift and go to state 15
 
-    optional_order                 shift and go to state 15
-    empty                          shift and go to state 17
 
 state 13
 
-    (3) optional_where -> WHERE . condition
-    (14) condition -> . or_condition
-    (15) or_condition -> . and_condition
-    (16) or_condition -> . or_condition OR and_condition
-    (17) and_condition -> . not_condition
-    (18) and_condition -> . and_condition AND not_condition
-    (19) not_condition -> . simple_condition
-    (20) not_condition -> . NOT simple_condition
-    (21) simple_condition -> . ID comparator value
+    (2) select_stmt -> SELECT optional_distinct select_list FROM . ID optional_where optional_order optional_limit
 
-    NOT             shift and go to state 23
-    ID              shift and go to state 24
+    ID              shift and go to state 16
 
-    condition                      shift and go to state 18
-    or_condition                   shift and go to state 19
-    and_condition                  shift and go to state 20
-    not_condition                  shift and go to state 21
-    simple_condition               shift and go to state 22
 
 state 14
 
-    (4) optional_where -> empty .
+    (16) column_list -> column_list COMMA . ID
 
-    ORDER           reduce using rule 4 (optional_where -> empty .)
-    LIMIT           reduce using rule 4 (optional_where -> empty .)
-    $end            reduce using rule 4 (optional_where -> empty .)
+    ID              shift and go to state 17
 
 
 state 15
 
-    (2) select_stmt -> SELECT select_list FROM ID optional_where optional_order . optional_limit
-    (7) optional_limit -> . LIMIT NUMBER
-    (8) optional_limit -> . empty
-    (9) empty -> .
+    (3) select_stmt -> SELECT COUNT LPAREN STAR . RPAREN FROM ID optional_where
 
-    LIMIT           shift and go to state 26
-    $end            reduce using rule 9 (empty -> .)
+    RPAREN          shift and go to state 18
 
-    optional_limit                 shift and go to state 25
-    empty                          shift and go to state 27
 
 state 16
 
-    (5) optional_order -> ORDER . BY ID
+    (2) select_stmt -> SELECT optional_distinct select_list FROM ID . optional_where optional_order optional_limit
+    (4) optional_where -> . WHERE condition
+    (5) optional_where -> . empty
+    (10) empty -> .
 
-    BY              shift and go to state 28
+    WHERE           shift and go to state 20
+    ORDER           reduce using rule 10 (empty -> .)
+    LIMIT           reduce using rule 10 (empty -> .)
+    $end            reduce using rule 10 (empty -> .)
 
+    optional_where                 shift and go to state 19
+    empty                          shift and go to state 21
 
 state 17
 
-    (6) optional_order -> empty .
+    (16) column_list -> column_list COMMA ID .
 
-    LIMIT           reduce using rule 6 (optional_order -> empty .)
-    $end            reduce using rule 6 (optional_order -> empty .)
+    COMMA           reduce using rule 16 (column_list -> column_list COMMA ID .)
+    FROM            reduce using rule 16 (column_list -> column_list COMMA ID .)
 
 
 state 18
 
-    (3) optional_where -> WHERE condition .
+    (3) select_stmt -> SELECT COUNT LPAREN STAR RPAREN . FROM ID optional_where
 
-    ORDER           reduce using rule 3 (optional_where -> WHERE condition .)
-    LIMIT           reduce using rule 3 (optional_where -> WHERE condition .)
-    $end            reduce using rule 3 (optional_where -> WHERE condition .)
+    FROM            shift and go to state 22
 
 
 state 19
 
-    (14) condition -> or_condition .
-    (16) or_condition -> or_condition . OR and_condition
+    (2) select_stmt -> SELECT optional_distinct select_list FROM ID optional_where . optional_order optional_limit
+    (6) optional_order -> . ORDER BY ID
+    (7) optional_order -> . empty
+    (10) empty -> .
 
-    ORDER           reduce using rule 14 (condition -> or_condition .)
-    LIMIT           reduce using rule 14 (condition -> or_condition .)
-    $end            reduce using rule 14 (condition -> or_condition .)
-    OR              shift and go to state 29
+    ORDER           shift and go to state 24
+    LIMIT           reduce using rule 10 (empty -> .)
+    $end            reduce using rule 10 (empty -> .)
 
+    optional_order                 shift and go to state 23
+    empty                          shift and go to state 25
 
 state 20
 
-    (15) or_condition -> and_condition .
-    (18) and_condition -> and_condition . AND not_condition
+    (4) optional_where -> WHERE . condition
+    (17) condition -> . or_condition
+    (18) or_condition -> . and_condition
+    (19) or_condition -> . or_condition OR and_condition
+    (20) and_condition -> . not_condition
+    (21) and_condition -> . and_condition AND not_condition
+    (22) not_condition -> . simple_condition
+    (23) not_condition -> . NOT simple_condition
+    (24) simple_condition -> . ID comparator value
 
-    OR              reduce using rule 15 (or_condition -> and_condition .)
-    ORDER           reduce using rule 15 (or_condition -> and_condition .)
-    LIMIT           reduce using rule 15 (or_condition -> and_condition .)
-    $end            reduce using rule 15 (or_condition -> and_condition .)
-    AND             shift and go to state 30
+    NOT             shift and go to state 31
+    ID              shift and go to state 32
 
+    condition                      shift and go to state 26
+    or_condition                   shift and go to state 27
+    and_condition                  shift and go to state 28
+    not_condition                  shift and go to state 29
+    simple_condition               shift and go to state 30
 
 state 21
 
-    (17) and_condition -> not_condition .
+    (5) optional_where -> empty .
 
-    AND             reduce using rule 17 (and_condition -> not_condition .)
-    OR              reduce using rule 17 (and_condition -> not_condition .)
-    ORDER           reduce using rule 17 (and_condition -> not_condition .)
-    LIMIT           reduce using rule 17 (and_condition -> not_condition .)
-    $end            reduce using rule 17 (and_condition -> not_condition .)
+    ORDER           reduce using rule 5 (optional_where -> empty .)
+    LIMIT           reduce using rule 5 (optional_where -> empty .)
+    $end            reduce using rule 5 (optional_where -> empty .)
 
 
 state 22
 
-    (19) not_condition -> simple_condition .
+    (3) select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM . ID optional_where
 
-    AND             reduce using rule 19 (not_condition -> simple_condition .)
-    OR              reduce using rule 19 (not_condition -> simple_condition .)
-    ORDER           reduce using rule 19 (not_condition -> simple_condition .)
-    LIMIT           reduce using rule 19 (not_condition -> simple_condition .)
-    $end            reduce using rule 19 (not_condition -> simple_condition .)
+    ID              shift and go to state 33
 
 
 state 23
 
-    (20) not_condition -> NOT . simple_condition
-    (21) simple_condition -> . ID comparator value
+    (2) select_stmt -> SELECT optional_distinct select_list FROM ID optional_where optional_order . optional_limit
+    (8) optional_limit -> . LIMIT NUMBER
+    (9) optional_limit -> . empty
+    (10) empty -> .
 
-    ID              shift and go to state 24
+    LIMIT           shift and go to state 35
+    $end            reduce using rule 10 (empty -> .)
 
-    simple_condition               shift and go to state 31
+    optional_limit                 shift and go to state 34
+    empty                          shift and go to state 36
 
 state 24
 
-    (21) simple_condition -> ID . comparator value
-    (22) comparator -> . EQUAL
-    (23) comparator -> . GT
-    (24) comparator -> . LT
-    (25) comparator -> . GE
-    (26) comparator -> . LE
+    (6) optional_order -> ORDER . BY ID
 
-    EQUAL           shift and go to state 33
-    GT              shift and go to state 34
-    LT              shift and go to state 35
-    GE              shift and go to state 36
-    LE              shift and go to state 37
+    BY              shift and go to state 37
 
-    comparator                     shift and go to state 32
 
 state 25
 
-    (2) select_stmt -> SELECT select_list FROM ID optional_where optional_order optional_limit .
+    (7) optional_order -> empty .
 
-    $end            reduce using rule 2 (select_stmt -> SELECT select_list FROM ID optional_where optional_order optional_limit .)
+    LIMIT           reduce using rule 7 (optional_order -> empty .)
+    $end            reduce using rule 7 (optional_order -> empty .)
 
 
 state 26
 
-    (7) optional_limit -> LIMIT . NUMBER
+    (4) optional_where -> WHERE condition .
 
-    NUMBER          shift and go to state 38
+    ORDER           reduce using rule 4 (optional_where -> WHERE condition .)
+    LIMIT           reduce using rule 4 (optional_where -> WHERE condition .)
+    $end            reduce using rule 4 (optional_where -> WHERE condition .)
 
 
 state 27
 
-    (8) optional_limit -> empty .
+    (17) condition -> or_condition .
+    (19) or_condition -> or_condition . OR and_condition
 
-    $end            reduce using rule 8 (optional_limit -> empty .)
+    ORDER           reduce using rule 17 (condition -> or_condition .)
+    LIMIT           reduce using rule 17 (condition -> or_condition .)
+    $end            reduce using rule 17 (condition -> or_condition .)
+    OR              shift and go to state 38
 
 
 state 28
 
-    (5) optional_order -> ORDER BY . ID
+    (18) or_condition -> and_condition .
+    (21) and_condition -> and_condition . AND not_condition
 
-    ID              shift and go to state 39
+    OR              reduce using rule 18 (or_condition -> and_condition .)
+    ORDER           reduce using rule 18 (or_condition -> and_condition .)
+    LIMIT           reduce using rule 18 (or_condition -> and_condition .)
+    $end            reduce using rule 18 (or_condition -> and_condition .)
+    AND             shift and go to state 39
 
 
 state 29
 
-    (16) or_condition -> or_condition OR . and_condition
-    (17) and_condition -> . not_condition
-    (18) and_condition -> . and_condition AND not_condition
-    (19) not_condition -> . simple_condition
-    (20) not_condition -> . NOT simple_condition
-    (21) simple_condition -> . ID comparator value
+    (20) and_condition -> not_condition .
 
-    NOT             shift and go to state 23
-    ID              shift and go to state 24
+    AND             reduce using rule 20 (and_condition -> not_condition .)
+    OR              reduce using rule 20 (and_condition -> not_condition .)
+    ORDER           reduce using rule 20 (and_condition -> not_condition .)
+    LIMIT           reduce using rule 20 (and_condition -> not_condition .)
+    $end            reduce using rule 20 (and_condition -> not_condition .)
 
-    and_condition                  shift and go to state 40
-    not_condition                  shift and go to state 21
-    simple_condition               shift and go to state 22
 
 state 30
 
-    (18) and_condition -> and_condition AND . not_condition
-    (19) not_condition -> . simple_condition
-    (20) not_condition -> . NOT simple_condition
-    (21) simple_condition -> . ID comparator value
+    (22) not_condition -> simple_condition .
 
-    NOT             shift and go to state 23
-    ID              shift and go to state 24
+    AND             reduce using rule 22 (not_condition -> simple_condition .)
+    OR              reduce using rule 22 (not_condition -> simple_condition .)
+    ORDER           reduce using rule 22 (not_condition -> simple_condition .)
+    LIMIT           reduce using rule 22 (not_condition -> simple_condition .)
+    $end            reduce using rule 22 (not_condition -> simple_condition .)
 
-    not_condition                  shift and go to state 41
-    simple_condition               shift and go to state 22
 
 state 31
 
-    (20) not_condition -> NOT simple_condition .
+    (23) not_condition -> NOT . simple_condition
+    (24) simple_condition -> . ID comparator value
 
-    AND             reduce using rule 20 (not_condition -> NOT simple_condition .)
-    OR              reduce using rule 20 (not_condition -> NOT simple_condition .)
-    ORDER           reduce using rule 20 (not_condition -> NOT simple_condition .)
-    LIMIT           reduce using rule 20 (not_condition -> NOT simple_condition .)
-    $end            reduce using rule 20 (not_condition -> NOT simple_condition .)
+    ID              shift and go to state 32
 
+    simple_condition               shift and go to state 40
 
 state 32
 
-    (21) simple_condition -> ID comparator . value
-    (27) value -> . NUMBER
-    (28) value -> . STRING
+    (24) simple_condition -> ID . comparator value
+    (25) comparator -> . EQUAL
+    (26) comparator -> . GT
+    (27) comparator -> . LT
+    (28) comparator -> . GE
+    (29) comparator -> . LE
 
-    NUMBER          shift and go to state 43
-    STRING          shift and go to state 44
+    EQUAL           shift and go to state 42
+    GT              shift and go to state 43
+    LT              shift and go to state 44
+    GE              shift and go to state 45
+    LE              shift and go to state 46
 
-    value                          shift and go to state 42
+    comparator                     shift and go to state 41
 
 state 33
 
-    (22) comparator -> EQUAL .
+    (3) select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM ID . optional_where
+    (4) optional_where -> . WHERE condition
+    (5) optional_where -> . empty
+    (10) empty -> .
 
-    NUMBER          reduce using rule 22 (comparator -> EQUAL .)
-    STRING          reduce using rule 22 (comparator -> EQUAL .)
+    WHERE           shift and go to state 20
+    $end            reduce using rule 10 (empty -> .)
 
+    optional_where                 shift and go to state 47
+    empty                          shift and go to state 21
 
 state 34
 
-    (23) comparator -> GT .
+    (2) select_stmt -> SELECT optional_distinct select_list FROM ID optional_where optional_order optional_limit .
 
-    NUMBER          reduce using rule 23 (comparator -> GT .)
-    STRING          reduce using rule 23 (comparator -> GT .)
+    $end            reduce using rule 2 (select_stmt -> SELECT optional_distinct select_list FROM ID optional_where optional_order optional_limit .)
 
 
 state 35
 
-    (24) comparator -> LT .
+    (8) optional_limit -> LIMIT . NUMBER
 
-    NUMBER          reduce using rule 24 (comparator -> LT .)
-    STRING          reduce using rule 24 (comparator -> LT .)
+    NUMBER          shift and go to state 48
 
 
 state 36
 
-    (25) comparator -> GE .
+    (9) optional_limit -> empty .
 
-    NUMBER          reduce using rule 25 (comparator -> GE .)
-    STRING          reduce using rule 25 (comparator -> GE .)
+    $end            reduce using rule 9 (optional_limit -> empty .)
 
 
 state 37
 
-    (26) comparator -> LE .
+    (6) optional_order -> ORDER BY . ID
 
-    NUMBER          reduce using rule 26 (comparator -> LE .)
-    STRING          reduce using rule 26 (comparator -> LE .)
+    ID              shift and go to state 49
 
 
 state 38
 
-    (7) optional_limit -> LIMIT NUMBER .
+    (19) or_condition -> or_condition OR . and_condition
+    (20) and_condition -> . not_condition
+    (21) and_condition -> . and_condition AND not_condition
+    (22) not_condition -> . simple_condition
+    (23) not_condition -> . NOT simple_condition
+    (24) simple_condition -> . ID comparator value
 
-    $end            reduce using rule 7 (optional_limit -> LIMIT NUMBER .)
+    NOT             shift and go to state 31
+    ID              shift and go to state 32
 
+    and_condition                  shift and go to state 50
+    not_condition                  shift and go to state 29
+    simple_condition               shift and go to state 30
 
 state 39
 
-    (5) optional_order -> ORDER BY ID .
+    (21) and_condition -> and_condition AND . not_condition
+    (22) not_condition -> . simple_condition
+    (23) not_condition -> . NOT simple_condition
+    (24) simple_condition -> . ID comparator value
 
-    LIMIT           reduce using rule 5 (optional_order -> ORDER BY ID .)
-    $end            reduce using rule 5 (optional_order -> ORDER BY ID .)
+    NOT             shift and go to state 31
+    ID              shift and go to state 32
 
+    not_condition                  shift and go to state 51
+    simple_condition               shift and go to state 30
 
 state 40
 
-    (16) or_condition -> or_condition OR and_condition .
-    (18) and_condition -> and_condition . AND not_condition
+    (23) not_condition -> NOT simple_condition .
 
-    OR              reduce using rule 16 (or_condition -> or_condition OR and_condition .)
-    ORDER           reduce using rule 16 (or_condition -> or_condition OR and_condition .)
-    LIMIT           reduce using rule 16 (or_condition -> or_condition OR and_condition .)
-    $end            reduce using rule 16 (or_condition -> or_condition OR and_condition .)
-    AND             shift and go to state 30
+    AND             reduce using rule 23 (not_condition -> NOT simple_condition .)
+    OR              reduce using rule 23 (not_condition -> NOT simple_condition .)
+    ORDER           reduce using rule 23 (not_condition -> NOT simple_condition .)
+    LIMIT           reduce using rule 23 (not_condition -> NOT simple_condition .)
+    $end            reduce using rule 23 (not_condition -> NOT simple_condition .)
 
 
 state 41
 
-    (18) and_condition -> and_condition AND not_condition .
+    (24) simple_condition -> ID comparator . value
+    (30) value -> . NUMBER
+    (31) value -> . STRING
 
-    AND             reduce using rule 18 (and_condition -> and_condition AND not_condition .)
-    OR              reduce using rule 18 (and_condition -> and_condition AND not_condition .)
-    ORDER           reduce using rule 18 (and_condition -> and_condition AND not_condition .)
-    LIMIT           reduce using rule 18 (and_condition -> and_condition AND not_condition .)
-    $end            reduce using rule 18 (and_condition -> and_condition AND not_condition .)
+    NUMBER          shift and go to state 53
+    STRING          shift and go to state 54
 
+    value                          shift and go to state 52
 
 state 42
 
-    (21) simple_condition -> ID comparator value .
+    (25) comparator -> EQUAL .
 
-    AND             reduce using rule 21 (simple_condition -> ID comparator value .)
-    OR              reduce using rule 21 (simple_condition -> ID comparator value .)
-    ORDER           reduce using rule 21 (simple_condition -> ID comparator value .)
-    LIMIT           reduce using rule 21 (simple_condition -> ID comparator value .)
-    $end            reduce using rule 21 (simple_condition -> ID comparator value .)
+    NUMBER          reduce using rule 25 (comparator -> EQUAL .)
+    STRING          reduce using rule 25 (comparator -> EQUAL .)
 
 
 state 43
 
-    (27) value -> NUMBER .
+    (26) comparator -> GT .
 
-    AND             reduce using rule 27 (value -> NUMBER .)
-    OR              reduce using rule 27 (value -> NUMBER .)
-    ORDER           reduce using rule 27 (value -> NUMBER .)
-    LIMIT           reduce using rule 27 (value -> NUMBER .)
-    $end            reduce using rule 27 (value -> NUMBER .)
+    NUMBER          reduce using rule 26 (comparator -> GT .)
+    STRING          reduce using rule 26 (comparator -> GT .)
 
 
 state 44
 
-    (28) value -> STRING .
+    (27) comparator -> LT .
 
-    AND             reduce using rule 28 (value -> STRING .)
-    OR              reduce using rule 28 (value -> STRING .)
-    ORDER           reduce using rule 28 (value -> STRING .)
-    LIMIT           reduce using rule 28 (value -> STRING .)
-    $end            reduce using rule 28 (value -> STRING .)
+    NUMBER          reduce using rule 27 (comparator -> LT .)
+    STRING          reduce using rule 27 (comparator -> LT .)
+
+
+state 45
+
+    (28) comparator -> GE .
+
+    NUMBER          reduce using rule 28 (comparator -> GE .)
+    STRING          reduce using rule 28 (comparator -> GE .)
+
+
+state 46
+
+    (29) comparator -> LE .
+
+    NUMBER          reduce using rule 29 (comparator -> LE .)
+    STRING          reduce using rule 29 (comparator -> LE .)
+
+
+state 47
+
+    (3) select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where .
+
+    $end            reduce using rule 3 (select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where .)
+
+
+state 48
+
+    (8) optional_limit -> LIMIT NUMBER .
+
+    $end            reduce using rule 8 (optional_limit -> LIMIT NUMBER .)
+
+
+state 49
+
+    (6) optional_order -> ORDER BY ID .
+
+    LIMIT           reduce using rule 6 (optional_order -> ORDER BY ID .)
+    $end            reduce using rule 6 (optional_order -> ORDER BY ID .)
+
+
+state 50
+
+    (19) or_condition -> or_condition OR and_condition .
+    (21) and_condition -> and_condition . AND not_condition
+
+    OR              reduce using rule 19 (or_condition -> or_condition OR and_condition .)
+    ORDER           reduce using rule 19 (or_condition -> or_condition OR and_condition .)
+    LIMIT           reduce using rule 19 (or_condition -> or_condition OR and_condition .)
+    $end            reduce using rule 19 (or_condition -> or_condition OR and_condition .)
+    AND             shift and go to state 39
+
+
+state 51
+
+    (21) and_condition -> and_condition AND not_condition .
+
+    AND             reduce using rule 21 (and_condition -> and_condition AND not_condition .)
+    OR              reduce using rule 21 (and_condition -> and_condition AND not_condition .)
+    ORDER           reduce using rule 21 (and_condition -> and_condition AND not_condition .)
+    LIMIT           reduce using rule 21 (and_condition -> and_condition AND not_condition .)
+    $end            reduce using rule 21 (and_condition -> and_condition AND not_condition .)
+
+
+state 52
+
+    (24) simple_condition -> ID comparator value .
+
+    AND             reduce using rule 24 (simple_condition -> ID comparator value .)
+    OR              reduce using rule 24 (simple_condition -> ID comparator value .)
+    ORDER           reduce using rule 24 (simple_condition -> ID comparator value .)
+    LIMIT           reduce using rule 24 (simple_condition -> ID comparator value .)
+    $end            reduce using rule 24 (simple_condition -> ID comparator value .)
+
+
+state 53
+
+    (30) value -> NUMBER .
+
+    AND             reduce using rule 30 (value -> NUMBER .)
+    OR              reduce using rule 30 (value -> NUMBER .)
+    ORDER           reduce using rule 30 (value -> NUMBER .)
+    LIMIT           reduce using rule 30 (value -> NUMBER .)
+    $end            reduce using rule 30 (value -> NUMBER .)
+
+
+state 54
+
+    (31) value -> STRING .
+
+    AND             reduce using rule 31 (value -> STRING .)
+    OR              reduce using rule 31 (value -> STRING .)
+    ORDER           reduce using rule 31 (value -> STRING .)
+    LIMIT           reduce using rule 31 (value -> STRING .)
+    $end            reduce using rule 31 (value -> STRING .)
 
