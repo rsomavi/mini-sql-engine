@@ -68,6 +68,28 @@ class AvgQuery(ASTNode):
     def __repr__(self):
         return f"AvgQuery(column={self.column!r}, table={self.table!r}, where={self.where!r})"
 
+class MinQuery(ASTNode):
+    """Represents a MIN(column) query: SELECT MIN(column) FROM table [WHERE condition]"""
+    
+    def __init__(self, column, table, where=None):
+        self.column = column
+        self.table = table
+        self.where = where  # Optional Condition
+    
+    def __repr__(self):
+        return f"MinQuery(column={self.column!r}, table={self.table!r}, where={self.where!r})"
+
+class MaxQuery(ASTNode):
+    """Represents a MAX(column) query: SELECT MAX(column) FROM table [WHERE condition]"""
+    
+    def __init__(self, column, table, where=None):
+        self.column = column
+        self.table = table
+        self.where = where  # Optional Condition
+    
+    def __repr__(self):
+        return f"MaxQuery(column={self.column!r}, table={self.table!r}, where={self.where!r})"
+
 class SelectQuery(ASTNode):
     """Represents a SELECT query: SELECT [DISTINCT] columns FROM table [WHERE condition] [ORDER BY column] [LIMIT number];"""
     

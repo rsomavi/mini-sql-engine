@@ -18,6 +18,8 @@ class SQLLexer:
         'COUNT',
         'SUM',
         'AVG',
+        'MIN',
+        'MAX',
         'DISTINCT',
         'ID',
         'STAR',
@@ -47,6 +49,8 @@ class SQLLexer:
         'COUNT': 'COUNT',
         'SUM': 'SUM',
         'AVG': 'AVG',
+        'MIN': 'MIN',
+        'MAX': 'MAX',
         'DISTINCT': 'DISTINCT',
         'AND': 'AND',
         'OR': 'OR',
@@ -65,6 +69,8 @@ class SQLLexer:
     t_COUNT = r'(?i)COUNT'
     t_SUM = r'(?i)SUM'
     t_AVG = r'(?i)AVG'
+    t_MIN = r'(?i)MIN'
+    t_MAX = r'(?i)MAX'
     t_DISTINCT = r'(?i)DISTINCT'
     t_STAR = r'\*'
     t_LPAREN = r'\('

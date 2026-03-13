@@ -1,7 +1,7 @@
 # Query Planner Layer
 # Converts AST into logical query plan
 
-from ast_nodes import SelectQuery, Condition, LogicalCondition, NotCondition, CountQuery, SumQuery, AvgQuery
+from ast_nodes import SelectQuery, Condition, LogicalCondition, NotCondition, CountQuery, SumQuery, AvgQuery, MinQuery, MaxQuery
 
 
 class SelectPlan:
@@ -42,6 +42,24 @@ class AvgPlan:
         self.where = where
 
 
+class MinPlan:
+    """Logical plan node for MIN(column) queries."""
+    
+    def __init__(self, column, table, where):
+        self.column = column
+        self.table = table
+        self.where = where
+
+
+class MaxPlan:
+    """Logical plan node for MAX(column) queries."""
+    
+    def __init__(self, column, table, where):
+        self.column = column
+        self.table = table
+        self.where = where
+
+
 class QueryPlanner:
     """Converts AST nodes into query plans."""
     
@@ -63,6 +81,10 @@ class QueryPlanner:
             return self._plan_sum(ast)
         elif isinstance(ast, AvgQuery):
             return self._plan_avg(ast)
+        elif isinstance(ast, MinQuery):
+            return self._plan_min(ast)
+        elif isinstance(ast, MaxQuery):
+            return self._plan_max(ast)
         else:
             raise ValueError(f"Unsupported AST node: {type(ast).__name__}")
     
@@ -130,4 +152,36 @@ class QueryPlanner:
             column=avg_node.column,
             table=avg_node.table,
             where=avg_node.where
+        )
+    
+    def _plan_min(self, min_node: MinQuery):
+        """
+        Convert a MinQuery AST into a MinPlan.
+        
+        Args:
+            min_node: MinQuery AST node
+            
+        Returns:
+            MinPlan object
+        """
+        return MinPlan(
+            column=min_node.column,
+            table=min_node.table,
+            where=min_node.where
+        )
+    
+    def _plan_max(self, max_node: MaxQuery):
+        """
+        Convert a MaxQuery AST into a MaxPlan.
+        
+        Args:
+            max_node: MaxQuery AST node
+            
+        Returns:
+            MaxPlan object
+        """
+        return MaxPlan(
+            column=max_node.column,
+            table=max_node.table,
+            where=max_node.where
         )

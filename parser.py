@@ -3,7 +3,7 @@
 
 import ply.yacc as yacc
 from lexer import SQLLexer
-from ast_nodes import SelectQuery, Condition, LogicalCondition, NotCondition, CountQuery, SumQuery, AvgQuery
+from ast_nodes import SelectQuery, Condition, LogicalCondition, NotCondition, CountQuery, SumQuery, AvgQuery, MinQuery, MaxQuery
 
 class SQLParser:
     """SQL Parser that builds AST from tokens"""
@@ -56,6 +56,16 @@ class SQLParser:
         'select_stmt : SELECT AVG LPAREN ID RPAREN FROM ID optional_where'
         # SELECT AVG(column) FROM table [WHERE condition];
         p[0] = AvgQuery(column=p[4], table=p[7], where=p[8] if p[8] else None)
+    
+    def p_select_stmt_min(self, p):
+        'select_stmt : SELECT MIN LPAREN ID RPAREN FROM ID optional_where'
+        # SELECT MIN(column) FROM table [WHERE condition];
+        p[0] = MinQuery(column=p[4], table=p[7], where=p[8] if p[8] else None)
+    
+    def p_select_stmt_max(self, p):
+        'select_stmt : SELECT MAX LPAREN ID RPAREN FROM ID optional_where'
+        # SELECT MAX(column) FROM table [WHERE condition];
+        p[0] = MaxQuery(column=p[4], table=p[7], where=p[8] if p[8] else None)
     
     def p_optional_where(self, p):
         'optional_where : WHERE condition'

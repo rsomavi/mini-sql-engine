@@ -2,7 +2,7 @@
 # Executes query plans against a storage backend
 
 from ast_nodes import Condition, LogicalCondition, NotCondition
-from planner import SelectPlan, CountPlan, SumPlan, AvgPlan
+from planner import SelectPlan, CountPlan, SumPlan, AvgPlan, MinPlan, MaxPlan
 
 
 class QueryExecutor:
@@ -35,6 +35,10 @@ class QueryExecutor:
             return self._execute_sum(plan)
         elif isinstance(plan, AvgPlan):
             return self._execute_avg(plan)
+        elif isinstance(plan, MinPlan):
+            return self._execute_min(plan)
+        elif isinstance(plan, MaxPlan):
+            return self._execute_max(plan)
         else:
             raise ValueError(f"Unsupported plan: {type(plan).__name__}")
     
@@ -243,3 +247,75 @@ class QueryExecutor:
             return 0
         
         return sum(values) / len(values)
+    
+    def _execute_min(self, plan: MinPlan):
+        """
+        Execute a MIN(column) query plan.
+        
+        Args:
+            plan: MinPlan object
+            
+        Returns:
+            Minimum value of column
+        """
+        table_name = plan.table
+        column = plan.column
+        where = plan.where
+        
+        # Load table from storage
+        table = self.storage.load_table(table_name)
+        rows = table.get_rows()
+        
+        # Filter rows based on WHERE condition
+        if where is not None:
+            def matches(row):
+                return self._evaluate_condition(row, where, table_name)
+            rows = [row for row in rows if matches(row)]
+        
+        # Find minimum value
+        values = []
+        for row in rows:
+            if column not in row:
+                raise ValueError(f"Column '{column}' not found in table '{table_name}'")
+            values.append(row[column])
+        
+        if len(values) == 0:
+            return 0
+        
+        return min(values)
+    
+    def _execute_max(self, plan: MaxPlan):
+        """
+        Execute a MAX(column) query plan.
+        
+        Args:
+            plan: MaxPlan object
+            
+        Returns:
+            Maximum value of column
+        """
+        table_name = plan.table
+        column = plan.column
+        where = plan.where
+        
+        # Load table from storage
+        table = self.storage.load_table(table_name)
+        rows = table.get_rows()
+        
+        # Filter rows based on WHERE condition
+        if where is not None:
+            def matches(row):
+                return self._evaluate_condition(row, where, table_name)
+            rows = [row for row in rows if matches(row)]
+        
+        # Find maximum value
+        values = []
+        for row in rows:
+            if column not in row:
+                raise ValueError(f"Column '{column}' not found in table '{table_name}'")
+            values.append(row[column])
+        
+        if len(values) == 0:
+            return 0
+        
+        return max(values)
