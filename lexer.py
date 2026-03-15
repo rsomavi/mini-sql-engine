@@ -21,6 +21,7 @@ class SQLLexer:
         'MIN',
         'MAX',
         'DISTINCT',
+        'GROUP',
         'ID',
         'STAR',
         'COMMA',
@@ -52,6 +53,7 @@ class SQLLexer:
         'MIN': 'MIN',
         'MAX': 'MAX',
         'DISTINCT': 'DISTINCT',
+        'GROUP': 'GROUP',
         'AND': 'AND',
         'OR': 'OR',
         'NOT': 'NOT',
@@ -72,6 +74,7 @@ class SQLLexer:
     t_MIN = r'(?i)MIN'
     t_MAX = r'(?i)MAX'
     t_DISTINCT = r'(?i)DISTINCT'
+    t_GROUP = r'(?i)GROUP'
     t_STAR = r'\*'
     t_LPAREN = r'\('
     t_RPAREN = r'\)'
@@ -91,10 +94,14 @@ class SQLLexer:
         t.value = int(t.value)
         return t
     
-    # String (double quoted)
+    # String (double or single quoted)
     def t_STRING(self, t):
-        r'"[^"]*"'
-        t.value = t.value[1:-1]  # Remove quotes
+        r'("([^"]*)")|(\'([^\']*)\')'
+        # Remove both types of quotes
+        if t.value.startswith('"'):
+            t.value = t.value[1:-1]
+        else:
+            t.value = t.value[1:-1]
         return t
     
     # Identifier (table/column names)

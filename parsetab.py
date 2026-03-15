@@ -6,9 +6,9 @@ _tabversion = '3.10'
 
 _lr_method = 'LALR'
 
-_lr_signature = 'rightNOTleftANDleftORAND AVG BY COMMA COUNT DISTINCT EQUAL FROM GE GT ID LE LIMIT LPAREN LT MAX MIN NOT NUMBER OR ORDER RPAREN SELECT STAR STRING SUM WHEREquery : select_stmtselect_stmt : SELECT optional_distinct select_list FROM ID optional_where optional_order optional_limitselect_stmt : SELECT COUNT LPAREN STAR RPAREN FROM ID optional_whereselect_stmt : SELECT SUM LPAREN ID RPAREN FROM ID optional_whereselect_stmt : SELECT AVG LPAREN ID RPAREN FROM ID optional_whereselect_stmt : SELECT MIN LPAREN ID RPAREN FROM ID optional_whereselect_stmt : SELECT MAX LPAREN ID RPAREN FROM ID optional_whereoptional_where : WHERE conditionoptional_where : emptyoptional_order : ORDER BY IDoptional_order : emptyoptional_limit : LIMIT NUMBERoptional_limit : emptyempty :optional_distinct : DISTINCToptional_distinct : emptyselect_list : STARselect_list : column_listcolumn_list : IDcolumn_list : column_list COMMA IDcondition : or_conditionor_condition : and_condition\n                        | or_condition OR and_conditionand_condition : not_condition\n                         | and_condition AND not_conditionnot_condition : simple_condition\n                         | NOT simple_conditionsimple_condition : ID comparator valuecomparator : EQUAL\n                      | GT\n                      | LT\n                      | GE\n                      | LEvalue : NUMBERvalue : STRING'
+_lr_signature = 'rightNOTleftANDleftORAND AVG BY COMMA COUNT DISTINCT EQUAL FROM GE GROUP GT ID LE LIMIT LPAREN LT MAX MIN NOT NUMBER OR ORDER RPAREN SELECT STAR STRING SUM WHEREquery : select_stmtselect_stmt : SELECT optional_distinct select_list FROM ID optional_where optional_group optional_order optional_limitselect_stmt : SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where optional_groupselect_stmt : SELECT SUM LPAREN ID RPAREN FROM ID optional_where optional_groupselect_stmt : SELECT AVG LPAREN ID RPAREN FROM ID optional_where optional_groupselect_stmt : SELECT MIN LPAREN ID RPAREN FROM ID optional_where optional_groupselect_stmt : SELECT MAX LPAREN ID RPAREN FROM ID optional_where optional_groupoptional_where : WHERE conditionoptional_where : emptyoptional_group : GROUP BY IDoptional_group : emptyoptional_order : ORDER BY order_by_exproptional_order : emptyorder_by_expr : IDorder_by_expr : COUNT LPAREN STAR RPARENorder_by_expr : aggregate_func LPAREN ID RPARENaggregate_func : SUM\n                          | AVG\n                          | MIN\n                          | MAXoptional_limit : LIMIT NUMBERoptional_limit : emptyempty :optional_distinct : DISTINCToptional_distinct : emptyselect_list : STARselect_list : column_listcolumn_list : column_itemcolumn_list : column_list COMMA column_itemcolumn_item : IDcolumn_item : COUNT LPAREN STAR RPARENcolumn_item : SUM LPAREN ID RPARENcolumn_item : AVG LPAREN ID RPARENcolumn_item : MIN LPAREN ID RPARENcolumn_item : MAX LPAREN ID RPARENcondition : or_conditionor_condition : and_condition\n                        | or_condition OR and_conditionand_condition : not_condition\n                         | and_condition AND not_conditionnot_condition : simple_condition\n                         | NOT simple_conditionsimple_condition : ID comparator valuecomparator : EQUAL\n                      | GT\n                      | LT\n                      | GE\n                      | LEvalue : NUMBERvalue : STRING'
     
-_lr_action_items = {'SELECT':([0,],[3,]),'$end':([1,2,28,35,37,43,45,46,47,48,49,50,53,54,55,56,57,58,60,64,71,72,73,74,75,76,77,78,79,80,81,82,],[0,-1,-14,-14,-9,-14,-11,-8,-21,-22,-24,-26,-14,-14,-14,-14,-14,-2,-13,-27,-3,-4,-5,-6,-7,-12,-10,-23,-25,-28,-34,-35,]),'COUNT':([3,],[5,]),'SUM':([3,],[6,]),'AVG':([3,],[7,]),'MIN':([3,],[8,]),'MAX':([3,],[9,]),'DISTINCT':([3,],[10,]),'STAR':([3,4,10,11,16,],[-14,14,-15,-16,23,]),'ID':([3,4,10,11,17,18,19,20,21,22,36,38,39,40,41,42,51,61,62,63,],[-14,13,-15,-16,24,25,26,27,28,29,52,53,54,55,56,57,52,77,52,52,]),'LPAREN':([5,6,7,8,9,],[16,17,18,19,20,]),'FROM':([12,13,14,15,29,30,31,32,33,34,],[21,-19,-17,-18,-20,38,39,40,41,42,]),'COMMA':([13,15,29,],[-19,22,-20,]),'RPAREN':([23,24,25,26,27,],[30,31,32,33,34,]),'WHERE':([28,53,54,55,56,57,],[36,36,36,36,36,36,]),'ORDER':([28,35,37,46,47,48,49,50,64,78,79,80,81,82,],[-14,44,-9,-8,-21,-22,-24,-26,-27,-23,-25,-28,-34,-35,]),'LIMIT':([28,35,37,43,45,46,47,48,49,50,64,77,78,79,80,81,82,],[-14,-14,-9,59,-11,-8,-21,-22,-24,-26,-27,-10,-23,-25,-28,-34,-35,]),'NOT':([36,62,63,],[51,51,51,]),'BY':([44,],[61,]),'OR':([47,48,49,50,64,78,79,80,81,82,],[62,-22,-24,-26,-27,-23,-25,-28,-34,-35,]),'AND':([48,49,50,64,78,79,80,81,82,],[63,-24,-26,-27,63,-25,-28,-34,-35,]),'EQUAL':([52,],[66,]),'GT':([52,],[67,]),'LT':([52,],[68,]),'GE':([52,],[69,]),'LE':([52,],[70,]),'NUMBER':([59,65,66,67,68,69,70,],[76,81,-29,-30,-31,-32,-33,]),'STRING':([65,66,67,68,69,70,],[82,-29,-30,-31,-32,-33,]),}
+_lr_action_items = {'SELECT':([0,],[3,]),'$end':([1,2,39,51,53,64,66,67,68,69,70,71,74,75,76,77,78,79,81,85,92,93,94,95,96,97,99,101,102,103,104,105,106,107,108,109,110,111,112,113,114,125,126,],[0,-1,-23,-23,-9,-23,-11,-8,-36,-37,-39,-41,-23,-23,-23,-23,-23,-23,-13,-42,-23,-23,-23,-23,-23,-2,-22,-10,-38,-40,-43,-49,-50,-3,-4,-5,-6,-7,-21,-12,-14,-15,-16,]),'COUNT':([3,4,10,11,28,100,],[5,17,-24,-25,17,115,]),'SUM':([3,4,10,11,28,100,],[6,18,-24,-25,18,117,]),'AVG':([3,4,10,11,28,100,],[7,19,-24,-25,19,118,]),'MIN':([3,4,10,11,28,100,],[8,20,-24,-25,20,119,]),'MAX':([3,4,10,11,28,100,],[9,21,-24,-25,21,120,]),'DISTINCT':([3,],[10,]),'STAR':([3,4,10,11,22,29,121,],[-23,14,-24,-25,34,41,123,]),'ID':([3,4,10,11,23,24,25,26,27,28,30,31,32,33,52,59,60,61,62,63,72,82,83,84,100,122,],[-23,13,-24,-25,35,36,37,38,39,13,42,43,44,45,73,74,75,76,77,78,73,101,73,73,114,124,]),'LPAREN':([5,6,7,8,9,17,18,19,20,21,115,116,117,118,119,120,],[22,23,24,25,26,29,30,31,32,33,121,122,-17,-18,-19,-20,]),'FROM':([12,13,14,15,16,40,46,47,48,49,50,54,55,56,57,58,],[27,-30,-26,-27,-28,-29,59,60,61,62,63,-31,-32,-33,-34,-35,]),'COMMA':([13,15,16,40,54,55,56,57,58,],[-30,28,-28,-29,-31,-32,-33,-34,-35,]),'RPAREN':([34,35,36,37,38,41,42,43,44,45,123,124,],[46,47,48,49,50,54,55,56,57,58,125,126,]),'WHERE':([39,74,75,76,77,78,],[52,52,52,52,52,52,]),'GROUP':([39,51,53,67,68,69,70,71,74,75,76,77,78,85,92,93,94,95,96,102,103,104,105,106,],[-23,65,-9,-8,-36,-37,-39,-41,-23,-23,-23,-23,-23,-42,65,65,65,65,65,-38,-40,-43,-49,-50,]),'ORDER':([39,51,53,64,66,67,68,69,70,71,85,101,102,103,104,105,106,],[-23,-23,-9,80,-11,-8,-36,-37,-39,-41,-42,-10,-38,-40,-43,-49,-50,]),'LIMIT':([39,51,53,64,66,67,68,69,70,71,79,81,85,101,102,103,104,105,106,113,114,125,126,],[-23,-23,-9,-23,-11,-8,-36,-37,-39,-41,98,-13,-42,-10,-38,-40,-43,-49,-50,-12,-14,-15,-16,]),'NOT':([52,83,84,],[72,72,72,]),'BY':([65,80,],[82,100,]),'OR':([68,69,70,71,85,102,103,104,105,106,],[83,-37,-39,-41,-42,-38,-40,-43,-49,-50,]),'AND':([69,70,71,85,102,103,104,105,106,],[84,-39,-41,-42,84,-40,-43,-49,-50,]),'EQUAL':([73,],[87,]),'GT':([73,],[88,]),'LT':([73,],[89,]),'GE':([73,],[90,]),'LE':([73,],[91,]),'NUMBER':([86,87,88,89,90,91,98,],[105,-44,-45,-46,-47,-48,112,]),'STRING':([86,87,88,89,90,91,],[106,-44,-45,-46,-47,-48,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -17,7 +17,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'query':([0,],[1,]),'select_stmt':([0,],[2,]),'optional_distinct':([3,],[4,]),'empty':([3,28,35,43,53,54,55,56,57,],[11,37,45,60,37,37,37,37,37,]),'select_list':([4,],[12,]),'column_list':([4,],[15,]),'optional_where':([28,53,54,55,56,57,],[35,71,72,73,74,75,]),'optional_order':([35,],[43,]),'condition':([36,],[46,]),'or_condition':([36,],[47,]),'and_condition':([36,62,],[48,78,]),'not_condition':([36,62,63,],[49,49,79,]),'simple_condition':([36,51,62,63,],[50,64,50,50,]),'optional_limit':([43,],[58,]),'comparator':([52,],[65,]),'value':([65,],[80,]),}
+_lr_goto_items = {'query':([0,],[1,]),'select_stmt':([0,],[2,]),'optional_distinct':([3,],[4,]),'empty':([3,39,51,64,74,75,76,77,78,79,92,93,94,95,96,],[11,53,66,81,53,53,53,53,53,99,66,66,66,66,66,]),'select_list':([4,],[12,]),'column_list':([4,],[15,]),'column_item':([4,28,],[16,40,]),'optional_where':([39,74,75,76,77,78,],[51,92,93,94,95,96,]),'optional_group':([51,92,93,94,95,96,],[64,107,108,109,110,111,]),'condition':([52,],[67,]),'or_condition':([52,],[68,]),'and_condition':([52,83,],[69,102,]),'not_condition':([52,83,84,],[70,70,103,]),'simple_condition':([52,72,83,84,],[71,85,71,71,]),'optional_order':([64,],[79,]),'comparator':([73,],[86,]),'optional_limit':([79,],[97,]),'value':([86,],[104,]),'order_by_expr':([100,],[113,]),'aggregate_func':([100,],[116,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -28,38 +28,53 @@ del _lr_goto_items
 _lr_productions = [
   ("S' -> query","S'",1,None,None,None),
   ('query -> select_stmt','query',1,'p_query','parser.py',32),
-  ('select_stmt -> SELECT optional_distinct select_list FROM ID optional_where optional_order optional_limit','select_stmt',8,'p_select_stmt','parser.py',36),
-  ('select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where','select_stmt',8,'p_select_stmt_count','parser.py',46),
-  ('select_stmt -> SELECT SUM LPAREN ID RPAREN FROM ID optional_where','select_stmt',8,'p_select_stmt_sum','parser.py',51),
-  ('select_stmt -> SELECT AVG LPAREN ID RPAREN FROM ID optional_where','select_stmt',8,'p_select_stmt_avg','parser.py',56),
-  ('select_stmt -> SELECT MIN LPAREN ID RPAREN FROM ID optional_where','select_stmt',8,'p_select_stmt_min','parser.py',61),
-  ('select_stmt -> SELECT MAX LPAREN ID RPAREN FROM ID optional_where','select_stmt',8,'p_select_stmt_max','parser.py',66),
-  ('optional_where -> WHERE condition','optional_where',2,'p_optional_where','parser.py',71),
-  ('optional_where -> empty','optional_where',1,'p_optional_where_empty','parser.py',75),
-  ('optional_order -> ORDER BY ID','optional_order',3,'p_optional_order','parser.py',79),
-  ('optional_order -> empty','optional_order',1,'p_optional_order_empty','parser.py',83),
-  ('optional_limit -> LIMIT NUMBER','optional_limit',2,'p_optional_limit','parser.py',87),
-  ('optional_limit -> empty','optional_limit',1,'p_optional_limit_empty','parser.py',91),
-  ('empty -> <empty>','empty',0,'p_empty','parser.py',95),
-  ('optional_distinct -> DISTINCT','optional_distinct',1,'p_optional_distinct','parser.py',99),
-  ('optional_distinct -> empty','optional_distinct',1,'p_optional_distinct_empty','parser.py',103),
-  ('select_list -> STAR','select_list',1,'p_select_list_star','parser.py',107),
-  ('select_list -> column_list','select_list',1,'p_select_list_column_list','parser.py',111),
-  ('column_list -> ID','column_list',1,'p_column_list_single','parser.py',115),
-  ('column_list -> column_list COMMA ID','column_list',3,'p_column_list_multiple','parser.py',119),
-  ('condition -> or_condition','condition',1,'p_condition','parser.py',123),
-  ('or_condition -> and_condition','or_condition',1,'p_or_condition','parser.py',127),
-  ('or_condition -> or_condition OR and_condition','or_condition',3,'p_or_condition','parser.py',128),
-  ('and_condition -> not_condition','and_condition',1,'p_and_condition','parser.py',135),
-  ('and_condition -> and_condition AND not_condition','and_condition',3,'p_and_condition','parser.py',136),
-  ('not_condition -> simple_condition','not_condition',1,'p_not_condition','parser.py',143),
-  ('not_condition -> NOT simple_condition','not_condition',2,'p_not_condition','parser.py',144),
-  ('simple_condition -> ID comparator value','simple_condition',3,'p_simple_condition','parser.py',151),
-  ('comparator -> EQUAL','comparator',1,'p_comparator','parser.py',155),
-  ('comparator -> GT','comparator',1,'p_comparator','parser.py',156),
-  ('comparator -> LT','comparator',1,'p_comparator','parser.py',157),
-  ('comparator -> GE','comparator',1,'p_comparator','parser.py',158),
-  ('comparator -> LE','comparator',1,'p_comparator','parser.py',159),
-  ('value -> NUMBER','value',1,'p_value_number','parser.py',163),
-  ('value -> STRING','value',1,'p_value_string','parser.py',167),
+  ('select_stmt -> SELECT optional_distinct select_list FROM ID optional_where optional_group optional_order optional_limit','select_stmt',9,'p_select_stmt','parser.py',36),
+  ('select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where optional_group','select_stmt',9,'p_select_stmt_count','parser.py',47),
+  ('select_stmt -> SELECT SUM LPAREN ID RPAREN FROM ID optional_where optional_group','select_stmt',9,'p_select_stmt_sum','parser.py',52),
+  ('select_stmt -> SELECT AVG LPAREN ID RPAREN FROM ID optional_where optional_group','select_stmt',9,'p_select_stmt_avg','parser.py',57),
+  ('select_stmt -> SELECT MIN LPAREN ID RPAREN FROM ID optional_where optional_group','select_stmt',9,'p_select_stmt_min','parser.py',62),
+  ('select_stmt -> SELECT MAX LPAREN ID RPAREN FROM ID optional_where optional_group','select_stmt',9,'p_select_stmt_max','parser.py',67),
+  ('optional_where -> WHERE condition','optional_where',2,'p_optional_where','parser.py',72),
+  ('optional_where -> empty','optional_where',1,'p_optional_where_empty','parser.py',76),
+  ('optional_group -> GROUP BY ID','optional_group',3,'p_optional_group','parser.py',80),
+  ('optional_group -> empty','optional_group',1,'p_optional_group_empty','parser.py',84),
+  ('optional_order -> ORDER BY order_by_expr','optional_order',3,'p_optional_order','parser.py',88),
+  ('optional_order -> empty','optional_order',1,'p_optional_order_empty','parser.py',92),
+  ('order_by_expr -> ID','order_by_expr',1,'p_order_by_expr_id','parser.py',96),
+  ('order_by_expr -> COUNT LPAREN STAR RPAREN','order_by_expr',4,'p_order_by_expr_aggregate','parser.py',100),
+  ('order_by_expr -> aggregate_func LPAREN ID RPAREN','order_by_expr',4,'p_order_by_expr_aggregate_column','parser.py',104),
+  ('aggregate_func -> SUM','aggregate_func',1,'p_aggregate_func','parser.py',108),
+  ('aggregate_func -> AVG','aggregate_func',1,'p_aggregate_func','parser.py',109),
+  ('aggregate_func -> MIN','aggregate_func',1,'p_aggregate_func','parser.py',110),
+  ('aggregate_func -> MAX','aggregate_func',1,'p_aggregate_func','parser.py',111),
+  ('optional_limit -> LIMIT NUMBER','optional_limit',2,'p_optional_limit','parser.py',115),
+  ('optional_limit -> empty','optional_limit',1,'p_optional_limit_empty','parser.py',119),
+  ('empty -> <empty>','empty',0,'p_empty','parser.py',123),
+  ('optional_distinct -> DISTINCT','optional_distinct',1,'p_optional_distinct','parser.py',127),
+  ('optional_distinct -> empty','optional_distinct',1,'p_optional_distinct_empty','parser.py',131),
+  ('select_list -> STAR','select_list',1,'p_select_list_star','parser.py',135),
+  ('select_list -> column_list','select_list',1,'p_select_list_column_list','parser.py',139),
+  ('column_list -> column_item','column_list',1,'p_column_list_single','parser.py',143),
+  ('column_list -> column_list COMMA column_item','column_list',3,'p_column_list_multiple','parser.py',147),
+  ('column_item -> ID','column_item',1,'p_column_item_id','parser.py',151),
+  ('column_item -> COUNT LPAREN STAR RPAREN','column_item',4,'p_column_item_count','parser.py',155),
+  ('column_item -> SUM LPAREN ID RPAREN','column_item',4,'p_column_item_sum','parser.py',159),
+  ('column_item -> AVG LPAREN ID RPAREN','column_item',4,'p_column_item_avg','parser.py',163),
+  ('column_item -> MIN LPAREN ID RPAREN','column_item',4,'p_column_item_min','parser.py',167),
+  ('column_item -> MAX LPAREN ID RPAREN','column_item',4,'p_column_item_max','parser.py',171),
+  ('condition -> or_condition','condition',1,'p_condition','parser.py',175),
+  ('or_condition -> and_condition','or_condition',1,'p_or_condition','parser.py',179),
+  ('or_condition -> or_condition OR and_condition','or_condition',3,'p_or_condition','parser.py',180),
+  ('and_condition -> not_condition','and_condition',1,'p_and_condition','parser.py',187),
+  ('and_condition -> and_condition AND not_condition','and_condition',3,'p_and_condition','parser.py',188),
+  ('not_condition -> simple_condition','not_condition',1,'p_not_condition','parser.py',195),
+  ('not_condition -> NOT simple_condition','not_condition',2,'p_not_condition','parser.py',196),
+  ('simple_condition -> ID comparator value','simple_condition',3,'p_simple_condition','parser.py',203),
+  ('comparator -> EQUAL','comparator',1,'p_comparator','parser.py',207),
+  ('comparator -> GT','comparator',1,'p_comparator','parser.py',208),
+  ('comparator -> LT','comparator',1,'p_comparator','parser.py',209),
+  ('comparator -> GE','comparator',1,'p_comparator','parser.py',210),
+  ('comparator -> LE','comparator',1,'p_comparator','parser.py',211),
+  ('value -> NUMBER','value',1,'p_value_number','parser.py',215),
+  ('value -> STRING','value',1,'p_value_string','parser.py',219),
 ]

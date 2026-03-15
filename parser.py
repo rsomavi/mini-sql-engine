@@ -33,39 +33,40 @@ class SQLParser:
         p[0] = p[1]
     
     def p_select_stmt(self, p):
-        'select_stmt : SELECT optional_distinct select_list FROM ID optional_where optional_order optional_limit'
-        # SELECT [DISTINCT] columns FROM table [WHERE condition] [ORDER BY column] [LIMIT number];
-        # p[1]=SELECT, p[2]=optional_distinct, p[3]=select_list, p[4]=FROM, p[5]=ID, p[6]=optional_where, p[7]=optional_order, p[8]=optional_limit
+        'select_stmt : SELECT optional_distinct select_list FROM ID optional_where optional_group optional_order optional_limit'
+        # SELECT [DISTINCT] columns FROM table [WHERE condition] [GROUP BY column] [ORDER BY column] [LIMIT number];
+        # p[1]=SELECT, p[2]=optional_distinct, p[3]=select_list, p[4]=FROM, p[5]=ID, p[6]=optional_where, p[7]=optional_group, p[8]=optional_order, p[9]=optional_limit
         where_clause = p[6] if p[6] else None
-        order_clause = p[7] if p[7] else None
-        limit_clause = p[8] if p[8] else None
+        group_clause = p[7] if p[7] else None
+        order_clause = p[8] if p[8] else None
+        limit_clause = p[9] if p[9] else None
         distinct_flag = p[2] if p[2] else False
-        p[0] = SelectQuery(columns=p[3], table=p[5], where=where_clause, order_by=order_clause, limit=limit_clause, distinct=distinct_flag)
+        p[0] = SelectQuery(columns=p[3], table=p[5], where=where_clause, order_by=order_clause, limit=limit_clause, distinct=distinct_flag, group_by=group_clause)
     
     def p_select_stmt_count(self, p):
-        'select_stmt : SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where'
-        # SELECT COUNT(*) FROM table [WHERE condition];
-        p[0] = CountQuery(table=p[7], where=p[8] if p[8] else None)
+        'select_stmt : SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where optional_group'
+        # SELECT COUNT(*) FROM table [WHERE condition] [GROUP BY column];
+        p[0] = CountQuery(table=p[7], where=p[8] if p[8] else None, group_by=p[9] if p[9] else None)
     
     def p_select_stmt_sum(self, p):
-        'select_stmt : SELECT SUM LPAREN ID RPAREN FROM ID optional_where'
-        # SELECT SUM(column) FROM table [WHERE condition];
-        p[0] = SumQuery(column=p[4], table=p[7], where=p[8] if p[8] else None)
+        'select_stmt : SELECT SUM LPAREN ID RPAREN FROM ID optional_where optional_group'
+        # SELECT SUM(column) FROM table [WHERE condition] [GROUP BY column];
+        p[0] = SumQuery(column=p[4], table=p[7], where=p[8] if p[8] else None, group_by=p[9] if p[9] else None)
     
     def p_select_stmt_avg(self, p):
-        'select_stmt : SELECT AVG LPAREN ID RPAREN FROM ID optional_where'
-        # SELECT AVG(column) FROM table [WHERE condition];
-        p[0] = AvgQuery(column=p[4], table=p[7], where=p[8] if p[8] else None)
+        'select_stmt : SELECT AVG LPAREN ID RPAREN FROM ID optional_where optional_group'
+        # SELECT AVG(column) FROM table [WHERE condition] [GROUP BY column];
+        p[0] = AvgQuery(column=p[4], table=p[7], where=p[8] if p[8] else None, group_by=p[9] if p[9] else None)
     
     def p_select_stmt_min(self, p):
-        'select_stmt : SELECT MIN LPAREN ID RPAREN FROM ID optional_where'
-        # SELECT MIN(column) FROM table [WHERE condition];
-        p[0] = MinQuery(column=p[4], table=p[7], where=p[8] if p[8] else None)
+        'select_stmt : SELECT MIN LPAREN ID RPAREN FROM ID optional_where optional_group'
+        # SELECT MIN(column) FROM table [WHERE condition] [GROUP BY column];
+        p[0] = MinQuery(column=p[4], table=p[7], where=p[8] if p[8] else None, group_by=p[9] if p[9] else None)
     
     def p_select_stmt_max(self, p):
-        'select_stmt : SELECT MAX LPAREN ID RPAREN FROM ID optional_where'
-        # SELECT MAX(column) FROM table [WHERE condition];
-        p[0] = MaxQuery(column=p[4], table=p[7], where=p[8] if p[8] else None)
+        'select_stmt : SELECT MAX LPAREN ID RPAREN FROM ID optional_where optional_group'
+        # SELECT MAX(column) FROM table [WHERE condition] [GROUP BY column];
+        p[0] = MaxQuery(column=p[4], table=p[7], where=p[8] if p[8] else None, group_by=p[9] if p[9] else None)
     
     def p_optional_where(self, p):
         'optional_where : WHERE condition'
@@ -75,13 +76,40 @@ class SQLParser:
         'optional_where : empty'
         p[0] = None
     
+    def p_optional_group(self, p):
+        'optional_group : GROUP BY ID'
+        p[0] = p[3]
+    
+    def p_optional_group_empty(self, p):
+        'optional_group : empty'
+        p[0] = None
+    
     def p_optional_order(self, p):
-        'optional_order : ORDER BY ID'
+        'optional_order : ORDER BY order_by_expr'
         p[0] = p[3]
     
     def p_optional_order_empty(self, p):
         'optional_order : empty'
         p[0] = None
+    
+    def p_order_by_expr_id(self, p):
+        'order_by_expr : ID'
+        p[0] = p[1]
+    
+    def p_order_by_expr_aggregate(self, p):
+        'order_by_expr : COUNT LPAREN STAR RPAREN'
+        p[0] = {'type': 'aggregate', 'func': 'count'}
+    
+    def p_order_by_expr_aggregate_column(self, p):
+        'order_by_expr : aggregate_func LPAREN ID RPAREN'
+        p[0] = {'type': 'aggregate', 'func': p[1], 'column': p[3]}
+    
+    def p_aggregate_func(self, p):
+        '''aggregate_func : SUM
+                          | AVG
+                          | MIN
+                          | MAX'''
+        p[0] = p[1]
     
     def p_optional_limit(self, p):
         'optional_limit : LIMIT NUMBER'
@@ -112,12 +140,36 @@ class SQLParser:
         p[0] = p[1]
     
     def p_column_list_single(self, p):
-        'column_list : ID'
+        'column_list : column_item'
         p[0] = [p[1]]
     
     def p_column_list_multiple(self, p):
-        'column_list : column_list COMMA ID'
+        'column_list : column_list COMMA column_item'
         p[0] = p[1] + [p[3]]
+    
+    def p_column_item_id(self, p):
+        'column_item : ID'
+        p[0] = {'type': 'column', 'name': p[1]}
+    
+    def p_column_item_count(self, p):
+        'column_item : COUNT LPAREN STAR RPAREN'
+        p[0] = {'type': 'aggregate', 'func': 'count'}
+    
+    def p_column_item_sum(self, p):
+        'column_item : SUM LPAREN ID RPAREN'
+        p[0] = {'type': 'aggregate', 'func': 'sum', 'column': p[3]}
+    
+    def p_column_item_avg(self, p):
+        'column_item : AVG LPAREN ID RPAREN'
+        p[0] = {'type': 'aggregate', 'func': 'avg', 'column': p[3]}
+    
+    def p_column_item_min(self, p):
+        'column_item : MIN LPAREN ID RPAREN'
+        p[0] = {'type': 'aggregate', 'func': 'min', 'column': p[3]}
+    
+    def p_column_item_max(self, p):
+        'column_item : MAX LPAREN ID RPAREN'
+        p[0] = {'type': 'aggregate', 'func': 'max', 'column': p[3]}
     
     def p_condition(self, p):
         '''condition : or_condition'''

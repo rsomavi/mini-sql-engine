@@ -4,6 +4,12 @@ Test suite for the SQL engine.
 Verifies all functionality works correctly after refactoring.
 """
 
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from parser import get_parser
 from planner import QueryPlanner
 from executor import QueryExecutor

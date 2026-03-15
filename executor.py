@@ -124,12 +124,119 @@ class QueryExecutor:
         # Load and filter rows
         rows = self._get_filtered_rows(plan.table, plan.where)
         
-        # Apply transformations in order
-        rows = self._apply_distinct(rows, plan)
-        rows = self._apply_order_by(rows, plan)
-        rows = self._apply_limit(rows, plan)
+        # Apply GROUP BY if specified
+        if plan.group_by:
+            rows = self._apply_group_by(rows, plan)
+        else:
+            # Apply transformations in order for non-GROUP BY queries
+            rows = self._apply_distinct(rows, plan)
+            rows = self._apply_order_by(rows, plan)
+            rows = self._apply_limit(rows, plan)
         
         return self._apply_projection(rows, plan)
+    
+    def _apply_group_by(self, rows, plan: SelectPlan):
+        """
+        Apply GROUP BY to rows and compute aggregates.
+        
+        Args:
+            rows: List of filtered rows
+            plan: SelectPlan object
+            
+        Returns:
+            List of aggregated rows
+        """
+        group_by = plan.group_by
+        
+        # Validate GROUP BY column exists
+        if rows and group_by not in rows[0]:
+            raise ValueError(f"Column '{group_by}' not found in table '{plan.table}'")
+        
+        # =========================================================================
+        # SQL STANDARD VALIDATION: GROUP BY columns must be in SELECT or aggregated
+        # =========================================================================
+        # In SQL, every column in SELECT must either:
+        # 1. Be in the GROUP BY clause, OR
+        # 2. Be inside an aggregate function (COUNT, SUM, AVG, MIN, MAX)
+        # =========================================================================
+        
+        columns = plan.columns
+        group_by_columns = {group_by} if isinstance(group_by, str) else set(group_by)
+        
+        if isinstance(columns, list):
+            for col in columns:
+                # Get column name (handle both string and dict formats)
+                if isinstance(col, dict):
+                    if col.get('type') == 'aggregate':
+                        # Validate aggregate column exists
+                        agg_col = col.get('column')
+                        if agg_col and rows and agg_col not in rows[0]:
+                            raise ValueError(f"Column '{agg_col}' not found in table '{plan.table}'")
+                        continue
+                    col_name = col.get('name', col.get('column'))
+                else:
+                    col_name = col
+                
+                # Check if column is in GROUP BY
+                if col_name not in group_by_columns:
+                    raise ValueError(
+                        f"Column '{col_name}' must be in GROUP BY or be aggregated. "
+                        f"GROUP BY columns: {group_by_columns}"
+                    )
+        
+        # Group rows by the group_by column
+        groups = {}
+        for row in rows:
+            key = row[group_by]
+            if key not in groups:
+                groups[key] = []
+            groups[key].append(row)
+        
+        # Compute aggregates for each group
+        results = []
+        columns = plan.columns
+        
+        # Extract aggregate info from plan
+        sum_col = getattr(plan, 'sum_column', None)
+        avg_col = getattr(plan, 'avg_column', None)
+        min_col = getattr(plan, 'min_column', None)
+        max_col = getattr(plan, 'max_column', None)
+        
+        for key, rows_in_group in groups.items():
+            result_row = {group_by: key}
+            
+            # Handle each column - check if it's an aggregate function
+            if isinstance(columns, list):
+                for col in columns:
+                    if isinstance(col, dict) and col.get('type') == 'aggregate':
+                        func = col.get('func')
+                        col_name = col.get('column')
+                        
+                        if func == 'count':
+                            result_row['count'] = len(rows_in_group)
+                        elif func == 'sum' and col_name:
+                            total = sum(row.get(col_name, 0) for row in rows_in_group)
+                            result_row['sum'] = total
+                        elif func == 'avg' and col_name:
+                            values = [row.get(col_name, 0) for row in rows_in_group]
+                            result_row['avg'] = sum(values) / len(values) if values else 0
+                        elif func == 'min' and col_name:
+                            values = [row.get(col_name) for row in rows_in_group if col_name in row]
+                            result_row['min'] = min(values) if values else None
+                        elif func == 'max' and col_name:
+                            values = [row.get(col_name) for row in rows_in_group if col_name in row]
+                            result_row['max'] = max(values) if values else None
+                    elif isinstance(col, str):
+                        # Regular column - for GROUP BY, take the first value
+                        result_row[col] = rows_in_group[0].get(col)
+            
+            results.append(result_row)
+        
+        # Apply ORDER BY and LIMIT after grouping
+        results = self._apply_order_by(results, plan)
+        results = self._apply_limit(results, plan)
+        
+        return results
     
     def _apply_distinct(self, rows, plan: SelectPlan):
         """Apply DISTINCT to rows if specified."""
@@ -141,11 +248,19 @@ class QueryExecutor:
         seen = set()
         unique_rows = []
         for row in rows:
-            # Create key from all column values
+            # Create key from all column values (convert to strings for hashability)
             if columns == '*':
-                key = tuple(sorted(row.items()))
+                key = tuple((k, str(v)) for k, v in sorted(row.items()))
             else:
-                key = tuple(row.get(col) for col in columns)
+                # Handle both string columns and dict columns
+                key_values = []
+                for col in columns:
+                    if isinstance(col, dict):
+                        col_name = col.get('name', col.get('column'))
+                    else:
+                        col_name = col
+                    key_values.append(str(row.get(col_name)))
+                key = tuple(key_values)
             if key not in seen:
                 seen.add(key)
                 unique_rows.append(row)
@@ -156,6 +271,28 @@ class QueryExecutor:
         order_by = plan.order_by
         if order_by is None:
             return rows
+        
+        # Handle ORDER BY with aggregate (e.g., ORDER BY COUNT(*))
+        if isinstance(order_by, dict) and order_by.get('type') == 'aggregate':
+            func = order_by.get('func')
+            col_name = order_by.get('column')  # May be None for COUNT(*)
+            
+            # Compute aggregate for each row
+            def get_aggregate_value(row):
+                if func == 'count':
+                    return row.get('count', 0)
+                elif func == 'sum':
+                    return row.get('sum', 0)
+                elif func == 'avg':
+                    return row.get('avg', 0)
+                elif func == 'min':
+                    return row.get('min', 0)
+                elif func == 'max':
+                    return row.get('max', 0)
+                else:
+                    raise ValueError(f"Unknown aggregate function: {func}")
+            
+            return sorted(rows, key=get_aggregate_value)
         
         # Validate ORDER BY column exists
         if rows:
@@ -173,6 +310,10 @@ class QueryExecutor:
     
     def _apply_projection(self, rows, plan: SelectPlan):
         """Apply column projection (SELECT columns)."""
+        # If GROUP BY was used, rows already have the correct structure
+        if plan.group_by:
+            return rows
+        
         columns = plan.columns
         table_name = plan.table
         
@@ -181,10 +322,17 @@ class QueryExecutor:
             return [row.copy() for row in rows]
         
         # Extract the requested columns from each row
+        # Handle both string columns and dict columns (from parser)
         results = []
         for row in rows:
             result_row = {}
-            for column_name in columns:
+            for col in columns:
+                # Handle dict format from parser: {'type': 'column', 'name': 'name'}
+                if isinstance(col, dict):
+                    column_name = col.get('name', col.get('column'))
+                else:
+                    column_name = col
+                    
                 if column_name not in row:
                     raise ValueError(f"Column '{column_name}' not found in table '{table_name}'")
                 result_row[column_name] = row[column_name]
@@ -204,10 +352,38 @@ class QueryExecutor:
             plan: CountPlan object
             
         Returns:
-            Integer count of rows
+            Integer count of rows, or list of counts if GROUP BY
         """
         rows = self._get_filtered_rows(plan.table, plan.where)
+        
+        # Handle GROUP BY
+        if plan.group_by:
+            return self._execute_count_with_group_by(rows, plan)
+        
         return len(rows)
+    
+    def _execute_count_with_group_by(self, rows, plan: CountPlan):
+        """Execute COUNT(*) with GROUP BY."""
+        group_by = plan.group_by
+        
+        # Validate GROUP BY column exists
+        if rows and group_by not in rows[0]:
+            raise ValueError(f"Column '{group_by}' not found in table '{plan.table}'")
+        
+        # Group rows
+        groups = {}
+        for row in rows:
+            key = row[group_by]
+            if key not in groups:
+                groups[key] = []
+            groups[key].append(row)
+        
+        # Return counts per group
+        results = []
+        for key, rows_in_group in groups.items():
+            results.append({group_by: key, 'count': len(rows_in_group)})
+        
+        return results
     
     def _execute_sum(self, plan: SumPlan):
         """
@@ -217,17 +393,47 @@ class QueryExecutor:
             plan: SumPlan object
             
         Returns:
-            Sum of column values
+            Sum of column values, or list of sums if GROUP BY
         """
         rows = self._get_filtered_rows(plan.table, plan.where)
         
+        # Validate column exists
+        if rows and plan.column not in rows[0]:
+            raise ValueError(f"Column '{plan.column}' not found in table '{plan.table}'")
+        
+        # Handle GROUP BY
+        if plan.group_by:
+            return self._execute_sum_with_group_by(rows, plan)
+        
         total = 0
         for row in rows:
-            if plan.column not in row:
-                raise ValueError(f"Column '{plan.column}' not found in table '{plan.table}'")
             total += row[plan.column]
         
         return total
+    
+    def _execute_sum_with_group_by(self, rows, plan: SumPlan):
+        """Execute SUM(column) with GROUP BY."""
+        group_by = plan.group_by
+        
+        # Validate GROUP BY column exists
+        if rows and group_by not in rows[0]:
+            raise ValueError(f"Column '{group_by}' not found in table '{plan.table}'")
+        
+        # Group rows
+        groups = {}
+        for row in rows:
+            key = row[group_by]
+            if key not in groups:
+                groups[key] = []
+            groups[key].append(row)
+        
+        # Return sums per group
+        results = []
+        for key, rows_in_group in groups.items():
+            total = sum(row[plan.column] for row in rows_in_group)
+            results.append({group_by: key, 'sum': total})
+        
+        return results
     
     def _execute_avg(self, plan: AvgPlan):
         """
@@ -237,20 +443,44 @@ class QueryExecutor:
             plan: AvgPlan object
             
         Returns:
-            Average of column values
+            Average of column values, or list of averages if GROUP BY
         """
         rows = self._get_filtered_rows(plan.table, plan.where)
+        
+        # Validate column exists
+        if rows and plan.column not in rows[0]:
+            raise ValueError(f"Column '{plan.column}' not found in table '{plan.table}'")
+        
+        # Handle GROUP BY
+        if plan.group_by:
+            return self._execute_avg_with_group_by(rows, plan)
         
         if not rows:
             return 0
         
-        total = 0
-        for row in rows:
-            if plan.column not in row:
-                raise ValueError(f"Column '{plan.column}' not found in table '{plan.table}'")
-            total += row[plan.column]
-        
+        total = sum(row[plan.column] for row in rows)
         return total / len(rows)
+    
+    def _execute_avg_with_group_by(self, rows, plan: AvgPlan):
+        """Execute AVG(column) with GROUP BY."""
+        group_by = plan.group_by
+        
+        # Group rows
+        groups = {}
+        for row in rows:
+            key = row[group_by]
+            if key not in groups:
+                groups[key] = []
+            groups[key].append(row)
+        
+        # Return averages per group
+        results = []
+        for key, rows_in_group in groups.items():
+            total = sum(row[plan.column] for row in rows_in_group)
+            avg = total / len(rows_in_group) if rows_in_group else 0
+            results.append({group_by: key, 'avg': avg})
+        
+        return results
     
     def _execute_min(self, plan: MinPlan):
         """
@@ -260,22 +490,43 @@ class QueryExecutor:
             plan: MinPlan object
             
         Returns:
-            Minimum value of column
+            Minimum value of column, or list of minimums if GROUP BY
         """
         rows = self._get_filtered_rows(plan.table, plan.where)
+        
+        # Validate column exists
+        if rows and plan.column not in rows[0]:
+            raise ValueError(f"Column '{plan.column}' not found in table '{plan.table}'")
+        
+        # Handle GROUP BY
+        if plan.group_by:
+            return self._execute_min_with_group_by(rows, plan)
         
         if not rows:
             return 0
         
-        min_value = None
-        for row in rows:
-            if plan.column not in row:
-                raise ValueError(f"Column '{plan.column}' not found in table '{plan.table}'")
-            value = row[plan.column]
-            if min_value is None or value < min_value:
-                min_value = value
-        
+        min_value = min(row[plan.column] for row in rows)
         return min_value
+    
+    def _execute_min_with_group_by(self, rows, plan: MinPlan):
+        """Execute MIN(column) with GROUP BY."""
+        group_by = plan.group_by
+        
+        # Group rows
+        groups = {}
+        for row in rows:
+            key = row[group_by]
+            if key not in groups:
+                groups[key] = []
+            groups[key].append(row)
+        
+        # Return minimums per group
+        results = []
+        for key, rows_in_group in groups.items():
+            min_val = min(row[plan.column] for row in rows_in_group)
+            results.append({group_by: key, 'min': min_val})
+        
+        return results
     
     def _execute_max(self, plan: MaxPlan):
         """
@@ -285,19 +536,40 @@ class QueryExecutor:
             plan: MaxPlan object
             
         Returns:
-            Maximum value of column
+            Maximum value of column, or list of maximums if GROUP BY
         """
         rows = self._get_filtered_rows(plan.table, plan.where)
+        
+        # Validate column exists
+        if rows and plan.column not in rows[0]:
+            raise ValueError(f"Column '{plan.column}' not found in table '{plan.table}'")
+        
+        # Handle GROUP BY
+        if plan.group_by:
+            return self._execute_max_with_group_by(rows, plan)
         
         if not rows:
             return 0
         
-        max_value = None
-        for row in rows:
-            if plan.column not in row:
-                raise ValueError(f"Column '{plan.column}' not found in table '{plan.table}'")
-            value = row[plan.column]
-            if max_value is None or value > max_value:
-                max_value = value
-        
+        max_value = max(row[plan.column] for row in rows)
         return max_value
+    
+    def _execute_max_with_group_by(self, rows, plan: MaxPlan):
+        """Execute MAX(column) with GROUP BY."""
+        group_by = plan.group_by
+        
+        # Group rows
+        groups = {}
+        for row in rows:
+            key = row[group_by]
+            if key not in groups:
+                groups[key] = []
+            groups[key].append(row)
+        
+        # Return maximums per group
+        results = []
+        for key, rows_in_group in groups.items():
+            max_val = max(row[plan.column] for row in rows_in_group)
+            results.append({group_by: key, 'max': max_val})
+        
+        return results
