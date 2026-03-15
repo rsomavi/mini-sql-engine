@@ -46,27 +46,27 @@ class SQLParser:
     
     def p_select_stmt_count(self, p):
         'select_stmt : SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where optional_group'
-        # SELECT COUNT(*) FROM table [WHERE condition] [GROUP BY column];
+        # SELECT COUNT(*) FROM table [WHERE condition] [GROUP BY column1, column2];
         p[0] = CountQuery(table=p[7], where=p[8] if p[8] else None, group_by=p[9] if p[9] else None)
     
     def p_select_stmt_sum(self, p):
         'select_stmt : SELECT SUM LPAREN ID RPAREN FROM ID optional_where optional_group'
-        # SELECT SUM(column) FROM table [WHERE condition] [GROUP BY column];
+        # SELECT SUM(column) FROM table [WHERE condition] [GROUP BY column1, column2];
         p[0] = SumQuery(column=p[4], table=p[7], where=p[8] if p[8] else None, group_by=p[9] if p[9] else None)
     
     def p_select_stmt_avg(self, p):
         'select_stmt : SELECT AVG LPAREN ID RPAREN FROM ID optional_where optional_group'
-        # SELECT AVG(column) FROM table [WHERE condition] [GROUP BY column];
+        # SELECT AVG(column) FROM table [WHERE condition] [GROUP BY column1, column2];
         p[0] = AvgQuery(column=p[4], table=p[7], where=p[8] if p[8] else None, group_by=p[9] if p[9] else None)
     
     def p_select_stmt_min(self, p):
         'select_stmt : SELECT MIN LPAREN ID RPAREN FROM ID optional_where optional_group'
-        # SELECT MIN(column) FROM table [WHERE condition] [GROUP BY column];
+        # SELECT MIN(column) FROM table [WHERE condition] [GROUP BY column1, column2];
         p[0] = MinQuery(column=p[4], table=p[7], where=p[8] if p[8] else None, group_by=p[9] if p[9] else None)
     
     def p_select_stmt_max(self, p):
         'select_stmt : SELECT MAX LPAREN ID RPAREN FROM ID optional_where optional_group'
-        # SELECT MAX(column) FROM table [WHERE condition] [GROUP BY column];
+        # SELECT MAX(column) FROM table [WHERE condition] [GROUP BY column1, column2];
         p[0] = MaxQuery(column=p[4], table=p[7], where=p[8] if p[8] else None, group_by=p[9] if p[9] else None)
     
     def p_optional_where(self, p):
@@ -78,12 +78,20 @@ class SQLParser:
         p[0] = None
     
     def p_optional_group(self, p):
-        'optional_group : GROUP BY ID'
+        'optional_group : GROUP BY group_by_list'
         p[0] = p[3]
     
     def p_optional_group_empty(self, p):
         'optional_group : empty'
         p[0] = None
+    
+    def p_group_by_list_single(self, p):
+        'group_by_list : ID'
+        p[0] = [p[1]]
+    
+    def p_group_by_list_multiple(self, p):
+        'group_by_list : group_by_list COMMA ID'
+        p[0] = p[1] + [p[3]]
     
     def p_optional_having(self, p):
         'optional_having : HAVING having_condition'

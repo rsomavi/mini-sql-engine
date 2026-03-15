@@ -148,9 +148,17 @@ class QueryExecutor:
         """
         group_by = plan.group_by
         
-        # Validate GROUP BY column exists
-        if rows and group_by not in rows[0]:
-            raise ValueError(f"Column '{group_by}' not found in table '{plan.table}'")
+        # Normalize group_by to always be a list (supports both single column and multiple)
+        if isinstance(group_by, str):
+            group_by_columns = [group_by]
+        else:
+            group_by_columns = list(group_by)
+        
+        # Validate GROUP BY columns exist
+        if rows:
+            for col in group_by_columns:
+                if col not in rows[0]:
+                    raise ValueError(f"Column '{col}' not found in table '{plan.table}'")
         
         # =========================================================================
         # SQL STANDARD VALIDATION: GROUP BY columns must be in SELECT or aggregated
@@ -161,7 +169,7 @@ class QueryExecutor:
         # =========================================================================
         
         columns = plan.columns
-        group_by_columns = {group_by} if isinstance(group_by, str) else set(group_by)
+        group_by_columns_set = set(group_by_columns)
         
         if isinstance(columns, list):
             for col in columns:
@@ -178,16 +186,17 @@ class QueryExecutor:
                     col_name = col
                 
                 # Check if column is in GROUP BY
-                if col_name not in group_by_columns:
+                if col_name not in group_by_columns_set:
                     raise ValueError(
                         f"Column '{col_name}' must be in GROUP BY or be aggregated. "
-                        f"GROUP BY columns: {group_by_columns}"
+                        f"GROUP BY columns: {group_by_columns_set}"
                     )
         
-        # Group rows by the group_by column
+        # Group rows by the group_by columns (using tuple key for multiple columns)
         groups = {}
         for row in rows:
-            key = row[group_by]
+            # Create tuple key from multiple columns: key = (row["city"], row["age"])
+            key = tuple(row[col] for col in group_by_columns)
             if key not in groups:
                 groups[key] = []
             groups[key].append(row)
@@ -203,7 +212,14 @@ class QueryExecutor:
         max_col = getattr(plan, 'max_column', None)
         
         for key, rows_in_group in groups.items():
-            result_row = {group_by: key}
+            # Build result row with all group by columns
+            if len(group_by_columns) == 1:
+                result_row = {group_by_columns[0]: key[0] if isinstance(key, tuple) else key}
+            else:
+                # Multiple columns: key is a tuple
+                result_row = {}
+                for i, col in enumerate(group_by_columns):
+                    result_row[col] = key[i]
             
             # Handle each column - check if it's an aggregate function
             if isinstance(columns, list):
@@ -424,17 +440,25 @@ class QueryExecutor:
         return len(rows)
     
     def _execute_count_with_group_by(self, rows, plan: CountPlan):
-        """Execute COUNT(*) with GROUP BY."""
+        """Execute COUNT(*) with GROUP BY (supports multiple columns)."""
         group_by = plan.group_by
         
-        # Validate GROUP BY column exists
-        if rows and group_by not in rows[0]:
-            raise ValueError(f"Column '{group_by}' not found in table '{plan.table}'")
+        # Normalize to list
+        if isinstance(group_by, str):
+            group_by_columns = [group_by]
+        else:
+            group_by_columns = list(group_by)
         
-        # Group rows
+        # Validate GROUP BY columns exist
+        if rows:
+            for col in group_by_columns:
+                if col not in rows[0]:
+                    raise ValueError(f"Column '{col}' not found in table '{plan.table}'")
+        
+        # Group rows using tuple key
         groups = {}
         for row in rows:
-            key = row[group_by]
+            key = tuple(row[col] for col in group_by_columns)
             if key not in groups:
                 groups[key] = []
             groups[key].append(row)
@@ -442,7 +466,14 @@ class QueryExecutor:
         # Return counts per group
         results = []
         for key, rows_in_group in groups.items():
-            results.append({group_by: key, 'count': len(rows_in_group)})
+            if len(group_by_columns) == 1:
+                results.append({group_by_columns[0]: key[0] if isinstance(key, tuple) else key, 'count': len(rows_in_group)})
+            else:
+                result_row = {}
+                for i, col in enumerate(group_by_columns):
+                    result_row[col] = key[i]
+                result_row['count'] = len(rows_in_group)
+                results.append(result_row)
         
         return results
     
@@ -473,17 +504,25 @@ class QueryExecutor:
         return total
     
     def _execute_sum_with_group_by(self, rows, plan: SumPlan):
-        """Execute SUM(column) with GROUP BY."""
+        """Execute SUM(column) with GROUP BY (supports multiple columns)."""
         group_by = plan.group_by
         
-        # Validate GROUP BY column exists
-        if rows and group_by not in rows[0]:
-            raise ValueError(f"Column '{group_by}' not found in table '{plan.table}'")
+        # Normalize to list
+        if isinstance(group_by, str):
+            group_by_columns = [group_by]
+        else:
+            group_by_columns = list(group_by)
         
-        # Group rows
+        # Validate GROUP BY columns exist
+        if rows:
+            for col in group_by_columns:
+                if col not in rows[0]:
+                    raise ValueError(f"Column '{col}' not found in table '{plan.table}'")
+        
+        # Group rows using tuple key
         groups = {}
         for row in rows:
-            key = row[group_by]
+            key = tuple(row[col] for col in group_by_columns)
             if key not in groups:
                 groups[key] = []
             groups[key].append(row)
@@ -491,8 +530,14 @@ class QueryExecutor:
         # Return sums per group
         results = []
         for key, rows_in_group in groups.items():
-            total = sum(row[plan.column] for row in rows_in_group)
-            results.append({group_by: key, 'sum': total})
+            if len(group_by_columns) == 1:
+                results.append({group_by_columns[0]: key[0] if isinstance(key, tuple) else key, 'sum': sum(row[plan.column] for row in rows_in_group)})
+            else:
+                result_row = {}
+                for i, col in enumerate(group_by_columns):
+                    result_row[col] = key[i]
+                result_row['sum'] = sum(row[plan.column] for row in rows_in_group)
+                results.append(result_row)
         
         return results
     
@@ -523,13 +568,19 @@ class QueryExecutor:
         return total / len(rows)
     
     def _execute_avg_with_group_by(self, rows, plan: AvgPlan):
-        """Execute AVG(column) with GROUP BY."""
+        """Execute AVG(column) with GROUP BY (supports multiple columns)."""
         group_by = plan.group_by
         
-        # Group rows
+        # Normalize to list
+        if isinstance(group_by, str):
+            group_by_columns = [group_by]
+        else:
+            group_by_columns = list(group_by)
+        
+        # Group rows using tuple key
         groups = {}
         for row in rows:
-            key = row[group_by]
+            key = tuple(row[col] for col in group_by_columns)
             if key not in groups:
                 groups[key] = []
             groups[key].append(row)
@@ -539,7 +590,14 @@ class QueryExecutor:
         for key, rows_in_group in groups.items():
             total = sum(row[plan.column] for row in rows_in_group)
             avg = total / len(rows_in_group) if rows_in_group else 0
-            results.append({group_by: key, 'avg': avg})
+            if len(group_by_columns) == 1:
+                results.append({group_by_columns[0]: key[0] if isinstance(key, tuple) else key, 'avg': avg})
+            else:
+                result_row = {}
+                for i, col in enumerate(group_by_columns):
+                    result_row[col] = key[i]
+                result_row['avg'] = avg
+                results.append(result_row)
         
         return results
     
@@ -570,13 +628,19 @@ class QueryExecutor:
         return min_value
     
     def _execute_min_with_group_by(self, rows, plan: MinPlan):
-        """Execute MIN(column) with GROUP BY."""
+        """Execute MIN(column) with GROUP BY (supports multiple columns)."""
         group_by = plan.group_by
         
-        # Group rows
+        # Normalize to list
+        if isinstance(group_by, str):
+            group_by_columns = [group_by]
+        else:
+            group_by_columns = list(group_by)
+        
+        # Group rows using tuple key
         groups = {}
         for row in rows:
-            key = row[group_by]
+            key = tuple(row[col] for col in group_by_columns)
             if key not in groups:
                 groups[key] = []
             groups[key].append(row)
@@ -585,7 +649,14 @@ class QueryExecutor:
         results = []
         for key, rows_in_group in groups.items():
             min_val = min(row[plan.column] for row in rows_in_group)
-            results.append({group_by: key, 'min': min_val})
+            if len(group_by_columns) == 1:
+                results.append({group_by_columns[0]: key[0] if isinstance(key, tuple) else key, 'min': min_val})
+            else:
+                result_row = {}
+                for i, col in enumerate(group_by_columns):
+                    result_row[col] = key[i]
+                result_row['min'] = min_val
+                results.append(result_row)
         
         return results
     
@@ -616,13 +687,19 @@ class QueryExecutor:
         return max_value
     
     def _execute_max_with_group_by(self, rows, plan: MaxPlan):
-        """Execute MAX(column) with GROUP BY."""
+        """Execute MAX(column) with GROUP BY (supports multiple columns)."""
         group_by = plan.group_by
         
-        # Group rows
+        # Normalize to list
+        if isinstance(group_by, str):
+            group_by_columns = [group_by]
+        else:
+            group_by_columns = list(group_by)
+        
+        # Group rows using tuple key
         groups = {}
         for row in rows:
-            key = row[group_by]
+            key = tuple(row[col] for col in group_by_columns)
             if key not in groups:
                 groups[key] = []
             groups[key].append(row)
@@ -631,6 +708,13 @@ class QueryExecutor:
         results = []
         for key, rows_in_group in groups.items():
             max_val = max(row[plan.column] for row in rows_in_group)
-            results.append({group_by: key, 'max': max_val})
+            if len(group_by_columns) == 1:
+                results.append({group_by_columns[0]: key[0] if isinstance(key, tuple) else key, 'max': max_val})
+            else:
+                result_row = {}
+                for i, col in enumerate(group_by_columns):
+                    result_row[col] = key[i]
+                result_row['max'] = max_val
+                results.append(result_row)
         
         return results
