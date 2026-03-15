@@ -84,19 +84,21 @@ SELECT city, COUNT(*) FROM users GROUP BY city HAVING COUNT(*) > 2 ORDER BY COUN
 ### Aggregate Functions
 
 ```sql
-SELECT department, AVG(salary) AS avg_salary, MIN(salary) AS min_salary, MAX(salary) AS max_salary, COUNT(*) AS employee_count FROM employees GROUP BY department HAVING AVG(salary) > 50000 ORDER BY avg_salary DESC
+SELECT city, COUNT(*)  FROM users  GROUP BY city;
+```
+```sql
+SELECT city, AVG(age) FROM users GROUP BY city
 ```
 
 ### DISTINCT and LIMIT
 
 ```sql
-SELECT DISTINCT category FROM products LIMIT 10
+SELECT DISTINCT city FROM users LIMIT 3;
 ```
 
-### Complex WHERE with AND/OR
-
+### Complex query
 ```sql
-SELECT * FROM orders WHERE status = 'pending' AND (total > 100 OR priority = 'high') ORDER BY created_at DESC LIMIT 5
+SELECT city, COUNT(*) FROM users WHERE age > 25 AND city = 'Madrid' OR age > 30 GROUP BY city HAVING COUNT(*) > 1 ORDER BY COUNT(*) LIMIT 3
 ```
 
 ## Running the Project
