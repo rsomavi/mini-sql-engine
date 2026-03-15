@@ -1,4 +1,4 @@
-# # Mini SQL Engine
+# Mini SQL Engine
 
 A minimal SQL parser and execution engine written in Python. It implements a simplified SQL query pipeline similar to real database engines, featuring a lexer, parser, query planner, and in-memory storage.
 
