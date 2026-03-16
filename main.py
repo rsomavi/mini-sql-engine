@@ -92,6 +92,16 @@ def main():
         if not query:
             continue
         
+        # Strip trailing semicolon (only one, and no semicolons elsewhere)
+        if query.endswith(';'):
+            # Ensure no other semicolons exist (prevents multiple statements)
+            if ';' in query[:-1]:
+                print("ERROR: multiple statements not supported")
+                tokens = get_tokens(query)
+                create_paginated_dashboard(query, None, tokens, None, "ERROR: multiple statements not supported")
+                continue
+            query = query[:-1]
+        
         try:
             # Capture parser output to suppress "Syntax error" messages
             old_stdout = sys.stdout
