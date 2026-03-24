@@ -1,126 +1,147 @@
-# Mini SQL Engine
+# minidbms
 
-A minimal SQL parser and execution engine written in Python. It implements a simplified SQL query pipeline similar to real database engines, featuring a lexer, parser, query planner, and in-memory storage.
+A minimal but complete Database Management System written in Python and C. It implements a full query pipeline — lexer, parser, AST, planner, executor — backed by a persistent storage engine in C with disk-based page management, slotted pages, heap files, and typed schemas.
 
-## Features
-
-- **SQL Lexer** — Tokenizer that breaks SQL queries into meaningful tokens
-- **SQL Parser** — Built with PLY (Python Lex-Yacc) to generate an Abstract Syntax Tree (AST)
-- **Query Planner** — Optimizes and plans query execution
-- **Query Executor** — Executes queries against in-memory storage
-- **In-Memory Storage Engine** — Fast, ephemeral data storage
-- **Terminal Dashboard UI** — Interactive CLI interface
-- **Comprehensive Test Suite** — Unit tests for core functionality
-
-### Supported SQL Features
-
-| Category | Supported |
-|----------|-----------|
-| Queries | `SELECT` |
-| Filtering | `WHERE` |
-| Grouping | `GROUP BY` |
-| Group Filtering | `HAVING` |
-| Sorting | `ORDER BY` |
-| Limiting | `LIMIT` |
-| Deduplication | `DISTINCT` |
-
-### Aggregate Functions
-
-- `COUNT(*)`
-- `SUM(column)`
-- `AVG(column)`
-- `MIN(column)`
-- `MAX(column)`
-
-### Operators
-
-**Logical:**
-- `AND`, `OR`, `NOT`
-
-**Comparison:**
-- `=`, `>`, `<`, `>=`, `<=`, `!=`
+Built as an experimental platform to compare buffer pool replacement policies (NoCache, Clock, LRU, OPT) under controlled conditions — the core research question of the accompanying TFG at Universidad Autónoma de Madrid.
 
 ## Architecture
 
 ```
-SQL Query
-    ↓
-Lexer → Tokens
-    ↓
-Parser → AST
-    ↓
-Planner → Query Plan
-    ↓
-Executor → Results
+SQL Query (text)
+      |
+   Lexer              tokens          (PLY tokenizer)
+      |
+   Parser             AST             (PLY/Yacc grammar)
+      |
+   Planner            query plan      (AST -> SelectPlan / AggregatePlan)
+      |
+   Executor           results         (WHERE, JOIN, GROUP BY, ORDER BY...)
+      |
+   Storage Interface
+      |-- MemoryStorage               (in-memory, for tests)
+      +-- DiskStorage                 (calls C engine via subprocess)
+                |
+                +-- Storage Engine (C)
+                      |-- Schema   (page 0)    TYPE_INT / FLOAT / BOOLEAN / VARCHAR
+                      |-- Heap     (pages 1+)  insert_into_table, RowID encoding
+                      |-- Page                 slotted page, 4096 bytes
+                      +-- Disk                 write_page, load_page, .db files
 ```
 
-### Components
+## Components
 
-1. **Lexer** (`lexer.py`) — Tokenizes raw SQL strings into a stream of tokens
-2. **Parser** (`parser.py`) — Uses PLY to parse tokens and build an AST
-3. **AST Nodes** (`ast_nodes.py`) — Defines the node types representing SQL constructs
-4. **AST Printer** (`ast_printer.py`) — Utility for visualizing the AST
-5. **Planner** (`planner.py`) — Transforms AST into an executable query plan
-6. **Executor** (`executor.py`) — Runs the query plan against storage and returns results
-7. **Storage** (`storage.py`) — In-memory table storage engine
-8. **Table** (`table.py`) — Table data structure and operations
-9. **UI** (`ui.py`) — Terminal-based dashboard for interactive queries
-10. **Main** (`main.py`) — Entry point for the application
+### SQL Engine (Python)
 
-## Example Queries
+| File | Responsibility |
+|------|---------------|
+| `lexer.py` | Tokenizes SQL strings. Keywords, operators, literals, identifiers |
+| `parser.py` | PLY/Yacc grammar -> AST. Handles precedence: NOT > AND > OR |
+| `ast_nodes.py` | SelectQuery, CountQuery, SumQuery, AvgQuery, MinQuery, MaxQuery, Condition, LogicalCondition, NotCondition |
+| `planner.py` | Transforms AST into executable plans |
+| `executor.py` | Runs plans: WHERE, INNER JOIN, GROUP BY, HAVING, DISTINCT, ORDER BY, LIMIT |
+| `storage.py` | MemoryStorage (dict-based) and DiskStorage (calls C engine) |
+| `ui.py` | Terminal dashboard for interactive queries |
+| `main.py` | Entry point |
 
-### Basic SELECT
+### Storage Engine (C)
+
+| File | Responsibility |
+|------|---------------|
+| `disk.c / disk.h` | Raw page I/O. write_page, load_page, get_num_pages. Files: table.db, PAGE_SIZE = 4096 |
+| `page.c / page.h` | Slotted page format. init_page, insert_row, delete_row, read_row, get_row_size |
+| `heap.c / heap.h` | Multi-page heap file. insert_into_table, scan_table. Page 0 reserved for schema. RowID = (page_id << 16) | slot_id |
+| `schema.c / schema.h` | Table schema: TYPE_INT, TYPE_FLOAT, TYPE_BOOLEAN, TYPE_VARCHAR. schema_save, schema_load, row_serialize, row_deserialize with null bitmap |
+
+## Supported SQL
+
+### Queries
 
 ```sql
 SELECT name, age FROM users WHERE age > 25
-```
 
-### GROUP BY with HAVING
-
-```sql
 SELECT city, COUNT(*) FROM users GROUP BY city HAVING COUNT(*) > 2 ORDER BY COUNT(*) LIMIT 2
-```
 
-### Aggregate Functions
-
-```sql
-SELECT city, COUNT(*)  FROM users  GROUP BY city;
-```
-```sql
 SELECT city, AVG(age) FROM users GROUP BY city
+
+SELECT DISTINCT city FROM users LIMIT 3
+
+SELECT city, COUNT(*) FROM users
+  WHERE age > 25 AND city = 'Madrid' OR age > 30
+  GROUP BY city HAVING COUNT(*) > 1
+  ORDER BY COUNT(*) LIMIT 3
 ```
 
-### DISTINCT and LIMIT
+### INNER JOIN
 
 ```sql
-SELECT DISTINCT city FROM users LIMIT 3;
+SELECT users.name, orders.amount
+  FROM users
+  JOIN orders ON users.id = orders.user_id
+  WHERE orders.amount > 100
 ```
 
-### Complex query
-```sql
-SELECT city, COUNT(*) FROM users WHERE age > 25 AND city = 'Madrid' OR age > 30 GROUP BY city HAVING COUNT(*) > 1 ORDER BY COUNT(*) LIMIT 3
+### Supported clauses
+
+| Clause | Status |
+|--------|--------|
+| SELECT | done |
+| WHERE (AND / OR / NOT) | done |
+| INNER JOIN | done |
+| GROUP BY | done |
+| HAVING | done |
+| ORDER BY ASC / DESC | done |
+| LIMIT | done |
+| DISTINCT | done |
+| COUNT / SUM / AVG / MIN / MAX | done |
+| INSERT / UPDATE / DELETE | pending |
+| CREATE TABLE | pending |
+
+## Tests
+
+### Storage engine (C)
+
+```bash
+cd storage-engine/tests
+
+gcc -Wall -Wextra -g -o test_disk        test_disk.c        ../disk.c
+gcc -Wall -Wextra -g -o test_page        test_page.c        ../page.c ../disk.c
+gcc -Wall -Wextra -g -o test_heap        test_heap.c        ../heap.c ../page.c ../disk.c
+gcc -Wall -Wextra -g -o test_schema      test_schema.c      ../schema.c ../heap.c ../page.c ../disk.c
+gcc -Wall -Wextra -g -o test_integration test_integration.c ../schema.c ../heap.c ../page.c ../disk.c
+
+./test_disk && ./test_page && ./test_heap && ./test_schema && ./test_integration
 ```
 
-## Running the Project
+| Suite | Tests | Coverage |
+|-------|-------|----------|
+| test_disk.c | 38 | write/read roundtrip, page isolation, binary data, bounds with fork, stress 100 pages |
+| test_page.c | 36 | slotted page, insert/delete/reuse slots, capacity, binary with null bytes |
+| test_heap.c | 35 | RowID encoding, page 0 reserved, overflow to page 2, two tables, stress |
+| test_schema.c | 32 | all 4 types, MAX_COLUMNS, save/load, row_serialize null bitmap, INT_MIN/MAX, VARCHAR 255 |
+| test_integration.c | 14 | schema + heap end-to-end, reload simulation, two tables interleaved |
+| **Total** | **155** | **all passing** |
+
+### SQL engine (Python)
+
+```bash
+python tests/run_tests.py
+```
+
+## Running
 
 ### Prerequisites
-
-- Python 3.8+
-- PLY (Python Lex-Yacc)
 
 ```bash
 pip install ply
 ```
 
-### Interactive Mode
-
-Start the terminal dashboard:
+### Interactive mode
 
 ```bash
 python main.py
 ```
 
-### Programmatic Usage
+### Programmatic usage
 
 ```python
 from parser import get_parser
@@ -128,87 +149,77 @@ from planner import QueryPlanner
 from executor import QueryExecutor
 from storage import MemoryStorage
 
-# Example database
 database = {
     "users": [
-        {"id": 1, "name": "Juan", "age": 25, "city": "Madrid"},
-        {"id": 2, "name": "Ana", "age": 30, "city": "Barcelona"},
+        {"id": 1, "name": "Juan",  "age": 25, "city": "Madrid"},
+        {"id": 2, "name": "Ana",   "age": 30, "city": "Barcelona"},
     ]
 }
 
-# Initialize components
-parser = get_parser()
-planner = QueryPlanner()
-storage = MemoryStorage(database)
+parser   = get_parser()
+planner  = QueryPlanner()
+storage  = MemoryStorage(database)
 executor = QueryExecutor(storage)
 
-# Execute query
-query = "SELECT name FROM users WHERE age > 20"
-
-ast = parser.parse(query)
-plan = planner.plan(ast)
+ast    = parser.parse("SELECT name FROM users WHERE age > 20")
+plan   = planner.plan(ast)
 result = executor.execute(plan)
 
 for row in result:
     print(row)
 ```
 
-## Running the Tests
-
-Execute the test suite:
-
-```bash
-python tests/run_tests.py
-```
-
-Run specific test files:
-
-```bash
-python tests/test_group_by.py
-python tests/test_having.py
-```
-
-## Project Structure
+## Project structure
 
 ```
-mini-sql-engine/
-├── lexer.py           # SQL tokenizer
-├── parser.py          # PLY-based SQL parser
-├── planner.py         # Query planning
-├── executor.py        # Query execution
-├── storage.py         # In-memory storage engine
-├── table.py           # Table data structure
-├── ast_nodes.py       # AST node definitions
-├── ast_printer.py     # AST visualization
-├── ui.py              # Terminal dashboard
-├── main.py            # Application entry point
-│
-└── tests/
-    ├── run_tests.py   # Test runner
-    ├── test_group_by.py
-    ├── test_having.py
-    └── ...
+minidbms/
+|-- lexer.py
+|-- parser.py
+|-- planner.py
+|-- executor.py
+|-- storage.py
+|-- table.py
+|-- ast_nodes.py
+|-- ast_printer.py
+|-- ui.py
+|-- main.py
+|
+|-- tests/                         SQL engine tests (Python)
+|   |-- run_tests.py
+|   |-- test_queries.py
+|   |-- test_group_by.py
+|   |-- test_having.py
+|   +-- test_sql_engine.py
+|
++-- storage-engine/                Storage engine (C)
+    |-- disk.c / disk.h
+    |-- page.c / page.h
+    |-- heap.c / heap.h
+    |-- schema.c / schema.h
+    +-- tests/
+        |-- test_disk.c
+        |-- test_page.c
+        |-- test_heap.c
+        |-- test_schema.c
+        +-- test_integration.c
 ```
 
-## Future Improvements
+## Roadmap
 
-- [ ] JOIN operations (INNER, LEFT, RIGHT)
-- [ ] INSERT, UPDATE, DELETE statements
-- [ ] CREATE TABLE support
-- [ ] Indexing for query optimization
-- [ ] Subqueries
-- [ ] Window functions
-- [ ] Transaction support (BEGIN, COMMIT, ROLLBACK)
-- [ ] Persistence layer (save/load to disk)
-- [ ] Additional data types (DATE, TIMESTAMP, BOOLEAN)
-- [ ] Query caching
-
-## Development Status
-
-**Under Development**
-
-This project is actively being developed. Features, APIs, and internal architecture may change. Contributions and feedback are welcome.
+- done: SQL parser with full SELECT support
+- done: INNER JOIN (nested loop)
+- done: GROUP BY / HAVING / ORDER BY / DISTINCT / LIMIT
+- done: Disk-based storage engine in C (disk, page, heap, schema)
+- done: Typed rows with null bitmap (INT, FLOAT, BOOLEAN, VARCHAR)
+- done: 155-test suite for storage engine
+- pending: Buffer pool with pluggable replacement policies (NoCache / Clock / LRU / OPT)
+- pending: IPC server — C engine as shared library called from Python via ctypes
+- pending: DML: INSERT, UPDATE, DELETE, CREATE TABLE
+- pending: WAL (Write-Ahead Log)
+- pending: B+ tree indexes
+- pending: Hash join and merge join
+- pending: Metrics monitor (hit rate, I/Os, latency, distance to Belady OPT)
 
 ---
 
-Built with [PLY (Python Lex-Yacc)](https://www.dabeaz.com/ply/)
+Built with PLY (Python Lex-Yacc) and C (gcc).
