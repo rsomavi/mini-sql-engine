@@ -15,7 +15,7 @@ int insert_into_table(const char *data_dir, const char *table, const void *data,
     int num_pages = get_num_pages(dir, table);
     
     // Page 0 is reserved for schema, start scanning from page 1
-    int start_page = (num_pages > 0) ? 1 : 1;
+    int start_page = 1;
     
     // Try to insert into existing pages (starting from page 1)
     for (int page_id = start_page; page_id < num_pages; page_id++) {
@@ -29,7 +29,7 @@ int insert_into_table(const char *data_dir, const char *table, const void *data,
     }
     
     // No page has space, create new page (starting from page 1 if no pages exist)
-    int new_page_id = (num_pages > 1) ? num_pages : 1;
+    int new_page_id = (num_pages >= 1) ? num_pages : 1;
     init_page(page);
     int slot_id = insert_row(page, data, size);
     

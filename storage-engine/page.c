@@ -13,6 +13,13 @@ void init_page(char *page) {
     header->num_slots = 0;
     header->free_space_start = sizeof(PageHeader);
     header->free_space_end = PAGE_SIZE;
+    
+    // Initialize slot directory to -1 (invalid)
+    int *slot_dir = (int *)(page + sizeof(PageHeader));
+    int max_slots = (PAGE_SIZE - sizeof(PageHeader)) / sizeof(int);
+    for (int i = 0; i < max_slots; i++) {
+        slot_dir[i] = -1;
+    }
 }
 
 int insert_row(char *page, const void *data, int data_size) {
@@ -107,8 +114,8 @@ int get_row_size(char *page, int slot_id) {
     int *slot_dir = (int *)(page + sizeof(PageHeader));
     int offset = slot_dir[slot_id];
     
-    // Check if slot is deleted
-    if (offset == -1) {
+    // Check if slot is deleted or never used (offset 0 is valid for first row)
+    if (offset <= 0) {
         return -1;
     }
     
