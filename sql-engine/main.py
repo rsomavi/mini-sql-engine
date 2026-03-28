@@ -2,6 +2,7 @@ from parser import get_parser
 from planner import QueryPlanner
 from executor import QueryExecutor
 from storage_disk import DiskStorage
+from storage_server import ServerStorage
 from ast_printer import print_ast
 from ui import get_tokens, create_paginated_dashboard, create_simple_dashboard
 import re
@@ -13,7 +14,7 @@ def main():
     # Create parser, planner, storage, and executor
     parser = get_parser()
     planner = QueryPlanner()
-    storage = DiskStorage()
+    storage = ServerStorage()
     executor = QueryExecutor(storage)
 
     # Print welcome message
