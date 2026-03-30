@@ -259,8 +259,7 @@ void handler_create(Server *srv, int client_fd, Request *req) {
     strncpy(args_copy, req->args, sizeof(args_copy) - 1);
     args_copy[sizeof(args_copy) - 1] = '\0';
 
-    char *token = strtok(args_copy, " ");  // skip table name
-    token = strtok(NULL, " ");             // first column
+    char *token = strtok(args_copy, " ");  // first column directly
 
     while (token != NULL && schema.num_columns < MAX_COLUMNS) {
         // token = "id:INT:4:0:1"

@@ -113,3 +113,74 @@ class SelectQuery(ASTNode):
     
     def __repr__(self):
         return f"SelectQuery(columns={self.columns!r}, table={self.table!r}, where={self.where!r}, order_by={self.order_by!r}, limit={self.limit!r}, distinct={self.distinct!r}, group_by={self.group_by!r}, join_table={self.join_table!r}, join_condition={self.join_condition!r})"
+    
+class ColumnDef(ASTNode):
+    """Represents a column definition in CREATE TABLE.
+    
+    col_type: "INT", "FLOAT", "BOOL", "VARCHAR"
+    max_size: for VARCHAR(N) — the N. 0 for fixed types.
+    nullable: True if column accepts NULL.
+    primary_key: True if column is PRIMARY KEY.
+    """
+    def __init__(self, name, col_type, max_size=0,
+                 nullable=True, primary_key=False):
+        self.name        = name
+        self.col_type    = col_type
+        self.max_size    = max_size
+        self.nullable    = nullable
+        self.primary_key = primary_key
+
+    def __repr__(self):
+        return (f"ColumnDef(name={self.name!r}, type={self.col_type!r}, "
+                f"max_size={self.max_size}, nullable={self.nullable}, "
+                f"pk={self.primary_key})")
+
+
+class CreateTableQuery(ASTNode):
+    """Represents: CREATE TABLE name (col type [PRIMARY KEY] [NOT NULL], ...)"""
+
+    def __init__(self, table_name, columns):
+        self.table_name = table_name
+        self.columns    = columns    # list of ColumnDef
+
+    def __repr__(self):
+        return (f"CreateTableQuery(table={self.table_name!r}, "
+                f"columns={self.columns!r})")
+
+
+class InsertQuery(ASTNode):
+    """Represents: INSERT INTO table (col1, col2, ...) VALUES (v1, v2, ...)"""
+
+    def __init__(self, table_name, columns, values):
+        self.table_name = table_name
+        self.columns    = columns   # list of column names
+        self.values     = values    # list of values (same order as columns)
+
+    def __repr__(self):
+        return (f"InsertQuery(table={self.table_name!r}, "
+                f"columns={self.columns!r}, values={self.values!r})")
+
+
+class DeleteQuery(ASTNode):
+    """Represents: DELETE FROM table WHERE condition"""
+
+    def __init__(self, table_name, where=None):
+        self.table_name = table_name
+        self.where      = where     # optional Condition
+
+    def __repr__(self):
+        return (f"DeleteQuery(table={self.table_name!r}, "
+                f"where={self.where!r})")
+
+
+class UpdateQuery(ASTNode):
+    """Represents: UPDATE table SET col1=val1, col2=val2 WHERE condition"""
+
+    def __init__(self, table_name, assignments, where=None):
+        self.table_name  = table_name
+        self.assignments = assignments  # list of (column, value) tuples
+        self.where       = where        # optional Condition
+
+    def __repr__(self):
+        return (f"UpdateQuery(table={self.table_name!r}, "
+                f"assignments={self.assignments!r}, where={self.where!r})")

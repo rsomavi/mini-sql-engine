@@ -1,8 +1,9 @@
 # Query Planner Layer
 # Converts AST into logical query plan
 
-from ast_nodes import SelectQuery, Condition, LogicalCondition, NotCondition, CountQuery, SumQuery, AvgQuery, MinQuery, MaxQuery
-
+from ast_nodes import (SelectQuery, Condition, LogicalCondition, NotCondition,
+                       CountQuery, SumQuery, AvgQuery, MinQuery, MaxQuery,
+                       CreateTableQuery, InsertQuery, DeleteQuery, UpdateQuery)
 
 class SelectPlan:
     """Logical plan node for SELECT queries."""
@@ -94,6 +95,14 @@ class QueryPlanner:
             return self._plan_min(ast)
         elif isinstance(ast, MaxQuery):
             return self._plan_max(ast)
+        elif isinstance(ast, CreateTableQuery):
+            return self._plan_create(ast)
+        elif isinstance(ast, InsertQuery):
+            return self._plan_insert(ast)
+        elif isinstance(ast, DeleteQuery):
+            return self._plan_delete(ast)
+        elif isinstance(ast, UpdateQuery):
+            return self._plan_update(ast)
         else:
             raise ValueError(f"Unsupported AST node: {type(ast).__name__}")
     
@@ -232,3 +241,44 @@ class QueryPlanner:
             where=max_node.where,
             group_by=getattr(max_node, 'group_by', None)
         )
+    
+    def _plan_create(self, ast):
+        return CreateTablePlan(ast.table_name, ast.columns)
+
+    def _plan_insert(self, ast):
+        return InsertPlan(ast.table_name, ast.columns, ast.values)
+
+    def _plan_delete(self, ast):
+        return DeletePlan(ast.table_name, ast.where)
+
+    def _plan_update(self, ast):
+        return UpdatePlan(ast.table_name, ast.assignments, ast.where)
+    
+class CreateTablePlan:
+    """Plan for CREATE TABLE."""
+    def __init__(self, table_name, columns):
+        self.table_name = table_name
+        self.columns    = columns  # list of ColumnDef
+
+
+class InsertPlan:
+    """Plan for INSERT INTO."""
+    def __init__(self, table_name, columns, values):
+        self.table_name = table_name
+        self.columns    = columns
+        self.values     = values
+
+
+class DeletePlan:
+    """Plan for DELETE FROM."""
+    def __init__(self, table_name, where=None):
+        self.table_name = table_name
+        self.where      = where
+
+
+class UpdatePlan:
+    """Plan for UPDATE SET."""
+    def __init__(self, table_name, assignments, where=None):
+        self.table_name  = table_name
+        self.assignments = assignments
+        self.where       = where

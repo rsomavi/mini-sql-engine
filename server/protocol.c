@@ -56,15 +56,22 @@ int protocol_read_request(int client_fd, Request *req) {
         strncpy(req->table_name, line + 7, sizeof(req->table_name) - 1);
         req->table_name[sizeof(req->table_name) - 1] = '\0';
         return 0;
+        
     } else if (strncmp(line, "CREATE ", 7) == 0) { // CREATE <table_name> <col1:type1> <col2:type2> ...\n
-        req->op = OP_CREATE;
+        req->op            = OP_CREATE;
         req->table_name[0] = '\0';
         req->args[0]       = '\0';
 
-        strncpy(req->args, line + 7, sizeof(req->args) - 1);
-        req->args[sizeof(req->args) - 1] = '\0';
-        // table_name is the first word of args
-        sscanf(req->args, "%63s", req->table_name);
+        // Extraer table_name — primer token después de "CREATE "
+        sscanf(line + 7, "%63s", req->table_name);
+
+        // args = solo las columnas, sin el nombre de tabla
+        // skip = 7 (CREATE ) + len(table_name) + 1 (espacio)
+        int skip = 7 + (int)strlen(req->table_name) + 1;
+        if (skip < (int)strlen(line)) {
+            strncpy(req->args, line + skip, sizeof(req->args) - 1);
+            req->args[sizeof(req->args) - 1] = '\0';
+        }
         return 0;
     }
 

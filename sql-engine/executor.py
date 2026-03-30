@@ -2,7 +2,8 @@
 # Executes query plans against a storage backend
 
 from ast_nodes import Condition, LogicalCondition, NotCondition
-from planner import SelectPlan, CountPlan, SumPlan, AvgPlan, MinPlan, MaxPlan
+from planner import SelectPlan, CountPlan, SumPlan, AvgPlan, MinPlan, MaxPlan, \
+                    CreateTablePlan, InsertPlan, DeletePlan, UpdatePlan
 
 
 class QueryExecutor:
@@ -39,6 +40,14 @@ class QueryExecutor:
             return self._execute_min(plan)
         elif isinstance(plan, MaxPlan):
             return self._execute_max(plan)
+        elif isinstance(plan, CreateTablePlan):
+            return self._execute_create(plan)
+        elif isinstance(plan, InsertPlan):
+            return self._execute_insert(plan)
+        elif isinstance(plan, DeletePlan):
+            return self._execute_delete(plan)
+        elif isinstance(plan, UpdatePlan):
+            return self._execute_update(plan)
         else:
             raise ValueError(f"Unsupported plan: {type(plan).__name__}")
     
@@ -793,3 +802,27 @@ class QueryExecutor:
                 results.append(result_row)
         
         return results
+    
+    # =========================================================================
+    # DML execution
+    # =========================================================================
+
+    def _execute_create(self, plan: CreateTablePlan):
+        self.storage.create_table(plan.table_name, plan.columns)
+        return [{"result": f"Table '{plan.table_name}' created successfully"}]
+
+    def _execute_insert(self, plan: InsertPlan):
+        row_id = self.storage.insert_row(
+            plan.table_name, plan.columns, plan.values
+        )
+        return [{"result": f"1 row inserted", "row_id": row_id}]
+
+    def _execute_delete(self, plan: DeletePlan):
+        count = self.storage.delete_rows(plan.table_name, plan.where)
+        return [{"result": f"{count} row(s) deleted"}]
+
+    def _execute_update(self, plan: UpdatePlan):
+        count = self.storage.update_rows(
+            plan.table_name, plan.assignments, plan.where
+        )
+        return [{"result": f"{count} row(s) updated"}]
