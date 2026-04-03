@@ -4,142 +4,183 @@ Grammar
 
 Rule 0     S' -> query
 Rule 1     query -> select_stmt
-Rule 2     select_stmt -> SELECT optional_distinct select_list FROM ID optional_join optional_where optional_group optional_having optional_order optional_limit
-Rule 3     select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where optional_group
-Rule 4     select_stmt -> SELECT SUM LPAREN ID RPAREN FROM ID optional_where optional_group
-Rule 5     select_stmt -> SELECT AVG LPAREN ID RPAREN FROM ID optional_where optional_group
-Rule 6     select_stmt -> SELECT MIN LPAREN ID RPAREN FROM ID optional_where optional_group
-Rule 7     select_stmt -> SELECT MAX LPAREN ID RPAREN FROM ID optional_where optional_group
-Rule 8     optional_where -> WHERE condition
-Rule 9     optional_where -> empty
-Rule 10    optional_join -> JOIN ID ON join_condition
-Rule 11    optional_join -> empty
-Rule 12    join_condition -> column_ref EQUAL column_ref
-Rule 13    column_ref -> ID
-Rule 14    column_ref -> ID DOT ID
-Rule 15    optional_group -> GROUP BY group_by_list
-Rule 16    optional_group -> empty
-Rule 17    group_by_list -> column_ref
-Rule 18    group_by_list -> group_by_list COMMA column_ref
-Rule 19    optional_having -> HAVING having_condition
-Rule 20    optional_having -> empty
-Rule 21    having_condition -> aggregate_comparison
-Rule 22    aggregate_comparison -> COUNT LPAREN STAR RPAREN comparator NUMBER
-Rule 23    aggregate_comparison -> aggregate_func LPAREN ID RPAREN comparator NUMBER
-Rule 24    optional_order -> ORDER BY order_by_expr
-Rule 25    optional_order -> empty
-Rule 26    order_by_expr -> column_ref
-Rule 27    order_by_expr -> column_ref ASC
-Rule 28    order_by_expr -> column_ref DESC
-Rule 29    order_by_expr -> COUNT LPAREN STAR RPAREN
-Rule 30    order_by_expr -> COUNT LPAREN STAR RPAREN ASC
-Rule 31    order_by_expr -> COUNT LPAREN STAR RPAREN DESC
-Rule 32    order_by_expr -> aggregate_func LPAREN ID RPAREN
-Rule 33    order_by_expr -> aggregate_func LPAREN ID RPAREN ASC
-Rule 34    order_by_expr -> aggregate_func LPAREN ID RPAREN DESC
-Rule 35    aggregate_func -> SUM
-Rule 36    aggregate_func -> AVG
-Rule 37    aggregate_func -> MIN
-Rule 38    aggregate_func -> MAX
-Rule 39    optional_limit -> LIMIT NUMBER
-Rule 40    optional_limit -> empty
-Rule 41    empty -> <empty>
-Rule 42    optional_distinct -> DISTINCT
-Rule 43    optional_distinct -> empty
-Rule 44    select_list -> STAR
-Rule 45    select_list -> column_list
-Rule 46    column_list -> column_item
-Rule 47    column_list -> column_list COMMA column_item
-Rule 48    column_item -> ID
-Rule 49    column_item -> ID DOT ID
-Rule 50    column_item -> COUNT LPAREN STAR RPAREN
-Rule 51    column_item -> SUM LPAREN ID RPAREN
-Rule 52    column_item -> AVG LPAREN ID RPAREN
-Rule 53    column_item -> MIN LPAREN ID RPAREN
-Rule 54    column_item -> MAX LPAREN ID RPAREN
-Rule 55    condition -> or_condition
-Rule 56    or_condition -> and_condition
-Rule 57    or_condition -> or_condition OR and_condition
-Rule 58    and_condition -> not_condition
-Rule 59    and_condition -> and_condition AND not_condition
-Rule 60    not_condition -> simple_condition
-Rule 61    not_condition -> NOT simple_condition
-Rule 62    simple_condition -> column_ref comparator value
-Rule 63    comparator -> EQUAL
-Rule 64    comparator -> GT
-Rule 65    comparator -> LT
-Rule 66    comparator -> GE
-Rule 67    comparator -> LE
-Rule 68    value -> NUMBER
-Rule 69    value -> STRING
+Rule 2     query -> create_stmt
+Rule 3     query -> insert_stmt
+Rule 4     select_stmt -> SELECT optional_distinct select_list FROM ID optional_join optional_where optional_group optional_having optional_order optional_limit
+Rule 5     select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where optional_group
+Rule 6     select_stmt -> SELECT SUM LPAREN ID RPAREN FROM ID optional_where optional_group
+Rule 7     select_stmt -> SELECT AVG LPAREN ID RPAREN FROM ID optional_where optional_group
+Rule 8     select_stmt -> SELECT MIN LPAREN ID RPAREN FROM ID optional_where optional_group
+Rule 9     select_stmt -> SELECT MAX LPAREN ID RPAREN FROM ID optional_where optional_group
+Rule 10    optional_where -> WHERE condition
+Rule 11    optional_where -> empty
+Rule 12    optional_join -> JOIN ID ON join_condition
+Rule 13    optional_join -> empty
+Rule 14    join_condition -> column_ref EQUAL column_ref
+Rule 15    column_ref -> ID
+Rule 16    column_ref -> ID DOT ID
+Rule 17    optional_group -> GROUP BY group_by_list
+Rule 18    optional_group -> empty
+Rule 19    group_by_list -> column_ref
+Rule 20    group_by_list -> group_by_list COMMA column_ref
+Rule 21    optional_having -> HAVING having_condition
+Rule 22    optional_having -> empty
+Rule 23    having_condition -> aggregate_comparison
+Rule 24    aggregate_comparison -> COUNT LPAREN STAR RPAREN comparator NUMBER
+Rule 25    aggregate_comparison -> aggregate_func LPAREN ID RPAREN comparator NUMBER
+Rule 26    optional_order -> ORDER BY order_by_expr
+Rule 27    optional_order -> empty
+Rule 28    order_by_expr -> column_ref
+Rule 29    order_by_expr -> column_ref ASC
+Rule 30    order_by_expr -> column_ref DESC
+Rule 31    order_by_expr -> COUNT LPAREN STAR RPAREN
+Rule 32    order_by_expr -> COUNT LPAREN STAR RPAREN ASC
+Rule 33    order_by_expr -> COUNT LPAREN STAR RPAREN DESC
+Rule 34    order_by_expr -> aggregate_func LPAREN ID RPAREN
+Rule 35    order_by_expr -> aggregate_func LPAREN ID RPAREN ASC
+Rule 36    order_by_expr -> aggregate_func LPAREN ID RPAREN DESC
+Rule 37    aggregate_func -> SUM
+Rule 38    aggregate_func -> AVG
+Rule 39    aggregate_func -> MIN
+Rule 40    aggregate_func -> MAX
+Rule 41    optional_limit -> LIMIT NUMBER
+Rule 42    optional_limit -> empty
+Rule 43    empty -> <empty>
+Rule 44    optional_distinct -> DISTINCT
+Rule 45    optional_distinct -> empty
+Rule 46    select_list -> STAR
+Rule 47    select_list -> column_list
+Rule 48    column_list -> column_item
+Rule 49    column_list -> column_list COMMA column_item
+Rule 50    column_item -> ID
+Rule 51    column_item -> ID DOT ID
+Rule 52    column_item -> COUNT LPAREN STAR RPAREN
+Rule 53    column_item -> SUM LPAREN ID RPAREN
+Rule 54    column_item -> AVG LPAREN ID RPAREN
+Rule 55    column_item -> MIN LPAREN ID RPAREN
+Rule 56    column_item -> MAX LPAREN ID RPAREN
+Rule 57    condition -> or_condition
+Rule 58    or_condition -> and_condition
+Rule 59    or_condition -> or_condition OR and_condition
+Rule 60    and_condition -> not_condition
+Rule 61    and_condition -> and_condition AND not_condition
+Rule 62    not_condition -> simple_condition
+Rule 63    not_condition -> NOT simple_condition
+Rule 64    simple_condition -> column_ref comparator value
+Rule 65    comparator -> EQUAL
+Rule 66    comparator -> GT
+Rule 67    comparator -> LT
+Rule 68    comparator -> GE
+Rule 69    comparator -> LE
+Rule 70    value -> NUMBER
+Rule 71    value -> MINUS NUMBER
+Rule 72    value -> STRING
+Rule 73    create_stmt -> CREATE TABLE ID LPAREN column_def_list RPAREN
+Rule 74    column_def_list -> column_def
+Rule 75    column_def_list -> column_def_list COMMA column_def
+Rule 76    column_def -> ID INT
+Rule 77    column_def -> ID INT PRIMARY KEY
+Rule 78    column_def -> ID INT NOT NULL
+Rule 79    column_def -> ID FLOAT
+Rule 80    column_def -> ID FLOAT NOT NULL
+Rule 81    column_def -> ID BOOL
+Rule 82    column_def -> ID BOOL NOT NULL
+Rule 83    column_def -> ID VARCHAR LPAREN NUMBER RPAREN
+Rule 84    column_def -> ID VARCHAR LPAREN NUMBER RPAREN NOT NULL
+Rule 85    column_def -> ID VARCHAR LPAREN NUMBER RPAREN PRIMARY KEY
+Rule 86    insert_stmt -> INSERT INTO ID LPAREN column_name_list RPAREN VALUES LPAREN value_list RPAREN
+Rule 87    insert_stmt -> INSERT INTO ID VALUES LPAREN value_list RPAREN
+Rule 88    column_name_list -> ID
+Rule 89    column_name_list -> column_name_list COMMA ID
+Rule 90    value_list -> value
+Rule 91    value_list -> value_list COMMA value
 
 Terminals, with rules where they appear
 
-AND                  : 59
-ASC                  : 27 30 33
-AVG                  : 5 36 52
-BY                   : 15 24
-COMMA                : 18 47
-COUNT                : 3 22 29 30 31 50
-DESC                 : 28 31 34
-DISTINCT             : 42
-DOT                  : 14 49
-EQUAL                : 12 63
-FROM                 : 2 3 4 5 6 7
-GE                   : 66
-GROUP                : 15
-GT                   : 64
-HAVING               : 19
-ID                   : 2 3 4 4 5 5 6 6 7 7 10 13 14 14 23 32 33 34 48 49 49 51 52 53 54
-JOIN                 : 10
-LE                   : 67
-LIMIT                : 39
-LPAREN               : 3 4 5 6 7 22 23 29 30 31 32 33 34 50 51 52 53 54
-LT                   : 65
-MAX                  : 7 38 54
-MIN                  : 6 37 53
-NOT                  : 61
-NUMBER               : 22 23 39 68
-ON                   : 10
-OR                   : 57
-ORDER                : 24
-RPAREN               : 3 4 5 6 7 22 23 29 30 31 32 33 34 50 51 52 53 54
-SELECT               : 2 3 4 5 6 7
-STAR                 : 3 22 29 30 31 44 50
-STRING               : 69
-SUM                  : 4 35 51
-WHERE                : 8
+AND                  : 61
+ASC                  : 29 32 35
+AVG                  : 7 38 54
+BOOL                 : 81 82
+BY                   : 17 26
+COMMA                : 20 49 75 89 91
+COUNT                : 5 24 31 32 33 52
+CREATE               : 73
+DESC                 : 30 33 36
+DISTINCT             : 44
+DOT                  : 16 51
+EQUAL                : 14 65
+FLOAT                : 79 80
+FROM                 : 4 5 6 7 8 9
+GE                   : 68
+GROUP                : 17
+GT                   : 66
+HAVING               : 21
+ID                   : 4 5 6 6 7 7 8 8 9 9 12 15 16 16 25 34 35 36 50 51 51 53 54 55 56 73 76 77 78 79 80 81 82 83 84 85 86 87 88 89
+INSERT               : 86 87
+INT                  : 76 77 78
+INTO                 : 86 87
+JOIN                 : 12
+KEY                  : 77 85
+LE                   : 69
+LIMIT                : 41
+LPAREN               : 5 6 7 8 9 24 25 31 32 33 34 35 36 52 53 54 55 56 73 83 84 85 86 86 87
+LT                   : 67
+MAX                  : 9 40 56
+MIN                  : 8 39 55
+MINUS                : 71
+NOT                  : 63 78 80 82 84
+NULL                 : 78 80 82 84
+NUMBER               : 24 25 41 70 71 83 84 85
+ON                   : 12
+OR                   : 59
+ORDER                : 26
+PRIMARY              : 77 85
+RPAREN               : 5 6 7 8 9 24 25 31 32 33 34 35 36 52 53 54 55 56 73 83 84 85 86 86 87
+SELECT               : 4 5 6 7 8 9
+STAR                 : 5 24 31 32 33 46 52
+STRING               : 72
+SUM                  : 6 37 53
+TABLE                : 73
+VALUES               : 86 87
+VARCHAR              : 83 84 85
+WHERE                : 10
 error                : 
 
 Nonterminals, with rules where they appear
 
-aggregate_comparison : 21
-aggregate_func       : 23 32 33 34
-and_condition        : 56 57 59
-column_item          : 46 47
-column_list          : 45 47
-column_ref           : 12 12 17 18 26 27 28 62
-comparator           : 22 23 62
-condition            : 8
-empty                : 9 11 16 20 25 40 43
-group_by_list        : 15 18
-having_condition     : 19
-join_condition       : 10
-not_condition        : 58 59
-optional_distinct    : 2
-optional_group       : 2 3 4 5 6 7
-optional_having      : 2
-optional_join        : 2
-optional_limit       : 2
-optional_order       : 2
-optional_where       : 2 3 4 5 6 7
-or_condition         : 55 57
-order_by_expr        : 24
+aggregate_comparison : 23
+aggregate_func       : 25 34 35 36
+and_condition        : 58 59 61
+column_def           : 74 75
+column_def_list      : 73 75
+column_item          : 48 49
+column_list          : 47 49
+column_name_list     : 86 89
+column_ref           : 14 14 19 20 28 29 30 64
+comparator           : 24 25 64
+condition            : 10
+create_stmt          : 2
+empty                : 11 13 18 22 27 42 45
+group_by_list        : 17 20
+having_condition     : 21
+insert_stmt          : 3
+join_condition       : 12
+not_condition        : 60 61
+optional_distinct    : 4
+optional_group       : 4 5 6 7 8 9
+optional_having      : 4
+optional_join        : 4
+optional_limit       : 4
+optional_order       : 4
+optional_where       : 4 5 6 7 8 9
+or_condition         : 57 59
+order_by_expr        : 26
 query                : 0
-select_list          : 2
+select_list          : 4
 select_stmt          : 1
-simple_condition     : 60 61
-value                : 62
+simple_condition     : 62 63
+value                : 64 90 91
+value_list           : 86 87 91
 
 Parsing method: LALR
 
@@ -147,17 +188,26 @@ state 0
 
     (0) S' -> . query
     (1) query -> . select_stmt
-    (2) select_stmt -> . SELECT optional_distinct select_list FROM ID optional_join optional_where optional_group optional_having optional_order optional_limit
-    (3) select_stmt -> . SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where optional_group
-    (4) select_stmt -> . SELECT SUM LPAREN ID RPAREN FROM ID optional_where optional_group
-    (5) select_stmt -> . SELECT AVG LPAREN ID RPAREN FROM ID optional_where optional_group
-    (6) select_stmt -> . SELECT MIN LPAREN ID RPAREN FROM ID optional_where optional_group
-    (7) select_stmt -> . SELECT MAX LPAREN ID RPAREN FROM ID optional_where optional_group
+    (2) query -> . create_stmt
+    (3) query -> . insert_stmt
+    (4) select_stmt -> . SELECT optional_distinct select_list FROM ID optional_join optional_where optional_group optional_having optional_order optional_limit
+    (5) select_stmt -> . SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where optional_group
+    (6) select_stmt -> . SELECT SUM LPAREN ID RPAREN FROM ID optional_where optional_group
+    (7) select_stmt -> . SELECT AVG LPAREN ID RPAREN FROM ID optional_where optional_group
+    (8) select_stmt -> . SELECT MIN LPAREN ID RPAREN FROM ID optional_where optional_group
+    (9) select_stmt -> . SELECT MAX LPAREN ID RPAREN FROM ID optional_where optional_group
+    (73) create_stmt -> . CREATE TABLE ID LPAREN column_def_list RPAREN
+    (86) insert_stmt -> . INSERT INTO ID LPAREN column_name_list RPAREN VALUES LPAREN value_list RPAREN
+    (87) insert_stmt -> . INSERT INTO ID VALUES LPAREN value_list RPAREN
 
-    SELECT          shift and go to state 3
+    SELECT          shift and go to state 5
+    CREATE          shift and go to state 6
+    INSERT          shift and go to state 7
 
     query                          shift and go to state 1
     select_stmt                    shift and go to state 2
+    create_stmt                    shift and go to state 3
+    insert_stmt                    shift and go to state 4
 
 state 1
 
@@ -174,1668 +224,2168 @@ state 2
 
 state 3
 
-    (2) select_stmt -> SELECT . optional_distinct select_list FROM ID optional_join optional_where optional_group optional_having optional_order optional_limit
-    (3) select_stmt -> SELECT . COUNT LPAREN STAR RPAREN FROM ID optional_where optional_group
-    (4) select_stmt -> SELECT . SUM LPAREN ID RPAREN FROM ID optional_where optional_group
-    (5) select_stmt -> SELECT . AVG LPAREN ID RPAREN FROM ID optional_where optional_group
-    (6) select_stmt -> SELECT . MIN LPAREN ID RPAREN FROM ID optional_where optional_group
-    (7) select_stmt -> SELECT . MAX LPAREN ID RPAREN FROM ID optional_where optional_group
-    (42) optional_distinct -> . DISTINCT
-    (43) optional_distinct -> . empty
-    (41) empty -> .
+    (2) query -> create_stmt .
+
+    $end            reduce using rule 2 (query -> create_stmt .)
+
+
+state 4
+
+    (3) query -> insert_stmt .
+
+    $end            reduce using rule 3 (query -> insert_stmt .)
+
+
+state 5
+
+    (4) select_stmt -> SELECT . optional_distinct select_list FROM ID optional_join optional_where optional_group optional_having optional_order optional_limit
+    (5) select_stmt -> SELECT . COUNT LPAREN STAR RPAREN FROM ID optional_where optional_group
+    (6) select_stmt -> SELECT . SUM LPAREN ID RPAREN FROM ID optional_where optional_group
+    (7) select_stmt -> SELECT . AVG LPAREN ID RPAREN FROM ID optional_where optional_group
+    (8) select_stmt -> SELECT . MIN LPAREN ID RPAREN FROM ID optional_where optional_group
+    (9) select_stmt -> SELECT . MAX LPAREN ID RPAREN FROM ID optional_where optional_group
+    (44) optional_distinct -> . DISTINCT
+    (45) optional_distinct -> . empty
+    (43) empty -> .
 
   ! shift/reduce conflict for COUNT resolved as shift
   ! shift/reduce conflict for SUM resolved as shift
   ! shift/reduce conflict for AVG resolved as shift
   ! shift/reduce conflict for MIN resolved as shift
   ! shift/reduce conflict for MAX resolved as shift
-    COUNT           shift and go to state 5
-    SUM             shift and go to state 6
-    AVG             shift and go to state 7
-    MIN             shift and go to state 8
-    MAX             shift and go to state 9
-    DISTINCT        shift and go to state 10
-    STAR            reduce using rule 41 (empty -> .)
-    ID              reduce using rule 41 (empty -> .)
+    COUNT           shift and go to state 9
+    SUM             shift and go to state 10
+    AVG             shift and go to state 11
+    MIN             shift and go to state 12
+    MAX             shift and go to state 13
+    DISTINCT        shift and go to state 14
+    STAR            reduce using rule 43 (empty -> .)
+    ID              reduce using rule 43 (empty -> .)
 
-  ! COUNT           [ reduce using rule 41 (empty -> .) ]
-  ! SUM             [ reduce using rule 41 (empty -> .) ]
-  ! AVG             [ reduce using rule 41 (empty -> .) ]
-  ! MIN             [ reduce using rule 41 (empty -> .) ]
-  ! MAX             [ reduce using rule 41 (empty -> .) ]
+  ! COUNT           [ reduce using rule 43 (empty -> .) ]
+  ! SUM             [ reduce using rule 43 (empty -> .) ]
+  ! AVG             [ reduce using rule 43 (empty -> .) ]
+  ! MIN             [ reduce using rule 43 (empty -> .) ]
+  ! MAX             [ reduce using rule 43 (empty -> .) ]
 
-    optional_distinct              shift and go to state 4
-    empty                          shift and go to state 11
-
-state 4
-
-    (2) select_stmt -> SELECT optional_distinct . select_list FROM ID optional_join optional_where optional_group optional_having optional_order optional_limit
-    (44) select_list -> . STAR
-    (45) select_list -> . column_list
-    (46) column_list -> . column_item
-    (47) column_list -> . column_list COMMA column_item
-    (48) column_item -> . ID
-    (49) column_item -> . ID DOT ID
-    (50) column_item -> . COUNT LPAREN STAR RPAREN
-    (51) column_item -> . SUM LPAREN ID RPAREN
-    (52) column_item -> . AVG LPAREN ID RPAREN
-    (53) column_item -> . MIN LPAREN ID RPAREN
-    (54) column_item -> . MAX LPAREN ID RPAREN
-
-    STAR            shift and go to state 14
-    ID              shift and go to state 13
-    COUNT           shift and go to state 17
-    SUM             shift and go to state 18
-    AVG             shift and go to state 19
-    MIN             shift and go to state 20
-    MAX             shift and go to state 21
-
-    select_list                    shift and go to state 12
-    column_list                    shift and go to state 15
-    column_item                    shift and go to state 16
-
-state 5
-
-    (3) select_stmt -> SELECT COUNT . LPAREN STAR RPAREN FROM ID optional_where optional_group
-
-    LPAREN          shift and go to state 22
-
+    optional_distinct              shift and go to state 8
+    empty                          shift and go to state 15
 
 state 6
 
-    (4) select_stmt -> SELECT SUM . LPAREN ID RPAREN FROM ID optional_where optional_group
+    (73) create_stmt -> CREATE . TABLE ID LPAREN column_def_list RPAREN
 
-    LPAREN          shift and go to state 23
+    TABLE           shift and go to state 16
 
 
 state 7
 
-    (5) select_stmt -> SELECT AVG . LPAREN ID RPAREN FROM ID optional_where optional_group
+    (86) insert_stmt -> INSERT . INTO ID LPAREN column_name_list RPAREN VALUES LPAREN value_list RPAREN
+    (87) insert_stmt -> INSERT . INTO ID VALUES LPAREN value_list RPAREN
 
-    LPAREN          shift and go to state 24
+    INTO            shift and go to state 17
 
 
 state 8
 
-    (6) select_stmt -> SELECT MIN . LPAREN ID RPAREN FROM ID optional_where optional_group
+    (4) select_stmt -> SELECT optional_distinct . select_list FROM ID optional_join optional_where optional_group optional_having optional_order optional_limit
+    (46) select_list -> . STAR
+    (47) select_list -> . column_list
+    (48) column_list -> . column_item
+    (49) column_list -> . column_list COMMA column_item
+    (50) column_item -> . ID
+    (51) column_item -> . ID DOT ID
+    (52) column_item -> . COUNT LPAREN STAR RPAREN
+    (53) column_item -> . SUM LPAREN ID RPAREN
+    (54) column_item -> . AVG LPAREN ID RPAREN
+    (55) column_item -> . MIN LPAREN ID RPAREN
+    (56) column_item -> . MAX LPAREN ID RPAREN
 
-    LPAREN          shift and go to state 25
+    STAR            shift and go to state 20
+    ID              shift and go to state 19
+    COUNT           shift and go to state 23
+    SUM             shift and go to state 24
+    AVG             shift and go to state 25
+    MIN             shift and go to state 26
+    MAX             shift and go to state 27
 
+    select_list                    shift and go to state 18
+    column_list                    shift and go to state 21
+    column_item                    shift and go to state 22
 
 state 9
 
-    (7) select_stmt -> SELECT MAX . LPAREN ID RPAREN FROM ID optional_where optional_group
+    (5) select_stmt -> SELECT COUNT . LPAREN STAR RPAREN FROM ID optional_where optional_group
 
-    LPAREN          shift and go to state 26
+    LPAREN          shift and go to state 28
 
 
 state 10
 
-    (42) optional_distinct -> DISTINCT .
+    (6) select_stmt -> SELECT SUM . LPAREN ID RPAREN FROM ID optional_where optional_group
 
-    STAR            reduce using rule 42 (optional_distinct -> DISTINCT .)
-    ID              reduce using rule 42 (optional_distinct -> DISTINCT .)
-    COUNT           reduce using rule 42 (optional_distinct -> DISTINCT .)
-    SUM             reduce using rule 42 (optional_distinct -> DISTINCT .)
-    AVG             reduce using rule 42 (optional_distinct -> DISTINCT .)
-    MIN             reduce using rule 42 (optional_distinct -> DISTINCT .)
-    MAX             reduce using rule 42 (optional_distinct -> DISTINCT .)
+    LPAREN          shift and go to state 29
 
 
 state 11
 
-    (43) optional_distinct -> empty .
-
-    STAR            reduce using rule 43 (optional_distinct -> empty .)
-    ID              reduce using rule 43 (optional_distinct -> empty .)
-    COUNT           reduce using rule 43 (optional_distinct -> empty .)
-    SUM             reduce using rule 43 (optional_distinct -> empty .)
-    AVG             reduce using rule 43 (optional_distinct -> empty .)
-    MIN             reduce using rule 43 (optional_distinct -> empty .)
-    MAX             reduce using rule 43 (optional_distinct -> empty .)
-
-
-state 12
-
-    (2) select_stmt -> SELECT optional_distinct select_list . FROM ID optional_join optional_where optional_group optional_having optional_order optional_limit
-
-    FROM            shift and go to state 27
-
-
-state 13
-
-    (48) column_item -> ID .
-    (49) column_item -> ID . DOT ID
-
-    COMMA           reduce using rule 48 (column_item -> ID .)
-    FROM            reduce using rule 48 (column_item -> ID .)
-    DOT             shift and go to state 28
-
-
-state 14
-
-    (44) select_list -> STAR .
-
-    FROM            reduce using rule 44 (select_list -> STAR .)
-
-
-state 15
-
-    (45) select_list -> column_list .
-    (47) column_list -> column_list . COMMA column_item
-
-    FROM            reduce using rule 45 (select_list -> column_list .)
-    COMMA           shift and go to state 29
-
-
-state 16
-
-    (46) column_list -> column_item .
-
-    COMMA           reduce using rule 46 (column_list -> column_item .)
-    FROM            reduce using rule 46 (column_list -> column_item .)
-
-
-state 17
-
-    (50) column_item -> COUNT . LPAREN STAR RPAREN
+    (7) select_stmt -> SELECT AVG . LPAREN ID RPAREN FROM ID optional_where optional_group
 
     LPAREN          shift and go to state 30
 
 
-state 18
+state 12
 
-    (51) column_item -> SUM . LPAREN ID RPAREN
+    (8) select_stmt -> SELECT MIN . LPAREN ID RPAREN FROM ID optional_where optional_group
 
     LPAREN          shift and go to state 31
 
 
-state 19
+state 13
 
-    (52) column_item -> AVG . LPAREN ID RPAREN
+    (9) select_stmt -> SELECT MAX . LPAREN ID RPAREN FROM ID optional_where optional_group
 
     LPAREN          shift and go to state 32
 
 
+state 14
+
+    (44) optional_distinct -> DISTINCT .
+
+    STAR            reduce using rule 44 (optional_distinct -> DISTINCT .)
+    ID              reduce using rule 44 (optional_distinct -> DISTINCT .)
+    COUNT           reduce using rule 44 (optional_distinct -> DISTINCT .)
+    SUM             reduce using rule 44 (optional_distinct -> DISTINCT .)
+    AVG             reduce using rule 44 (optional_distinct -> DISTINCT .)
+    MIN             reduce using rule 44 (optional_distinct -> DISTINCT .)
+    MAX             reduce using rule 44 (optional_distinct -> DISTINCT .)
+
+
+state 15
+
+    (45) optional_distinct -> empty .
+
+    STAR            reduce using rule 45 (optional_distinct -> empty .)
+    ID              reduce using rule 45 (optional_distinct -> empty .)
+    COUNT           reduce using rule 45 (optional_distinct -> empty .)
+    SUM             reduce using rule 45 (optional_distinct -> empty .)
+    AVG             reduce using rule 45 (optional_distinct -> empty .)
+    MIN             reduce using rule 45 (optional_distinct -> empty .)
+    MAX             reduce using rule 45 (optional_distinct -> empty .)
+
+
+state 16
+
+    (73) create_stmt -> CREATE TABLE . ID LPAREN column_def_list RPAREN
+
+    ID              shift and go to state 33
+
+
+state 17
+
+    (86) insert_stmt -> INSERT INTO . ID LPAREN column_name_list RPAREN VALUES LPAREN value_list RPAREN
+    (87) insert_stmt -> INSERT INTO . ID VALUES LPAREN value_list RPAREN
+
+    ID              shift and go to state 34
+
+
+state 18
+
+    (4) select_stmt -> SELECT optional_distinct select_list . FROM ID optional_join optional_where optional_group optional_having optional_order optional_limit
+
+    FROM            shift and go to state 35
+
+
+state 19
+
+    (50) column_item -> ID .
+    (51) column_item -> ID . DOT ID
+
+    COMMA           reduce using rule 50 (column_item -> ID .)
+    FROM            reduce using rule 50 (column_item -> ID .)
+    DOT             shift and go to state 36
+
+
 state 20
 
-    (53) column_item -> MIN . LPAREN ID RPAREN
+    (46) select_list -> STAR .
 
-    LPAREN          shift and go to state 33
+    FROM            reduce using rule 46 (select_list -> STAR .)
 
 
 state 21
 
-    (54) column_item -> MAX . LPAREN ID RPAREN
+    (47) select_list -> column_list .
+    (49) column_list -> column_list . COMMA column_item
 
-    LPAREN          shift and go to state 34
+    FROM            reduce using rule 47 (select_list -> column_list .)
+    COMMA           shift and go to state 37
 
 
 state 22
 
-    (3) select_stmt -> SELECT COUNT LPAREN . STAR RPAREN FROM ID optional_where optional_group
+    (48) column_list -> column_item .
 
-    STAR            shift and go to state 35
+    COMMA           reduce using rule 48 (column_list -> column_item .)
+    FROM            reduce using rule 48 (column_list -> column_item .)
 
 
 state 23
 
-    (4) select_stmt -> SELECT SUM LPAREN . ID RPAREN FROM ID optional_where optional_group
+    (52) column_item -> COUNT . LPAREN STAR RPAREN
 
-    ID              shift and go to state 36
+    LPAREN          shift and go to state 38
 
 
 state 24
 
-    (5) select_stmt -> SELECT AVG LPAREN . ID RPAREN FROM ID optional_where optional_group
+    (53) column_item -> SUM . LPAREN ID RPAREN
 
-    ID              shift and go to state 37
+    LPAREN          shift and go to state 39
 
 
 state 25
 
-    (6) select_stmt -> SELECT MIN LPAREN . ID RPAREN FROM ID optional_where optional_group
+    (54) column_item -> AVG . LPAREN ID RPAREN
 
-    ID              shift and go to state 38
+    LPAREN          shift and go to state 40
 
 
 state 26
 
-    (7) select_stmt -> SELECT MAX LPAREN . ID RPAREN FROM ID optional_where optional_group
+    (55) column_item -> MIN . LPAREN ID RPAREN
 
-    ID              shift and go to state 39
+    LPAREN          shift and go to state 41
 
 
 state 27
 
-    (2) select_stmt -> SELECT optional_distinct select_list FROM . ID optional_join optional_where optional_group optional_having optional_order optional_limit
+    (56) column_item -> MAX . LPAREN ID RPAREN
 
-    ID              shift and go to state 40
+    LPAREN          shift and go to state 42
 
 
 state 28
 
-    (49) column_item -> ID DOT . ID
-
-    ID              shift and go to state 41
-
-
-state 29
-
-    (47) column_list -> column_list COMMA . column_item
-    (48) column_item -> . ID
-    (49) column_item -> . ID DOT ID
-    (50) column_item -> . COUNT LPAREN STAR RPAREN
-    (51) column_item -> . SUM LPAREN ID RPAREN
-    (52) column_item -> . AVG LPAREN ID RPAREN
-    (53) column_item -> . MIN LPAREN ID RPAREN
-    (54) column_item -> . MAX LPAREN ID RPAREN
-
-    ID              shift and go to state 13
-    COUNT           shift and go to state 17
-    SUM             shift and go to state 18
-    AVG             shift and go to state 19
-    MIN             shift and go to state 20
-    MAX             shift and go to state 21
-
-    column_item                    shift and go to state 42
-
-state 30
-
-    (50) column_item -> COUNT LPAREN . STAR RPAREN
+    (5) select_stmt -> SELECT COUNT LPAREN . STAR RPAREN FROM ID optional_where optional_group
 
     STAR            shift and go to state 43
 
 
-state 31
+state 29
 
-    (51) column_item -> SUM LPAREN . ID RPAREN
+    (6) select_stmt -> SELECT SUM LPAREN . ID RPAREN FROM ID optional_where optional_group
 
     ID              shift and go to state 44
 
 
-state 32
+state 30
 
-    (52) column_item -> AVG LPAREN . ID RPAREN
+    (7) select_stmt -> SELECT AVG LPAREN . ID RPAREN FROM ID optional_where optional_group
 
     ID              shift and go to state 45
 
 
-state 33
+state 31
 
-    (53) column_item -> MIN LPAREN . ID RPAREN
+    (8) select_stmt -> SELECT MIN LPAREN . ID RPAREN FROM ID optional_where optional_group
 
     ID              shift and go to state 46
 
 
-state 34
+state 32
 
-    (54) column_item -> MAX LPAREN . ID RPAREN
+    (9) select_stmt -> SELECT MAX LPAREN . ID RPAREN FROM ID optional_where optional_group
 
     ID              shift and go to state 47
 
 
+state 33
+
+    (73) create_stmt -> CREATE TABLE ID . LPAREN column_def_list RPAREN
+
+    LPAREN          shift and go to state 48
+
+
+state 34
+
+    (86) insert_stmt -> INSERT INTO ID . LPAREN column_name_list RPAREN VALUES LPAREN value_list RPAREN
+    (87) insert_stmt -> INSERT INTO ID . VALUES LPAREN value_list RPAREN
+
+    LPAREN          shift and go to state 49
+    VALUES          shift and go to state 50
+
+
 state 35
 
-    (3) select_stmt -> SELECT COUNT LPAREN STAR . RPAREN FROM ID optional_where optional_group
+    (4) select_stmt -> SELECT optional_distinct select_list FROM . ID optional_join optional_where optional_group optional_having optional_order optional_limit
 
-    RPAREN          shift and go to state 48
+    ID              shift and go to state 51
 
 
 state 36
 
-    (4) select_stmt -> SELECT SUM LPAREN ID . RPAREN FROM ID optional_where optional_group
+    (51) column_item -> ID DOT . ID
 
-    RPAREN          shift and go to state 49
+    ID              shift and go to state 52
 
 
 state 37
 
-    (5) select_stmt -> SELECT AVG LPAREN ID . RPAREN FROM ID optional_where optional_group
+    (49) column_list -> column_list COMMA . column_item
+    (50) column_item -> . ID
+    (51) column_item -> . ID DOT ID
+    (52) column_item -> . COUNT LPAREN STAR RPAREN
+    (53) column_item -> . SUM LPAREN ID RPAREN
+    (54) column_item -> . AVG LPAREN ID RPAREN
+    (55) column_item -> . MIN LPAREN ID RPAREN
+    (56) column_item -> . MAX LPAREN ID RPAREN
 
-    RPAREN          shift and go to state 50
+    ID              shift and go to state 19
+    COUNT           shift and go to state 23
+    SUM             shift and go to state 24
+    AVG             shift and go to state 25
+    MIN             shift and go to state 26
+    MAX             shift and go to state 27
 
+    column_item                    shift and go to state 53
 
 state 38
 
-    (6) select_stmt -> SELECT MIN LPAREN ID . RPAREN FROM ID optional_where optional_group
+    (52) column_item -> COUNT LPAREN . STAR RPAREN
 
-    RPAREN          shift and go to state 51
+    STAR            shift and go to state 54
 
 
 state 39
 
-    (7) select_stmt -> SELECT MAX LPAREN ID . RPAREN FROM ID optional_where optional_group
+    (53) column_item -> SUM LPAREN . ID RPAREN
 
-    RPAREN          shift and go to state 52
+    ID              shift and go to state 55
 
 
 state 40
 
-    (2) select_stmt -> SELECT optional_distinct select_list FROM ID . optional_join optional_where optional_group optional_having optional_order optional_limit
-    (10) optional_join -> . JOIN ID ON join_condition
-    (11) optional_join -> . empty
-    (41) empty -> .
+    (54) column_item -> AVG LPAREN . ID RPAREN
 
-    JOIN            shift and go to state 54
-    WHERE           reduce using rule 41 (empty -> .)
-    GROUP           reduce using rule 41 (empty -> .)
-    HAVING          reduce using rule 41 (empty -> .)
-    ORDER           reduce using rule 41 (empty -> .)
-    LIMIT           reduce using rule 41 (empty -> .)
-    $end            reduce using rule 41 (empty -> .)
+    ID              shift and go to state 56
 
-    optional_join                  shift and go to state 53
-    empty                          shift and go to state 55
 
 state 41
 
-    (49) column_item -> ID DOT ID .
+    (55) column_item -> MIN LPAREN . ID RPAREN
 
-    COMMA           reduce using rule 49 (column_item -> ID DOT ID .)
-    FROM            reduce using rule 49 (column_item -> ID DOT ID .)
+    ID              shift and go to state 57
 
 
 state 42
 
-    (47) column_list -> column_list COMMA column_item .
+    (56) column_item -> MAX LPAREN . ID RPAREN
 
-    COMMA           reduce using rule 47 (column_list -> column_list COMMA column_item .)
-    FROM            reduce using rule 47 (column_list -> column_list COMMA column_item .)
+    ID              shift and go to state 58
 
 
 state 43
 
-    (50) column_item -> COUNT LPAREN STAR . RPAREN
-
-    RPAREN          shift and go to state 56
-
-
-state 44
-
-    (51) column_item -> SUM LPAREN ID . RPAREN
-
-    RPAREN          shift and go to state 57
-
-
-state 45
-
-    (52) column_item -> AVG LPAREN ID . RPAREN
-
-    RPAREN          shift and go to state 58
-
-
-state 46
-
-    (53) column_item -> MIN LPAREN ID . RPAREN
+    (5) select_stmt -> SELECT COUNT LPAREN STAR . RPAREN FROM ID optional_where optional_group
 
     RPAREN          shift and go to state 59
 
 
-state 47
+state 44
 
-    (54) column_item -> MAX LPAREN ID . RPAREN
+    (6) select_stmt -> SELECT SUM LPAREN ID . RPAREN FROM ID optional_where optional_group
 
     RPAREN          shift and go to state 60
 
 
+state 45
+
+    (7) select_stmt -> SELECT AVG LPAREN ID . RPAREN FROM ID optional_where optional_group
+
+    RPAREN          shift and go to state 61
+
+
+state 46
+
+    (8) select_stmt -> SELECT MIN LPAREN ID . RPAREN FROM ID optional_where optional_group
+
+    RPAREN          shift and go to state 62
+
+
+state 47
+
+    (9) select_stmt -> SELECT MAX LPAREN ID . RPAREN FROM ID optional_where optional_group
+
+    RPAREN          shift and go to state 63
+
+
 state 48
 
-    (3) select_stmt -> SELECT COUNT LPAREN STAR RPAREN . FROM ID optional_where optional_group
+    (73) create_stmt -> CREATE TABLE ID LPAREN . column_def_list RPAREN
+    (74) column_def_list -> . column_def
+    (75) column_def_list -> . column_def_list COMMA column_def
+    (76) column_def -> . ID INT
+    (77) column_def -> . ID INT PRIMARY KEY
+    (78) column_def -> . ID INT NOT NULL
+    (79) column_def -> . ID FLOAT
+    (80) column_def -> . ID FLOAT NOT NULL
+    (81) column_def -> . ID BOOL
+    (82) column_def -> . ID BOOL NOT NULL
+    (83) column_def -> . ID VARCHAR LPAREN NUMBER RPAREN
+    (84) column_def -> . ID VARCHAR LPAREN NUMBER RPAREN NOT NULL
+    (85) column_def -> . ID VARCHAR LPAREN NUMBER RPAREN PRIMARY KEY
 
-    FROM            shift and go to state 61
+    ID              shift and go to state 64
 
+    column_def_list                shift and go to state 65
+    column_def                     shift and go to state 66
 
 state 49
 
-    (4) select_stmt -> SELECT SUM LPAREN ID RPAREN . FROM ID optional_where optional_group
+    (86) insert_stmt -> INSERT INTO ID LPAREN . column_name_list RPAREN VALUES LPAREN value_list RPAREN
+    (88) column_name_list -> . ID
+    (89) column_name_list -> . column_name_list COMMA ID
 
-    FROM            shift and go to state 62
+    ID              shift and go to state 67
 
+    column_name_list               shift and go to state 68
 
 state 50
 
-    (5) select_stmt -> SELECT AVG LPAREN ID RPAREN . FROM ID optional_where optional_group
+    (87) insert_stmt -> INSERT INTO ID VALUES . LPAREN value_list RPAREN
 
-    FROM            shift and go to state 63
+    LPAREN          shift and go to state 69
 
 
 state 51
 
-    (6) select_stmt -> SELECT MIN LPAREN ID RPAREN . FROM ID optional_where optional_group
+    (4) select_stmt -> SELECT optional_distinct select_list FROM ID . optional_join optional_where optional_group optional_having optional_order optional_limit
+    (12) optional_join -> . JOIN ID ON join_condition
+    (13) optional_join -> . empty
+    (43) empty -> .
 
-    FROM            shift and go to state 64
+    JOIN            shift and go to state 71
+    WHERE           reduce using rule 43 (empty -> .)
+    GROUP           reduce using rule 43 (empty -> .)
+    HAVING          reduce using rule 43 (empty -> .)
+    ORDER           reduce using rule 43 (empty -> .)
+    LIMIT           reduce using rule 43 (empty -> .)
+    $end            reduce using rule 43 (empty -> .)
 
+    optional_join                  shift and go to state 70
+    empty                          shift and go to state 72
 
 state 52
 
-    (7) select_stmt -> SELECT MAX LPAREN ID RPAREN . FROM ID optional_where optional_group
+    (51) column_item -> ID DOT ID .
 
-    FROM            shift and go to state 65
+    COMMA           reduce using rule 51 (column_item -> ID DOT ID .)
+    FROM            reduce using rule 51 (column_item -> ID DOT ID .)
 
 
 state 53
 
-    (2) select_stmt -> SELECT optional_distinct select_list FROM ID optional_join . optional_where optional_group optional_having optional_order optional_limit
-    (8) optional_where -> . WHERE condition
-    (9) optional_where -> . empty
-    (41) empty -> .
+    (49) column_list -> column_list COMMA column_item .
 
-    WHERE           shift and go to state 67
-    GROUP           reduce using rule 41 (empty -> .)
-    HAVING          reduce using rule 41 (empty -> .)
-    ORDER           reduce using rule 41 (empty -> .)
-    LIMIT           reduce using rule 41 (empty -> .)
-    $end            reduce using rule 41 (empty -> .)
+    COMMA           reduce using rule 49 (column_list -> column_list COMMA column_item .)
+    FROM            reduce using rule 49 (column_list -> column_list COMMA column_item .)
 
-    optional_where                 shift and go to state 66
-    empty                          shift and go to state 68
 
 state 54
 
-    (10) optional_join -> JOIN . ID ON join_condition
+    (52) column_item -> COUNT LPAREN STAR . RPAREN
 
-    ID              shift and go to state 69
+    RPAREN          shift and go to state 73
 
 
 state 55
 
-    (11) optional_join -> empty .
+    (53) column_item -> SUM LPAREN ID . RPAREN
 
-    WHERE           reduce using rule 11 (optional_join -> empty .)
-    GROUP           reduce using rule 11 (optional_join -> empty .)
-    HAVING          reduce using rule 11 (optional_join -> empty .)
-    ORDER           reduce using rule 11 (optional_join -> empty .)
-    LIMIT           reduce using rule 11 (optional_join -> empty .)
-    $end            reduce using rule 11 (optional_join -> empty .)
+    RPAREN          shift and go to state 74
 
 
 state 56
 
-    (50) column_item -> COUNT LPAREN STAR RPAREN .
+    (54) column_item -> AVG LPAREN ID . RPAREN
 
-    COMMA           reduce using rule 50 (column_item -> COUNT LPAREN STAR RPAREN .)
-    FROM            reduce using rule 50 (column_item -> COUNT LPAREN STAR RPAREN .)
+    RPAREN          shift and go to state 75
 
 
 state 57
 
-    (51) column_item -> SUM LPAREN ID RPAREN .
+    (55) column_item -> MIN LPAREN ID . RPAREN
 
-    COMMA           reduce using rule 51 (column_item -> SUM LPAREN ID RPAREN .)
-    FROM            reduce using rule 51 (column_item -> SUM LPAREN ID RPAREN .)
+    RPAREN          shift and go to state 76
 
 
 state 58
 
-    (52) column_item -> AVG LPAREN ID RPAREN .
+    (56) column_item -> MAX LPAREN ID . RPAREN
 
-    COMMA           reduce using rule 52 (column_item -> AVG LPAREN ID RPAREN .)
-    FROM            reduce using rule 52 (column_item -> AVG LPAREN ID RPAREN .)
+    RPAREN          shift and go to state 77
 
 
 state 59
 
-    (53) column_item -> MIN LPAREN ID RPAREN .
+    (5) select_stmt -> SELECT COUNT LPAREN STAR RPAREN . FROM ID optional_where optional_group
 
-    COMMA           reduce using rule 53 (column_item -> MIN LPAREN ID RPAREN .)
-    FROM            reduce using rule 53 (column_item -> MIN LPAREN ID RPAREN .)
+    FROM            shift and go to state 78
 
 
 state 60
 
-    (54) column_item -> MAX LPAREN ID RPAREN .
+    (6) select_stmt -> SELECT SUM LPAREN ID RPAREN . FROM ID optional_where optional_group
 
-    COMMA           reduce using rule 54 (column_item -> MAX LPAREN ID RPAREN .)
-    FROM            reduce using rule 54 (column_item -> MAX LPAREN ID RPAREN .)
+    FROM            shift and go to state 79
 
 
 state 61
 
-    (3) select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM . ID optional_where optional_group
+    (7) select_stmt -> SELECT AVG LPAREN ID RPAREN . FROM ID optional_where optional_group
 
-    ID              shift and go to state 70
+    FROM            shift and go to state 80
 
 
 state 62
 
-    (4) select_stmt -> SELECT SUM LPAREN ID RPAREN FROM . ID optional_where optional_group
+    (8) select_stmt -> SELECT MIN LPAREN ID RPAREN . FROM ID optional_where optional_group
 
-    ID              shift and go to state 71
+    FROM            shift and go to state 81
 
 
 state 63
 
-    (5) select_stmt -> SELECT AVG LPAREN ID RPAREN FROM . ID optional_where optional_group
+    (9) select_stmt -> SELECT MAX LPAREN ID RPAREN . FROM ID optional_where optional_group
 
-    ID              shift and go to state 72
+    FROM            shift and go to state 82
 
 
 state 64
 
-    (6) select_stmt -> SELECT MIN LPAREN ID RPAREN FROM . ID optional_where optional_group
+    (76) column_def -> ID . INT
+    (77) column_def -> ID . INT PRIMARY KEY
+    (78) column_def -> ID . INT NOT NULL
+    (79) column_def -> ID . FLOAT
+    (80) column_def -> ID . FLOAT NOT NULL
+    (81) column_def -> ID . BOOL
+    (82) column_def -> ID . BOOL NOT NULL
+    (83) column_def -> ID . VARCHAR LPAREN NUMBER RPAREN
+    (84) column_def -> ID . VARCHAR LPAREN NUMBER RPAREN NOT NULL
+    (85) column_def -> ID . VARCHAR LPAREN NUMBER RPAREN PRIMARY KEY
 
-    ID              shift and go to state 73
+    INT             shift and go to state 83
+    FLOAT           shift and go to state 84
+    BOOL            shift and go to state 85
+    VARCHAR         shift and go to state 86
 
 
 state 65
 
-    (7) select_stmt -> SELECT MAX LPAREN ID RPAREN FROM . ID optional_where optional_group
+    (73) create_stmt -> CREATE TABLE ID LPAREN column_def_list . RPAREN
+    (75) column_def_list -> column_def_list . COMMA column_def
 
-    ID              shift and go to state 74
+    RPAREN          shift and go to state 87
+    COMMA           shift and go to state 88
 
 
 state 66
 
-    (2) select_stmt -> SELECT optional_distinct select_list FROM ID optional_join optional_where . optional_group optional_having optional_order optional_limit
-    (15) optional_group -> . GROUP BY group_by_list
-    (16) optional_group -> . empty
-    (41) empty -> .
+    (74) column_def_list -> column_def .
 
-    GROUP           shift and go to state 76
-    HAVING          reduce using rule 41 (empty -> .)
-    ORDER           reduce using rule 41 (empty -> .)
-    LIMIT           reduce using rule 41 (empty -> .)
-    $end            reduce using rule 41 (empty -> .)
+    RPAREN          reduce using rule 74 (column_def_list -> column_def .)
+    COMMA           reduce using rule 74 (column_def_list -> column_def .)
 
-    optional_group                 shift and go to state 75
-    empty                          shift and go to state 77
 
 state 67
 
-    (8) optional_where -> WHERE . condition
-    (55) condition -> . or_condition
-    (56) or_condition -> . and_condition
-    (57) or_condition -> . or_condition OR and_condition
-    (58) and_condition -> . not_condition
-    (59) and_condition -> . and_condition AND not_condition
-    (60) not_condition -> . simple_condition
-    (61) not_condition -> . NOT simple_condition
-    (62) simple_condition -> . column_ref comparator value
-    (13) column_ref -> . ID
-    (14) column_ref -> . ID DOT ID
+    (88) column_name_list -> ID .
 
-    NOT             shift and go to state 83
-    ID              shift and go to state 85
+    RPAREN          reduce using rule 88 (column_name_list -> ID .)
+    COMMA           reduce using rule 88 (column_name_list -> ID .)
 
-    condition                      shift and go to state 78
-    or_condition                   shift and go to state 79
-    and_condition                  shift and go to state 80
-    not_condition                  shift and go to state 81
-    simple_condition               shift and go to state 82
-    column_ref                     shift and go to state 84
 
 state 68
 
-    (9) optional_where -> empty .
+    (86) insert_stmt -> INSERT INTO ID LPAREN column_name_list . RPAREN VALUES LPAREN value_list RPAREN
+    (89) column_name_list -> column_name_list . COMMA ID
 
-    GROUP           reduce using rule 9 (optional_where -> empty .)
-    HAVING          reduce using rule 9 (optional_where -> empty .)
-    ORDER           reduce using rule 9 (optional_where -> empty .)
-    LIMIT           reduce using rule 9 (optional_where -> empty .)
-    $end            reduce using rule 9 (optional_where -> empty .)
+    RPAREN          shift and go to state 89
+    COMMA           shift and go to state 90
 
 
 state 69
 
-    (10) optional_join -> JOIN ID . ON join_condition
+    (87) insert_stmt -> INSERT INTO ID VALUES LPAREN . value_list RPAREN
+    (90) value_list -> . value
+    (91) value_list -> . value_list COMMA value
+    (70) value -> . NUMBER
+    (71) value -> . MINUS NUMBER
+    (72) value -> . STRING
 
-    ON              shift and go to state 86
+    NUMBER          shift and go to state 93
+    MINUS           shift and go to state 94
+    STRING          shift and go to state 95
 
+    value_list                     shift and go to state 91
+    value                          shift and go to state 92
 
 state 70
 
-    (3) select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM ID . optional_where optional_group
-    (8) optional_where -> . WHERE condition
-    (9) optional_where -> . empty
-    (41) empty -> .
+    (4) select_stmt -> SELECT optional_distinct select_list FROM ID optional_join . optional_where optional_group optional_having optional_order optional_limit
+    (10) optional_where -> . WHERE condition
+    (11) optional_where -> . empty
+    (43) empty -> .
 
-    WHERE           shift and go to state 67
-    GROUP           reduce using rule 41 (empty -> .)
-    $end            reduce using rule 41 (empty -> .)
+    WHERE           shift and go to state 97
+    GROUP           reduce using rule 43 (empty -> .)
+    HAVING          reduce using rule 43 (empty -> .)
+    ORDER           reduce using rule 43 (empty -> .)
+    LIMIT           reduce using rule 43 (empty -> .)
+    $end            reduce using rule 43 (empty -> .)
 
-    optional_where                 shift and go to state 87
-    empty                          shift and go to state 68
+    optional_where                 shift and go to state 96
+    empty                          shift and go to state 98
 
 state 71
 
-    (4) select_stmt -> SELECT SUM LPAREN ID RPAREN FROM ID . optional_where optional_group
-    (8) optional_where -> . WHERE condition
-    (9) optional_where -> . empty
-    (41) empty -> .
+    (12) optional_join -> JOIN . ID ON join_condition
 
-    WHERE           shift and go to state 67
-    GROUP           reduce using rule 41 (empty -> .)
-    $end            reduce using rule 41 (empty -> .)
+    ID              shift and go to state 99
 
-    optional_where                 shift and go to state 88
-    empty                          shift and go to state 68
 
 state 72
 
-    (5) select_stmt -> SELECT AVG LPAREN ID RPAREN FROM ID . optional_where optional_group
-    (8) optional_where -> . WHERE condition
-    (9) optional_where -> . empty
-    (41) empty -> .
+    (13) optional_join -> empty .
 
-    WHERE           shift and go to state 67
-    GROUP           reduce using rule 41 (empty -> .)
-    $end            reduce using rule 41 (empty -> .)
+    WHERE           reduce using rule 13 (optional_join -> empty .)
+    GROUP           reduce using rule 13 (optional_join -> empty .)
+    HAVING          reduce using rule 13 (optional_join -> empty .)
+    ORDER           reduce using rule 13 (optional_join -> empty .)
+    LIMIT           reduce using rule 13 (optional_join -> empty .)
+    $end            reduce using rule 13 (optional_join -> empty .)
 
-    optional_where                 shift and go to state 89
-    empty                          shift and go to state 68
 
 state 73
 
-    (6) select_stmt -> SELECT MIN LPAREN ID RPAREN FROM ID . optional_where optional_group
-    (8) optional_where -> . WHERE condition
-    (9) optional_where -> . empty
-    (41) empty -> .
+    (52) column_item -> COUNT LPAREN STAR RPAREN .
 
-    WHERE           shift and go to state 67
-    GROUP           reduce using rule 41 (empty -> .)
-    $end            reduce using rule 41 (empty -> .)
+    COMMA           reduce using rule 52 (column_item -> COUNT LPAREN STAR RPAREN .)
+    FROM            reduce using rule 52 (column_item -> COUNT LPAREN STAR RPAREN .)
 
-    optional_where                 shift and go to state 90
-    empty                          shift and go to state 68
 
 state 74
 
-    (7) select_stmt -> SELECT MAX LPAREN ID RPAREN FROM ID . optional_where optional_group
-    (8) optional_where -> . WHERE condition
-    (9) optional_where -> . empty
-    (41) empty -> .
+    (53) column_item -> SUM LPAREN ID RPAREN .
 
-    WHERE           shift and go to state 67
-    GROUP           reduce using rule 41 (empty -> .)
-    $end            reduce using rule 41 (empty -> .)
+    COMMA           reduce using rule 53 (column_item -> SUM LPAREN ID RPAREN .)
+    FROM            reduce using rule 53 (column_item -> SUM LPAREN ID RPAREN .)
 
-    optional_where                 shift and go to state 91
-    empty                          shift and go to state 68
 
 state 75
 
-    (2) select_stmt -> SELECT optional_distinct select_list FROM ID optional_join optional_where optional_group . optional_having optional_order optional_limit
-    (19) optional_having -> . HAVING having_condition
-    (20) optional_having -> . empty
-    (41) empty -> .
+    (54) column_item -> AVG LPAREN ID RPAREN .
 
-    HAVING          shift and go to state 93
-    ORDER           reduce using rule 41 (empty -> .)
-    LIMIT           reduce using rule 41 (empty -> .)
-    $end            reduce using rule 41 (empty -> .)
+    COMMA           reduce using rule 54 (column_item -> AVG LPAREN ID RPAREN .)
+    FROM            reduce using rule 54 (column_item -> AVG LPAREN ID RPAREN .)
 
-    optional_having                shift and go to state 92
-    empty                          shift and go to state 94
 
 state 76
 
-    (15) optional_group -> GROUP . BY group_by_list
+    (55) column_item -> MIN LPAREN ID RPAREN .
 
-    BY              shift and go to state 95
+    COMMA           reduce using rule 55 (column_item -> MIN LPAREN ID RPAREN .)
+    FROM            reduce using rule 55 (column_item -> MIN LPAREN ID RPAREN .)
 
 
 state 77
 
-    (16) optional_group -> empty .
+    (56) column_item -> MAX LPAREN ID RPAREN .
 
-    HAVING          reduce using rule 16 (optional_group -> empty .)
-    ORDER           reduce using rule 16 (optional_group -> empty .)
-    LIMIT           reduce using rule 16 (optional_group -> empty .)
-    $end            reduce using rule 16 (optional_group -> empty .)
+    COMMA           reduce using rule 56 (column_item -> MAX LPAREN ID RPAREN .)
+    FROM            reduce using rule 56 (column_item -> MAX LPAREN ID RPAREN .)
 
 
 state 78
 
-    (8) optional_where -> WHERE condition .
+    (5) select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM . ID optional_where optional_group
 
-    GROUP           reduce using rule 8 (optional_where -> WHERE condition .)
-    HAVING          reduce using rule 8 (optional_where -> WHERE condition .)
-    ORDER           reduce using rule 8 (optional_where -> WHERE condition .)
-    LIMIT           reduce using rule 8 (optional_where -> WHERE condition .)
-    $end            reduce using rule 8 (optional_where -> WHERE condition .)
+    ID              shift and go to state 100
 
 
 state 79
 
-    (55) condition -> or_condition .
-    (57) or_condition -> or_condition . OR and_condition
+    (6) select_stmt -> SELECT SUM LPAREN ID RPAREN FROM . ID optional_where optional_group
 
-    GROUP           reduce using rule 55 (condition -> or_condition .)
-    HAVING          reduce using rule 55 (condition -> or_condition .)
-    ORDER           reduce using rule 55 (condition -> or_condition .)
-    LIMIT           reduce using rule 55 (condition -> or_condition .)
-    $end            reduce using rule 55 (condition -> or_condition .)
-    OR              shift and go to state 96
+    ID              shift and go to state 101
 
 
 state 80
 
-    (56) or_condition -> and_condition .
-    (59) and_condition -> and_condition . AND not_condition
+    (7) select_stmt -> SELECT AVG LPAREN ID RPAREN FROM . ID optional_where optional_group
 
-    OR              reduce using rule 56 (or_condition -> and_condition .)
-    GROUP           reduce using rule 56 (or_condition -> and_condition .)
-    HAVING          reduce using rule 56 (or_condition -> and_condition .)
-    ORDER           reduce using rule 56 (or_condition -> and_condition .)
-    LIMIT           reduce using rule 56 (or_condition -> and_condition .)
-    $end            reduce using rule 56 (or_condition -> and_condition .)
-    AND             shift and go to state 97
+    ID              shift and go to state 102
 
 
 state 81
 
-    (58) and_condition -> not_condition .
+    (8) select_stmt -> SELECT MIN LPAREN ID RPAREN FROM . ID optional_where optional_group
 
-    AND             reduce using rule 58 (and_condition -> not_condition .)
-    OR              reduce using rule 58 (and_condition -> not_condition .)
-    GROUP           reduce using rule 58 (and_condition -> not_condition .)
-    HAVING          reduce using rule 58 (and_condition -> not_condition .)
-    ORDER           reduce using rule 58 (and_condition -> not_condition .)
-    LIMIT           reduce using rule 58 (and_condition -> not_condition .)
-    $end            reduce using rule 58 (and_condition -> not_condition .)
+    ID              shift and go to state 103
 
 
 state 82
 
-    (60) not_condition -> simple_condition .
+    (9) select_stmt -> SELECT MAX LPAREN ID RPAREN FROM . ID optional_where optional_group
 
-    AND             reduce using rule 60 (not_condition -> simple_condition .)
-    OR              reduce using rule 60 (not_condition -> simple_condition .)
-    GROUP           reduce using rule 60 (not_condition -> simple_condition .)
-    HAVING          reduce using rule 60 (not_condition -> simple_condition .)
-    ORDER           reduce using rule 60 (not_condition -> simple_condition .)
-    LIMIT           reduce using rule 60 (not_condition -> simple_condition .)
-    $end            reduce using rule 60 (not_condition -> simple_condition .)
+    ID              shift and go to state 104
 
 
 state 83
 
-    (61) not_condition -> NOT . simple_condition
-    (62) simple_condition -> . column_ref comparator value
-    (13) column_ref -> . ID
-    (14) column_ref -> . ID DOT ID
+    (76) column_def -> ID INT .
+    (77) column_def -> ID INT . PRIMARY KEY
+    (78) column_def -> ID INT . NOT NULL
 
-    ID              shift and go to state 85
+    RPAREN          reduce using rule 76 (column_def -> ID INT .)
+    COMMA           reduce using rule 76 (column_def -> ID INT .)
+    PRIMARY         shift and go to state 105
+    NOT             shift and go to state 106
 
-    simple_condition               shift and go to state 98
-    column_ref                     shift and go to state 84
 
 state 84
 
-    (62) simple_condition -> column_ref . comparator value
-    (63) comparator -> . EQUAL
-    (64) comparator -> . GT
-    (65) comparator -> . LT
-    (66) comparator -> . GE
-    (67) comparator -> . LE
+    (79) column_def -> ID FLOAT .
+    (80) column_def -> ID FLOAT . NOT NULL
 
-    EQUAL           shift and go to state 100
-    GT              shift and go to state 101
-    LT              shift and go to state 102
-    GE              shift and go to state 103
-    LE              shift and go to state 104
+    RPAREN          reduce using rule 79 (column_def -> ID FLOAT .)
+    COMMA           reduce using rule 79 (column_def -> ID FLOAT .)
+    NOT             shift and go to state 107
 
-    comparator                     shift and go to state 99
 
 state 85
 
-    (13) column_ref -> ID .
-    (14) column_ref -> ID . DOT ID
+    (81) column_def -> ID BOOL .
+    (82) column_def -> ID BOOL . NOT NULL
 
-    EQUAL           reduce using rule 13 (column_ref -> ID .)
-    GT              reduce using rule 13 (column_ref -> ID .)
-    LT              reduce using rule 13 (column_ref -> ID .)
-    GE              reduce using rule 13 (column_ref -> ID .)
-    LE              reduce using rule 13 (column_ref -> ID .)
-    COMMA           reduce using rule 13 (column_ref -> ID .)
-    HAVING          reduce using rule 13 (column_ref -> ID .)
-    ORDER           reduce using rule 13 (column_ref -> ID .)
-    LIMIT           reduce using rule 13 (column_ref -> ID .)
-    $end            reduce using rule 13 (column_ref -> ID .)
-    WHERE           reduce using rule 13 (column_ref -> ID .)
-    GROUP           reduce using rule 13 (column_ref -> ID .)
-    ASC             reduce using rule 13 (column_ref -> ID .)
-    DESC            reduce using rule 13 (column_ref -> ID .)
-    DOT             shift and go to state 105
+    RPAREN          reduce using rule 81 (column_def -> ID BOOL .)
+    COMMA           reduce using rule 81 (column_def -> ID BOOL .)
+    NOT             shift and go to state 108
 
 
 state 86
 
-    (10) optional_join -> JOIN ID ON . join_condition
-    (12) join_condition -> . column_ref EQUAL column_ref
-    (13) column_ref -> . ID
-    (14) column_ref -> . ID DOT ID
+    (83) column_def -> ID VARCHAR . LPAREN NUMBER RPAREN
+    (84) column_def -> ID VARCHAR . LPAREN NUMBER RPAREN NOT NULL
+    (85) column_def -> ID VARCHAR . LPAREN NUMBER RPAREN PRIMARY KEY
 
-    ID              shift and go to state 85
+    LPAREN          shift and go to state 109
 
-    join_condition                 shift and go to state 106
-    column_ref                     shift and go to state 107
 
 state 87
 
-    (3) select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where . optional_group
-    (15) optional_group -> . GROUP BY group_by_list
-    (16) optional_group -> . empty
-    (41) empty -> .
+    (73) create_stmt -> CREATE TABLE ID LPAREN column_def_list RPAREN .
 
-    GROUP           shift and go to state 76
-    $end            reduce using rule 41 (empty -> .)
+    $end            reduce using rule 73 (create_stmt -> CREATE TABLE ID LPAREN column_def_list RPAREN .)
 
-    optional_group                 shift and go to state 108
-    empty                          shift and go to state 77
 
 state 88
 
-    (4) select_stmt -> SELECT SUM LPAREN ID RPAREN FROM ID optional_where . optional_group
-    (15) optional_group -> . GROUP BY group_by_list
-    (16) optional_group -> . empty
-    (41) empty -> .
+    (75) column_def_list -> column_def_list COMMA . column_def
+    (76) column_def -> . ID INT
+    (77) column_def -> . ID INT PRIMARY KEY
+    (78) column_def -> . ID INT NOT NULL
+    (79) column_def -> . ID FLOAT
+    (80) column_def -> . ID FLOAT NOT NULL
+    (81) column_def -> . ID BOOL
+    (82) column_def -> . ID BOOL NOT NULL
+    (83) column_def -> . ID VARCHAR LPAREN NUMBER RPAREN
+    (84) column_def -> . ID VARCHAR LPAREN NUMBER RPAREN NOT NULL
+    (85) column_def -> . ID VARCHAR LPAREN NUMBER RPAREN PRIMARY KEY
 
-    GROUP           shift and go to state 76
-    $end            reduce using rule 41 (empty -> .)
+    ID              shift and go to state 64
 
-    optional_group                 shift and go to state 109
-    empty                          shift and go to state 77
+    column_def                     shift and go to state 110
 
 state 89
 
-    (5) select_stmt -> SELECT AVG LPAREN ID RPAREN FROM ID optional_where . optional_group
-    (15) optional_group -> . GROUP BY group_by_list
-    (16) optional_group -> . empty
-    (41) empty -> .
+    (86) insert_stmt -> INSERT INTO ID LPAREN column_name_list RPAREN . VALUES LPAREN value_list RPAREN
 
-    GROUP           shift and go to state 76
-    $end            reduce using rule 41 (empty -> .)
+    VALUES          shift and go to state 111
 
-    optional_group                 shift and go to state 110
-    empty                          shift and go to state 77
 
 state 90
 
-    (6) select_stmt -> SELECT MIN LPAREN ID RPAREN FROM ID optional_where . optional_group
-    (15) optional_group -> . GROUP BY group_by_list
-    (16) optional_group -> . empty
-    (41) empty -> .
+    (89) column_name_list -> column_name_list COMMA . ID
 
-    GROUP           shift and go to state 76
-    $end            reduce using rule 41 (empty -> .)
+    ID              shift and go to state 112
 
-    optional_group                 shift and go to state 111
-    empty                          shift and go to state 77
 
 state 91
 
-    (7) select_stmt -> SELECT MAX LPAREN ID RPAREN FROM ID optional_where . optional_group
-    (15) optional_group -> . GROUP BY group_by_list
-    (16) optional_group -> . empty
-    (41) empty -> .
+    (87) insert_stmt -> INSERT INTO ID VALUES LPAREN value_list . RPAREN
+    (91) value_list -> value_list . COMMA value
 
-    GROUP           shift and go to state 76
-    $end            reduce using rule 41 (empty -> .)
+    RPAREN          shift and go to state 113
+    COMMA           shift and go to state 114
 
-    optional_group                 shift and go to state 112
-    empty                          shift and go to state 77
 
 state 92
 
-    (2) select_stmt -> SELECT optional_distinct select_list FROM ID optional_join optional_where optional_group optional_having . optional_order optional_limit
-    (24) optional_order -> . ORDER BY order_by_expr
-    (25) optional_order -> . empty
-    (41) empty -> .
+    (90) value_list -> value .
 
-    ORDER           shift and go to state 114
-    LIMIT           reduce using rule 41 (empty -> .)
-    $end            reduce using rule 41 (empty -> .)
+    RPAREN          reduce using rule 90 (value_list -> value .)
+    COMMA           reduce using rule 90 (value_list -> value .)
 
-    optional_order                 shift and go to state 113
-    empty                          shift and go to state 115
 
 state 93
 
-    (19) optional_having -> HAVING . having_condition
-    (21) having_condition -> . aggregate_comparison
-    (22) aggregate_comparison -> . COUNT LPAREN STAR RPAREN comparator NUMBER
-    (23) aggregate_comparison -> . aggregate_func LPAREN ID RPAREN comparator NUMBER
-    (35) aggregate_func -> . SUM
-    (36) aggregate_func -> . AVG
-    (37) aggregate_func -> . MIN
-    (38) aggregate_func -> . MAX
+    (70) value -> NUMBER .
 
-    COUNT           shift and go to state 118
-    SUM             shift and go to state 120
-    AVG             shift and go to state 121
-    MIN             shift and go to state 122
-    MAX             shift and go to state 123
+    RPAREN          reduce using rule 70 (value -> NUMBER .)
+    COMMA           reduce using rule 70 (value -> NUMBER .)
+    AND             reduce using rule 70 (value -> NUMBER .)
+    OR              reduce using rule 70 (value -> NUMBER .)
+    GROUP           reduce using rule 70 (value -> NUMBER .)
+    HAVING          reduce using rule 70 (value -> NUMBER .)
+    ORDER           reduce using rule 70 (value -> NUMBER .)
+    LIMIT           reduce using rule 70 (value -> NUMBER .)
+    $end            reduce using rule 70 (value -> NUMBER .)
 
-    having_condition               shift and go to state 116
-    aggregate_comparison           shift and go to state 117
-    aggregate_func                 shift and go to state 119
 
 state 94
 
-    (20) optional_having -> empty .
+    (71) value -> MINUS . NUMBER
 
-    ORDER           reduce using rule 20 (optional_having -> empty .)
-    LIMIT           reduce using rule 20 (optional_having -> empty .)
-    $end            reduce using rule 20 (optional_having -> empty .)
+    NUMBER          shift and go to state 115
 
 
 state 95
 
-    (15) optional_group -> GROUP BY . group_by_list
-    (17) group_by_list -> . column_ref
-    (18) group_by_list -> . group_by_list COMMA column_ref
-    (13) column_ref -> . ID
-    (14) column_ref -> . ID DOT ID
+    (72) value -> STRING .
 
-    ID              shift and go to state 85
+    RPAREN          reduce using rule 72 (value -> STRING .)
+    COMMA           reduce using rule 72 (value -> STRING .)
+    AND             reduce using rule 72 (value -> STRING .)
+    OR              reduce using rule 72 (value -> STRING .)
+    GROUP           reduce using rule 72 (value -> STRING .)
+    HAVING          reduce using rule 72 (value -> STRING .)
+    ORDER           reduce using rule 72 (value -> STRING .)
+    LIMIT           reduce using rule 72 (value -> STRING .)
+    $end            reduce using rule 72 (value -> STRING .)
 
-    group_by_list                  shift and go to state 124
-    column_ref                     shift and go to state 125
 
 state 96
 
-    (57) or_condition -> or_condition OR . and_condition
-    (58) and_condition -> . not_condition
-    (59) and_condition -> . and_condition AND not_condition
-    (60) not_condition -> . simple_condition
-    (61) not_condition -> . NOT simple_condition
-    (62) simple_condition -> . column_ref comparator value
-    (13) column_ref -> . ID
-    (14) column_ref -> . ID DOT ID
+    (4) select_stmt -> SELECT optional_distinct select_list FROM ID optional_join optional_where . optional_group optional_having optional_order optional_limit
+    (17) optional_group -> . GROUP BY group_by_list
+    (18) optional_group -> . empty
+    (43) empty -> .
 
-    NOT             shift and go to state 83
-    ID              shift and go to state 85
+    GROUP           shift and go to state 117
+    HAVING          reduce using rule 43 (empty -> .)
+    ORDER           reduce using rule 43 (empty -> .)
+    LIMIT           reduce using rule 43 (empty -> .)
+    $end            reduce using rule 43 (empty -> .)
 
-    and_condition                  shift and go to state 126
-    not_condition                  shift and go to state 81
-    simple_condition               shift and go to state 82
-    column_ref                     shift and go to state 84
+    optional_group                 shift and go to state 116
+    empty                          shift and go to state 118
 
 state 97
 
-    (59) and_condition -> and_condition AND . not_condition
-    (60) not_condition -> . simple_condition
-    (61) not_condition -> . NOT simple_condition
-    (62) simple_condition -> . column_ref comparator value
-    (13) column_ref -> . ID
-    (14) column_ref -> . ID DOT ID
+    (10) optional_where -> WHERE . condition
+    (57) condition -> . or_condition
+    (58) or_condition -> . and_condition
+    (59) or_condition -> . or_condition OR and_condition
+    (60) and_condition -> . not_condition
+    (61) and_condition -> . and_condition AND not_condition
+    (62) not_condition -> . simple_condition
+    (63) not_condition -> . NOT simple_condition
+    (64) simple_condition -> . column_ref comparator value
+    (15) column_ref -> . ID
+    (16) column_ref -> . ID DOT ID
 
-    NOT             shift and go to state 83
-    ID              shift and go to state 85
+    NOT             shift and go to state 124
+    ID              shift and go to state 126
 
-    not_condition                  shift and go to state 127
-    simple_condition               shift and go to state 82
-    column_ref                     shift and go to state 84
+    condition                      shift and go to state 119
+    or_condition                   shift and go to state 120
+    and_condition                  shift and go to state 121
+    not_condition                  shift and go to state 122
+    simple_condition               shift and go to state 123
+    column_ref                     shift and go to state 125
 
 state 98
 
-    (61) not_condition -> NOT simple_condition .
+    (11) optional_where -> empty .
 
-    AND             reduce using rule 61 (not_condition -> NOT simple_condition .)
-    OR              reduce using rule 61 (not_condition -> NOT simple_condition .)
-    GROUP           reduce using rule 61 (not_condition -> NOT simple_condition .)
-    HAVING          reduce using rule 61 (not_condition -> NOT simple_condition .)
-    ORDER           reduce using rule 61 (not_condition -> NOT simple_condition .)
-    LIMIT           reduce using rule 61 (not_condition -> NOT simple_condition .)
-    $end            reduce using rule 61 (not_condition -> NOT simple_condition .)
+    GROUP           reduce using rule 11 (optional_where -> empty .)
+    HAVING          reduce using rule 11 (optional_where -> empty .)
+    ORDER           reduce using rule 11 (optional_where -> empty .)
+    LIMIT           reduce using rule 11 (optional_where -> empty .)
+    $end            reduce using rule 11 (optional_where -> empty .)
 
 
 state 99
 
-    (62) simple_condition -> column_ref comparator . value
-    (68) value -> . NUMBER
-    (69) value -> . STRING
+    (12) optional_join -> JOIN ID . ON join_condition
 
-    NUMBER          shift and go to state 129
-    STRING          shift and go to state 130
+    ON              shift and go to state 127
 
-    value                          shift and go to state 128
 
 state 100
 
-    (63) comparator -> EQUAL .
+    (5) select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM ID . optional_where optional_group
+    (10) optional_where -> . WHERE condition
+    (11) optional_where -> . empty
+    (43) empty -> .
 
-    NUMBER          reduce using rule 63 (comparator -> EQUAL .)
-    STRING          reduce using rule 63 (comparator -> EQUAL .)
+    WHERE           shift and go to state 97
+    GROUP           reduce using rule 43 (empty -> .)
+    $end            reduce using rule 43 (empty -> .)
 
+    optional_where                 shift and go to state 128
+    empty                          shift and go to state 98
 
 state 101
 
-    (64) comparator -> GT .
+    (6) select_stmt -> SELECT SUM LPAREN ID RPAREN FROM ID . optional_where optional_group
+    (10) optional_where -> . WHERE condition
+    (11) optional_where -> . empty
+    (43) empty -> .
 
-    NUMBER          reduce using rule 64 (comparator -> GT .)
-    STRING          reduce using rule 64 (comparator -> GT .)
+    WHERE           shift and go to state 97
+    GROUP           reduce using rule 43 (empty -> .)
+    $end            reduce using rule 43 (empty -> .)
 
+    optional_where                 shift and go to state 129
+    empty                          shift and go to state 98
 
 state 102
 
-    (65) comparator -> LT .
+    (7) select_stmt -> SELECT AVG LPAREN ID RPAREN FROM ID . optional_where optional_group
+    (10) optional_where -> . WHERE condition
+    (11) optional_where -> . empty
+    (43) empty -> .
 
-    NUMBER          reduce using rule 65 (comparator -> LT .)
-    STRING          reduce using rule 65 (comparator -> LT .)
+    WHERE           shift and go to state 97
+    GROUP           reduce using rule 43 (empty -> .)
+    $end            reduce using rule 43 (empty -> .)
 
+    optional_where                 shift and go to state 130
+    empty                          shift and go to state 98
 
 state 103
 
-    (66) comparator -> GE .
+    (8) select_stmt -> SELECT MIN LPAREN ID RPAREN FROM ID . optional_where optional_group
+    (10) optional_where -> . WHERE condition
+    (11) optional_where -> . empty
+    (43) empty -> .
 
-    NUMBER          reduce using rule 66 (comparator -> GE .)
-    STRING          reduce using rule 66 (comparator -> GE .)
+    WHERE           shift and go to state 97
+    GROUP           reduce using rule 43 (empty -> .)
+    $end            reduce using rule 43 (empty -> .)
 
+    optional_where                 shift and go to state 131
+    empty                          shift and go to state 98
 
 state 104
 
-    (67) comparator -> LE .
+    (9) select_stmt -> SELECT MAX LPAREN ID RPAREN FROM ID . optional_where optional_group
+    (10) optional_where -> . WHERE condition
+    (11) optional_where -> . empty
+    (43) empty -> .
 
-    NUMBER          reduce using rule 67 (comparator -> LE .)
-    STRING          reduce using rule 67 (comparator -> LE .)
+    WHERE           shift and go to state 97
+    GROUP           reduce using rule 43 (empty -> .)
+    $end            reduce using rule 43 (empty -> .)
 
+    optional_where                 shift and go to state 132
+    empty                          shift and go to state 98
 
 state 105
 
-    (14) column_ref -> ID DOT . ID
+    (77) column_def -> ID INT PRIMARY . KEY
 
-    ID              shift and go to state 131
+    KEY             shift and go to state 133
 
 
 state 106
 
-    (10) optional_join -> JOIN ID ON join_condition .
+    (78) column_def -> ID INT NOT . NULL
 
-    WHERE           reduce using rule 10 (optional_join -> JOIN ID ON join_condition .)
-    GROUP           reduce using rule 10 (optional_join -> JOIN ID ON join_condition .)
-    HAVING          reduce using rule 10 (optional_join -> JOIN ID ON join_condition .)
-    ORDER           reduce using rule 10 (optional_join -> JOIN ID ON join_condition .)
-    LIMIT           reduce using rule 10 (optional_join -> JOIN ID ON join_condition .)
-    $end            reduce using rule 10 (optional_join -> JOIN ID ON join_condition .)
+    NULL            shift and go to state 134
 
 
 state 107
 
-    (12) join_condition -> column_ref . EQUAL column_ref
+    (80) column_def -> ID FLOAT NOT . NULL
 
-    EQUAL           shift and go to state 132
+    NULL            shift and go to state 135
 
 
 state 108
 
-    (3) select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where optional_group .
+    (82) column_def -> ID BOOL NOT . NULL
 
-    $end            reduce using rule 3 (select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where optional_group .)
+    NULL            shift and go to state 136
 
 
 state 109
 
-    (4) select_stmt -> SELECT SUM LPAREN ID RPAREN FROM ID optional_where optional_group .
+    (83) column_def -> ID VARCHAR LPAREN . NUMBER RPAREN
+    (84) column_def -> ID VARCHAR LPAREN . NUMBER RPAREN NOT NULL
+    (85) column_def -> ID VARCHAR LPAREN . NUMBER RPAREN PRIMARY KEY
 
-    $end            reduce using rule 4 (select_stmt -> SELECT SUM LPAREN ID RPAREN FROM ID optional_where optional_group .)
+    NUMBER          shift and go to state 137
 
 
 state 110
 
-    (5) select_stmt -> SELECT AVG LPAREN ID RPAREN FROM ID optional_where optional_group .
+    (75) column_def_list -> column_def_list COMMA column_def .
 
-    $end            reduce using rule 5 (select_stmt -> SELECT AVG LPAREN ID RPAREN FROM ID optional_where optional_group .)
+    RPAREN          reduce using rule 75 (column_def_list -> column_def_list COMMA column_def .)
+    COMMA           reduce using rule 75 (column_def_list -> column_def_list COMMA column_def .)
 
 
 state 111
 
-    (6) select_stmt -> SELECT MIN LPAREN ID RPAREN FROM ID optional_where optional_group .
-
-    $end            reduce using rule 6 (select_stmt -> SELECT MIN LPAREN ID RPAREN FROM ID optional_where optional_group .)
-
-
-state 112
-
-    (7) select_stmt -> SELECT MAX LPAREN ID RPAREN FROM ID optional_where optional_group .
-
-    $end            reduce using rule 7 (select_stmt -> SELECT MAX LPAREN ID RPAREN FROM ID optional_where optional_group .)
-
-
-state 113
-
-    (2) select_stmt -> SELECT optional_distinct select_list FROM ID optional_join optional_where optional_group optional_having optional_order . optional_limit
-    (39) optional_limit -> . LIMIT NUMBER
-    (40) optional_limit -> . empty
-    (41) empty -> .
-
-    LIMIT           shift and go to state 134
-    $end            reduce using rule 41 (empty -> .)
-
-    optional_limit                 shift and go to state 133
-    empty                          shift and go to state 135
-
-state 114
-
-    (24) optional_order -> ORDER . BY order_by_expr
-
-    BY              shift and go to state 136
-
-
-state 115
-
-    (25) optional_order -> empty .
-
-    LIMIT           reduce using rule 25 (optional_order -> empty .)
-    $end            reduce using rule 25 (optional_order -> empty .)
-
-
-state 116
-
-    (19) optional_having -> HAVING having_condition .
-
-    ORDER           reduce using rule 19 (optional_having -> HAVING having_condition .)
-    LIMIT           reduce using rule 19 (optional_having -> HAVING having_condition .)
-    $end            reduce using rule 19 (optional_having -> HAVING having_condition .)
-
-
-state 117
-
-    (21) having_condition -> aggregate_comparison .
-
-    ORDER           reduce using rule 21 (having_condition -> aggregate_comparison .)
-    LIMIT           reduce using rule 21 (having_condition -> aggregate_comparison .)
-    $end            reduce using rule 21 (having_condition -> aggregate_comparison .)
-
-
-state 118
-
-    (22) aggregate_comparison -> COUNT . LPAREN STAR RPAREN comparator NUMBER
-
-    LPAREN          shift and go to state 137
-
-
-state 119
-
-    (23) aggregate_comparison -> aggregate_func . LPAREN ID RPAREN comparator NUMBER
+    (86) insert_stmt -> INSERT INTO ID LPAREN column_name_list RPAREN VALUES . LPAREN value_list RPAREN
 
     LPAREN          shift and go to state 138
 
 
+state 112
+
+    (89) column_name_list -> column_name_list COMMA ID .
+
+    RPAREN          reduce using rule 89 (column_name_list -> column_name_list COMMA ID .)
+    COMMA           reduce using rule 89 (column_name_list -> column_name_list COMMA ID .)
+
+
+state 113
+
+    (87) insert_stmt -> INSERT INTO ID VALUES LPAREN value_list RPAREN .
+
+    $end            reduce using rule 87 (insert_stmt -> INSERT INTO ID VALUES LPAREN value_list RPAREN .)
+
+
+state 114
+
+    (91) value_list -> value_list COMMA . value
+    (70) value -> . NUMBER
+    (71) value -> . MINUS NUMBER
+    (72) value -> . STRING
+
+    NUMBER          shift and go to state 93
+    MINUS           shift and go to state 94
+    STRING          shift and go to state 95
+
+    value                          shift and go to state 139
+
+state 115
+
+    (71) value -> MINUS NUMBER .
+
+    RPAREN          reduce using rule 71 (value -> MINUS NUMBER .)
+    COMMA           reduce using rule 71 (value -> MINUS NUMBER .)
+    AND             reduce using rule 71 (value -> MINUS NUMBER .)
+    OR              reduce using rule 71 (value -> MINUS NUMBER .)
+    GROUP           reduce using rule 71 (value -> MINUS NUMBER .)
+    HAVING          reduce using rule 71 (value -> MINUS NUMBER .)
+    ORDER           reduce using rule 71 (value -> MINUS NUMBER .)
+    LIMIT           reduce using rule 71 (value -> MINUS NUMBER .)
+    $end            reduce using rule 71 (value -> MINUS NUMBER .)
+
+
+state 116
+
+    (4) select_stmt -> SELECT optional_distinct select_list FROM ID optional_join optional_where optional_group . optional_having optional_order optional_limit
+    (21) optional_having -> . HAVING having_condition
+    (22) optional_having -> . empty
+    (43) empty -> .
+
+    HAVING          shift and go to state 141
+    ORDER           reduce using rule 43 (empty -> .)
+    LIMIT           reduce using rule 43 (empty -> .)
+    $end            reduce using rule 43 (empty -> .)
+
+    optional_having                shift and go to state 140
+    empty                          shift and go to state 142
+
+state 117
+
+    (17) optional_group -> GROUP . BY group_by_list
+
+    BY              shift and go to state 143
+
+
+state 118
+
+    (18) optional_group -> empty .
+
+    HAVING          reduce using rule 18 (optional_group -> empty .)
+    ORDER           reduce using rule 18 (optional_group -> empty .)
+    LIMIT           reduce using rule 18 (optional_group -> empty .)
+    $end            reduce using rule 18 (optional_group -> empty .)
+
+
+state 119
+
+    (10) optional_where -> WHERE condition .
+
+    GROUP           reduce using rule 10 (optional_where -> WHERE condition .)
+    HAVING          reduce using rule 10 (optional_where -> WHERE condition .)
+    ORDER           reduce using rule 10 (optional_where -> WHERE condition .)
+    LIMIT           reduce using rule 10 (optional_where -> WHERE condition .)
+    $end            reduce using rule 10 (optional_where -> WHERE condition .)
+
+
 state 120
 
-    (35) aggregate_func -> SUM .
+    (57) condition -> or_condition .
+    (59) or_condition -> or_condition . OR and_condition
 
-    LPAREN          reduce using rule 35 (aggregate_func -> SUM .)
+    GROUP           reduce using rule 57 (condition -> or_condition .)
+    HAVING          reduce using rule 57 (condition -> or_condition .)
+    ORDER           reduce using rule 57 (condition -> or_condition .)
+    LIMIT           reduce using rule 57 (condition -> or_condition .)
+    $end            reduce using rule 57 (condition -> or_condition .)
+    OR              shift and go to state 144
 
 
 state 121
 
-    (36) aggregate_func -> AVG .
+    (58) or_condition -> and_condition .
+    (61) and_condition -> and_condition . AND not_condition
 
-    LPAREN          reduce using rule 36 (aggregate_func -> AVG .)
+    OR              reduce using rule 58 (or_condition -> and_condition .)
+    GROUP           reduce using rule 58 (or_condition -> and_condition .)
+    HAVING          reduce using rule 58 (or_condition -> and_condition .)
+    ORDER           reduce using rule 58 (or_condition -> and_condition .)
+    LIMIT           reduce using rule 58 (or_condition -> and_condition .)
+    $end            reduce using rule 58 (or_condition -> and_condition .)
+    AND             shift and go to state 145
 
 
 state 122
 
-    (37) aggregate_func -> MIN .
+    (60) and_condition -> not_condition .
 
-    LPAREN          reduce using rule 37 (aggregate_func -> MIN .)
+    AND             reduce using rule 60 (and_condition -> not_condition .)
+    OR              reduce using rule 60 (and_condition -> not_condition .)
+    GROUP           reduce using rule 60 (and_condition -> not_condition .)
+    HAVING          reduce using rule 60 (and_condition -> not_condition .)
+    ORDER           reduce using rule 60 (and_condition -> not_condition .)
+    LIMIT           reduce using rule 60 (and_condition -> not_condition .)
+    $end            reduce using rule 60 (and_condition -> not_condition .)
 
 
 state 123
 
-    (38) aggregate_func -> MAX .
+    (62) not_condition -> simple_condition .
 
-    LPAREN          reduce using rule 38 (aggregate_func -> MAX .)
+    AND             reduce using rule 62 (not_condition -> simple_condition .)
+    OR              reduce using rule 62 (not_condition -> simple_condition .)
+    GROUP           reduce using rule 62 (not_condition -> simple_condition .)
+    HAVING          reduce using rule 62 (not_condition -> simple_condition .)
+    ORDER           reduce using rule 62 (not_condition -> simple_condition .)
+    LIMIT           reduce using rule 62 (not_condition -> simple_condition .)
+    $end            reduce using rule 62 (not_condition -> simple_condition .)
 
 
 state 124
 
-    (15) optional_group -> GROUP BY group_by_list .
-    (18) group_by_list -> group_by_list . COMMA column_ref
+    (63) not_condition -> NOT . simple_condition
+    (64) simple_condition -> . column_ref comparator value
+    (15) column_ref -> . ID
+    (16) column_ref -> . ID DOT ID
 
-    HAVING          reduce using rule 15 (optional_group -> GROUP BY group_by_list .)
-    ORDER           reduce using rule 15 (optional_group -> GROUP BY group_by_list .)
-    LIMIT           reduce using rule 15 (optional_group -> GROUP BY group_by_list .)
-    $end            reduce using rule 15 (optional_group -> GROUP BY group_by_list .)
-    COMMA           shift and go to state 139
+    ID              shift and go to state 126
 
+    simple_condition               shift and go to state 146
+    column_ref                     shift and go to state 125
 
 state 125
 
-    (17) group_by_list -> column_ref .
+    (64) simple_condition -> column_ref . comparator value
+    (65) comparator -> . EQUAL
+    (66) comparator -> . GT
+    (67) comparator -> . LT
+    (68) comparator -> . GE
+    (69) comparator -> . LE
 
-    COMMA           reduce using rule 17 (group_by_list -> column_ref .)
-    HAVING          reduce using rule 17 (group_by_list -> column_ref .)
-    ORDER           reduce using rule 17 (group_by_list -> column_ref .)
-    LIMIT           reduce using rule 17 (group_by_list -> column_ref .)
-    $end            reduce using rule 17 (group_by_list -> column_ref .)
+    EQUAL           shift and go to state 148
+    GT              shift and go to state 149
+    LT              shift and go to state 150
+    GE              shift and go to state 151
+    LE              shift and go to state 152
 
+    comparator                     shift and go to state 147
 
 state 126
 
-    (57) or_condition -> or_condition OR and_condition .
-    (59) and_condition -> and_condition . AND not_condition
+    (15) column_ref -> ID .
+    (16) column_ref -> ID . DOT ID
 
-    OR              reduce using rule 57 (or_condition -> or_condition OR and_condition .)
-    GROUP           reduce using rule 57 (or_condition -> or_condition OR and_condition .)
-    HAVING          reduce using rule 57 (or_condition -> or_condition OR and_condition .)
-    ORDER           reduce using rule 57 (or_condition -> or_condition OR and_condition .)
-    LIMIT           reduce using rule 57 (or_condition -> or_condition OR and_condition .)
-    $end            reduce using rule 57 (or_condition -> or_condition OR and_condition .)
-    AND             shift and go to state 97
+    EQUAL           reduce using rule 15 (column_ref -> ID .)
+    GT              reduce using rule 15 (column_ref -> ID .)
+    LT              reduce using rule 15 (column_ref -> ID .)
+    GE              reduce using rule 15 (column_ref -> ID .)
+    LE              reduce using rule 15 (column_ref -> ID .)
+    COMMA           reduce using rule 15 (column_ref -> ID .)
+    HAVING          reduce using rule 15 (column_ref -> ID .)
+    ORDER           reduce using rule 15 (column_ref -> ID .)
+    LIMIT           reduce using rule 15 (column_ref -> ID .)
+    $end            reduce using rule 15 (column_ref -> ID .)
+    WHERE           reduce using rule 15 (column_ref -> ID .)
+    GROUP           reduce using rule 15 (column_ref -> ID .)
+    ASC             reduce using rule 15 (column_ref -> ID .)
+    DESC            reduce using rule 15 (column_ref -> ID .)
+    DOT             shift and go to state 153
 
 
 state 127
 
-    (59) and_condition -> and_condition AND not_condition .
+    (12) optional_join -> JOIN ID ON . join_condition
+    (14) join_condition -> . column_ref EQUAL column_ref
+    (15) column_ref -> . ID
+    (16) column_ref -> . ID DOT ID
 
-    AND             reduce using rule 59 (and_condition -> and_condition AND not_condition .)
-    OR              reduce using rule 59 (and_condition -> and_condition AND not_condition .)
-    GROUP           reduce using rule 59 (and_condition -> and_condition AND not_condition .)
-    HAVING          reduce using rule 59 (and_condition -> and_condition AND not_condition .)
-    ORDER           reduce using rule 59 (and_condition -> and_condition AND not_condition .)
-    LIMIT           reduce using rule 59 (and_condition -> and_condition AND not_condition .)
-    $end            reduce using rule 59 (and_condition -> and_condition AND not_condition .)
+    ID              shift and go to state 126
 
+    join_condition                 shift and go to state 154
+    column_ref                     shift and go to state 155
 
 state 128
 
-    (62) simple_condition -> column_ref comparator value .
+    (5) select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where . optional_group
+    (17) optional_group -> . GROUP BY group_by_list
+    (18) optional_group -> . empty
+    (43) empty -> .
 
-    AND             reduce using rule 62 (simple_condition -> column_ref comparator value .)
-    OR              reduce using rule 62 (simple_condition -> column_ref comparator value .)
-    GROUP           reduce using rule 62 (simple_condition -> column_ref comparator value .)
-    HAVING          reduce using rule 62 (simple_condition -> column_ref comparator value .)
-    ORDER           reduce using rule 62 (simple_condition -> column_ref comparator value .)
-    LIMIT           reduce using rule 62 (simple_condition -> column_ref comparator value .)
-    $end            reduce using rule 62 (simple_condition -> column_ref comparator value .)
+    GROUP           shift and go to state 117
+    $end            reduce using rule 43 (empty -> .)
 
+    optional_group                 shift and go to state 156
+    empty                          shift and go to state 118
 
 state 129
 
-    (68) value -> NUMBER .
+    (6) select_stmt -> SELECT SUM LPAREN ID RPAREN FROM ID optional_where . optional_group
+    (17) optional_group -> . GROUP BY group_by_list
+    (18) optional_group -> . empty
+    (43) empty -> .
 
-    AND             reduce using rule 68 (value -> NUMBER .)
-    OR              reduce using rule 68 (value -> NUMBER .)
-    GROUP           reduce using rule 68 (value -> NUMBER .)
-    HAVING          reduce using rule 68 (value -> NUMBER .)
-    ORDER           reduce using rule 68 (value -> NUMBER .)
-    LIMIT           reduce using rule 68 (value -> NUMBER .)
-    $end            reduce using rule 68 (value -> NUMBER .)
+    GROUP           shift and go to state 117
+    $end            reduce using rule 43 (empty -> .)
 
+    optional_group                 shift and go to state 157
+    empty                          shift and go to state 118
 
 state 130
 
-    (69) value -> STRING .
+    (7) select_stmt -> SELECT AVG LPAREN ID RPAREN FROM ID optional_where . optional_group
+    (17) optional_group -> . GROUP BY group_by_list
+    (18) optional_group -> . empty
+    (43) empty -> .
 
-    AND             reduce using rule 69 (value -> STRING .)
-    OR              reduce using rule 69 (value -> STRING .)
-    GROUP           reduce using rule 69 (value -> STRING .)
-    HAVING          reduce using rule 69 (value -> STRING .)
-    ORDER           reduce using rule 69 (value -> STRING .)
-    LIMIT           reduce using rule 69 (value -> STRING .)
-    $end            reduce using rule 69 (value -> STRING .)
+    GROUP           shift and go to state 117
+    $end            reduce using rule 43 (empty -> .)
 
+    optional_group                 shift and go to state 158
+    empty                          shift and go to state 118
 
 state 131
 
-    (14) column_ref -> ID DOT ID .
+    (8) select_stmt -> SELECT MIN LPAREN ID RPAREN FROM ID optional_where . optional_group
+    (17) optional_group -> . GROUP BY group_by_list
+    (18) optional_group -> . empty
+    (43) empty -> .
 
-    EQUAL           reduce using rule 14 (column_ref -> ID DOT ID .)
-    GT              reduce using rule 14 (column_ref -> ID DOT ID .)
-    LT              reduce using rule 14 (column_ref -> ID DOT ID .)
-    GE              reduce using rule 14 (column_ref -> ID DOT ID .)
-    LE              reduce using rule 14 (column_ref -> ID DOT ID .)
-    COMMA           reduce using rule 14 (column_ref -> ID DOT ID .)
-    HAVING          reduce using rule 14 (column_ref -> ID DOT ID .)
-    ORDER           reduce using rule 14 (column_ref -> ID DOT ID .)
-    LIMIT           reduce using rule 14 (column_ref -> ID DOT ID .)
-    $end            reduce using rule 14 (column_ref -> ID DOT ID .)
-    WHERE           reduce using rule 14 (column_ref -> ID DOT ID .)
-    GROUP           reduce using rule 14 (column_ref -> ID DOT ID .)
-    ASC             reduce using rule 14 (column_ref -> ID DOT ID .)
-    DESC            reduce using rule 14 (column_ref -> ID DOT ID .)
+    GROUP           shift and go to state 117
+    $end            reduce using rule 43 (empty -> .)
 
+    optional_group                 shift and go to state 159
+    empty                          shift and go to state 118
 
 state 132
 
-    (12) join_condition -> column_ref EQUAL . column_ref
-    (13) column_ref -> . ID
-    (14) column_ref -> . ID DOT ID
+    (9) select_stmt -> SELECT MAX LPAREN ID RPAREN FROM ID optional_where . optional_group
+    (17) optional_group -> . GROUP BY group_by_list
+    (18) optional_group -> . empty
+    (43) empty -> .
 
-    ID              shift and go to state 85
+    GROUP           shift and go to state 117
+    $end            reduce using rule 43 (empty -> .)
 
-    column_ref                     shift and go to state 140
+    optional_group                 shift and go to state 160
+    empty                          shift and go to state 118
 
 state 133
 
-    (2) select_stmt -> SELECT optional_distinct select_list FROM ID optional_join optional_where optional_group optional_having optional_order optional_limit .
+    (77) column_def -> ID INT PRIMARY KEY .
 
-    $end            reduce using rule 2 (select_stmt -> SELECT optional_distinct select_list FROM ID optional_join optional_where optional_group optional_having optional_order optional_limit .)
+    RPAREN          reduce using rule 77 (column_def -> ID INT PRIMARY KEY .)
+    COMMA           reduce using rule 77 (column_def -> ID INT PRIMARY KEY .)
 
 
 state 134
 
-    (39) optional_limit -> LIMIT . NUMBER
+    (78) column_def -> ID INT NOT NULL .
 
-    NUMBER          shift and go to state 141
+    RPAREN          reduce using rule 78 (column_def -> ID INT NOT NULL .)
+    COMMA           reduce using rule 78 (column_def -> ID INT NOT NULL .)
 
 
 state 135
 
-    (40) optional_limit -> empty .
+    (80) column_def -> ID FLOAT NOT NULL .
 
-    $end            reduce using rule 40 (optional_limit -> empty .)
+    RPAREN          reduce using rule 80 (column_def -> ID FLOAT NOT NULL .)
+    COMMA           reduce using rule 80 (column_def -> ID FLOAT NOT NULL .)
 
 
 state 136
 
-    (24) optional_order -> ORDER BY . order_by_expr
-    (26) order_by_expr -> . column_ref
-    (27) order_by_expr -> . column_ref ASC
-    (28) order_by_expr -> . column_ref DESC
-    (29) order_by_expr -> . COUNT LPAREN STAR RPAREN
-    (30) order_by_expr -> . COUNT LPAREN STAR RPAREN ASC
-    (31) order_by_expr -> . COUNT LPAREN STAR RPAREN DESC
-    (32) order_by_expr -> . aggregate_func LPAREN ID RPAREN
-    (33) order_by_expr -> . aggregate_func LPAREN ID RPAREN ASC
-    (34) order_by_expr -> . aggregate_func LPAREN ID RPAREN DESC
-    (13) column_ref -> . ID
-    (14) column_ref -> . ID DOT ID
-    (35) aggregate_func -> . SUM
-    (36) aggregate_func -> . AVG
-    (37) aggregate_func -> . MIN
-    (38) aggregate_func -> . MAX
+    (82) column_def -> ID BOOL NOT NULL .
 
-    COUNT           shift and go to state 144
-    ID              shift and go to state 85
-    SUM             shift and go to state 120
-    AVG             shift and go to state 121
-    MIN             shift and go to state 122
-    MAX             shift and go to state 123
+    RPAREN          reduce using rule 82 (column_def -> ID BOOL NOT NULL .)
+    COMMA           reduce using rule 82 (column_def -> ID BOOL NOT NULL .)
 
-    order_by_expr                  shift and go to state 142
-    column_ref                     shift and go to state 143
-    aggregate_func                 shift and go to state 145
 
 state 137
 
-    (22) aggregate_comparison -> COUNT LPAREN . STAR RPAREN comparator NUMBER
+    (83) column_def -> ID VARCHAR LPAREN NUMBER . RPAREN
+    (84) column_def -> ID VARCHAR LPAREN NUMBER . RPAREN NOT NULL
+    (85) column_def -> ID VARCHAR LPAREN NUMBER . RPAREN PRIMARY KEY
 
-    STAR            shift and go to state 146
+    RPAREN          shift and go to state 161
 
 
 state 138
 
-    (23) aggregate_comparison -> aggregate_func LPAREN . ID RPAREN comparator NUMBER
+    (86) insert_stmt -> INSERT INTO ID LPAREN column_name_list RPAREN VALUES LPAREN . value_list RPAREN
+    (90) value_list -> . value
+    (91) value_list -> . value_list COMMA value
+    (70) value -> . NUMBER
+    (71) value -> . MINUS NUMBER
+    (72) value -> . STRING
 
-    ID              shift and go to state 147
+    NUMBER          shift and go to state 93
+    MINUS           shift and go to state 94
+    STRING          shift and go to state 95
 
+    value_list                     shift and go to state 162
+    value                          shift and go to state 92
 
 state 139
 
-    (18) group_by_list -> group_by_list COMMA . column_ref
-    (13) column_ref -> . ID
-    (14) column_ref -> . ID DOT ID
+    (91) value_list -> value_list COMMA value .
 
-    ID              shift and go to state 85
+    RPAREN          reduce using rule 91 (value_list -> value_list COMMA value .)
+    COMMA           reduce using rule 91 (value_list -> value_list COMMA value .)
 
-    column_ref                     shift and go to state 148
 
 state 140
 
-    (12) join_condition -> column_ref EQUAL column_ref .
+    (4) select_stmt -> SELECT optional_distinct select_list FROM ID optional_join optional_where optional_group optional_having . optional_order optional_limit
+    (26) optional_order -> . ORDER BY order_by_expr
+    (27) optional_order -> . empty
+    (43) empty -> .
 
-    WHERE           reduce using rule 12 (join_condition -> column_ref EQUAL column_ref .)
-    GROUP           reduce using rule 12 (join_condition -> column_ref EQUAL column_ref .)
-    HAVING          reduce using rule 12 (join_condition -> column_ref EQUAL column_ref .)
-    ORDER           reduce using rule 12 (join_condition -> column_ref EQUAL column_ref .)
-    LIMIT           reduce using rule 12 (join_condition -> column_ref EQUAL column_ref .)
-    $end            reduce using rule 12 (join_condition -> column_ref EQUAL column_ref .)
+    ORDER           shift and go to state 164
+    LIMIT           reduce using rule 43 (empty -> .)
+    $end            reduce using rule 43 (empty -> .)
 
+    optional_order                 shift and go to state 163
+    empty                          shift and go to state 165
 
 state 141
 
-    (39) optional_limit -> LIMIT NUMBER .
+    (21) optional_having -> HAVING . having_condition
+    (23) having_condition -> . aggregate_comparison
+    (24) aggregate_comparison -> . COUNT LPAREN STAR RPAREN comparator NUMBER
+    (25) aggregate_comparison -> . aggregate_func LPAREN ID RPAREN comparator NUMBER
+    (37) aggregate_func -> . SUM
+    (38) aggregate_func -> . AVG
+    (39) aggregate_func -> . MIN
+    (40) aggregate_func -> . MAX
 
-    $end            reduce using rule 39 (optional_limit -> LIMIT NUMBER .)
+    COUNT           shift and go to state 168
+    SUM             shift and go to state 170
+    AVG             shift and go to state 171
+    MIN             shift and go to state 172
+    MAX             shift and go to state 173
 
+    having_condition               shift and go to state 166
+    aggregate_comparison           shift and go to state 167
+    aggregate_func                 shift and go to state 169
 
 state 142
 
-    (24) optional_order -> ORDER BY order_by_expr .
+    (22) optional_having -> empty .
 
-    LIMIT           reduce using rule 24 (optional_order -> ORDER BY order_by_expr .)
-    $end            reduce using rule 24 (optional_order -> ORDER BY order_by_expr .)
+    ORDER           reduce using rule 22 (optional_having -> empty .)
+    LIMIT           reduce using rule 22 (optional_having -> empty .)
+    $end            reduce using rule 22 (optional_having -> empty .)
 
 
 state 143
 
-    (26) order_by_expr -> column_ref .
-    (27) order_by_expr -> column_ref . ASC
-    (28) order_by_expr -> column_ref . DESC
+    (17) optional_group -> GROUP BY . group_by_list
+    (19) group_by_list -> . column_ref
+    (20) group_by_list -> . group_by_list COMMA column_ref
+    (15) column_ref -> . ID
+    (16) column_ref -> . ID DOT ID
 
-    LIMIT           reduce using rule 26 (order_by_expr -> column_ref .)
-    $end            reduce using rule 26 (order_by_expr -> column_ref .)
-    ASC             shift and go to state 149
-    DESC            shift and go to state 150
+    ID              shift and go to state 126
 
+    group_by_list                  shift and go to state 174
+    column_ref                     shift and go to state 175
 
 state 144
 
-    (29) order_by_expr -> COUNT . LPAREN STAR RPAREN
-    (30) order_by_expr -> COUNT . LPAREN STAR RPAREN ASC
-    (31) order_by_expr -> COUNT . LPAREN STAR RPAREN DESC
+    (59) or_condition -> or_condition OR . and_condition
+    (60) and_condition -> . not_condition
+    (61) and_condition -> . and_condition AND not_condition
+    (62) not_condition -> . simple_condition
+    (63) not_condition -> . NOT simple_condition
+    (64) simple_condition -> . column_ref comparator value
+    (15) column_ref -> . ID
+    (16) column_ref -> . ID DOT ID
 
-    LPAREN          shift and go to state 151
+    NOT             shift and go to state 124
+    ID              shift and go to state 126
 
+    and_condition                  shift and go to state 176
+    not_condition                  shift and go to state 122
+    simple_condition               shift and go to state 123
+    column_ref                     shift and go to state 125
 
 state 145
 
-    (32) order_by_expr -> aggregate_func . LPAREN ID RPAREN
-    (33) order_by_expr -> aggregate_func . LPAREN ID RPAREN ASC
-    (34) order_by_expr -> aggregate_func . LPAREN ID RPAREN DESC
+    (61) and_condition -> and_condition AND . not_condition
+    (62) not_condition -> . simple_condition
+    (63) not_condition -> . NOT simple_condition
+    (64) simple_condition -> . column_ref comparator value
+    (15) column_ref -> . ID
+    (16) column_ref -> . ID DOT ID
 
-    LPAREN          shift and go to state 152
+    NOT             shift and go to state 124
+    ID              shift and go to state 126
 
+    not_condition                  shift and go to state 177
+    simple_condition               shift and go to state 123
+    column_ref                     shift and go to state 125
 
 state 146
 
-    (22) aggregate_comparison -> COUNT LPAREN STAR . RPAREN comparator NUMBER
+    (63) not_condition -> NOT simple_condition .
 
-    RPAREN          shift and go to state 153
+    AND             reduce using rule 63 (not_condition -> NOT simple_condition .)
+    OR              reduce using rule 63 (not_condition -> NOT simple_condition .)
+    GROUP           reduce using rule 63 (not_condition -> NOT simple_condition .)
+    HAVING          reduce using rule 63 (not_condition -> NOT simple_condition .)
+    ORDER           reduce using rule 63 (not_condition -> NOT simple_condition .)
+    LIMIT           reduce using rule 63 (not_condition -> NOT simple_condition .)
+    $end            reduce using rule 63 (not_condition -> NOT simple_condition .)
 
 
 state 147
 
-    (23) aggregate_comparison -> aggregate_func LPAREN ID . RPAREN comparator NUMBER
+    (64) simple_condition -> column_ref comparator . value
+    (70) value -> . NUMBER
+    (71) value -> . MINUS NUMBER
+    (72) value -> . STRING
 
-    RPAREN          shift and go to state 154
+    NUMBER          shift and go to state 93
+    MINUS           shift and go to state 94
+    STRING          shift and go to state 95
 
+    value                          shift and go to state 178
 
 state 148
 
-    (18) group_by_list -> group_by_list COMMA column_ref .
+    (65) comparator -> EQUAL .
 
-    COMMA           reduce using rule 18 (group_by_list -> group_by_list COMMA column_ref .)
-    HAVING          reduce using rule 18 (group_by_list -> group_by_list COMMA column_ref .)
-    ORDER           reduce using rule 18 (group_by_list -> group_by_list COMMA column_ref .)
-    LIMIT           reduce using rule 18 (group_by_list -> group_by_list COMMA column_ref .)
-    $end            reduce using rule 18 (group_by_list -> group_by_list COMMA column_ref .)
+    NUMBER          reduce using rule 65 (comparator -> EQUAL .)
+    MINUS           reduce using rule 65 (comparator -> EQUAL .)
+    STRING          reduce using rule 65 (comparator -> EQUAL .)
 
 
 state 149
 
-    (27) order_by_expr -> column_ref ASC .
+    (66) comparator -> GT .
 
-    LIMIT           reduce using rule 27 (order_by_expr -> column_ref ASC .)
-    $end            reduce using rule 27 (order_by_expr -> column_ref ASC .)
+    NUMBER          reduce using rule 66 (comparator -> GT .)
+    MINUS           reduce using rule 66 (comparator -> GT .)
+    STRING          reduce using rule 66 (comparator -> GT .)
 
 
 state 150
 
-    (28) order_by_expr -> column_ref DESC .
+    (67) comparator -> LT .
 
-    LIMIT           reduce using rule 28 (order_by_expr -> column_ref DESC .)
-    $end            reduce using rule 28 (order_by_expr -> column_ref DESC .)
+    NUMBER          reduce using rule 67 (comparator -> LT .)
+    MINUS           reduce using rule 67 (comparator -> LT .)
+    STRING          reduce using rule 67 (comparator -> LT .)
 
 
 state 151
 
-    (29) order_by_expr -> COUNT LPAREN . STAR RPAREN
-    (30) order_by_expr -> COUNT LPAREN . STAR RPAREN ASC
-    (31) order_by_expr -> COUNT LPAREN . STAR RPAREN DESC
+    (68) comparator -> GE .
 
-    STAR            shift and go to state 155
+    NUMBER          reduce using rule 68 (comparator -> GE .)
+    MINUS           reduce using rule 68 (comparator -> GE .)
+    STRING          reduce using rule 68 (comparator -> GE .)
 
 
 state 152
 
-    (32) order_by_expr -> aggregate_func LPAREN . ID RPAREN
-    (33) order_by_expr -> aggregate_func LPAREN . ID RPAREN ASC
-    (34) order_by_expr -> aggregate_func LPAREN . ID RPAREN DESC
+    (69) comparator -> LE .
 
-    ID              shift and go to state 156
+    NUMBER          reduce using rule 69 (comparator -> LE .)
+    MINUS           reduce using rule 69 (comparator -> LE .)
+    STRING          reduce using rule 69 (comparator -> LE .)
 
 
 state 153
 
-    (22) aggregate_comparison -> COUNT LPAREN STAR RPAREN . comparator NUMBER
-    (63) comparator -> . EQUAL
-    (64) comparator -> . GT
-    (65) comparator -> . LT
-    (66) comparator -> . GE
-    (67) comparator -> . LE
+    (16) column_ref -> ID DOT . ID
 
-    EQUAL           shift and go to state 100
-    GT              shift and go to state 101
-    LT              shift and go to state 102
-    GE              shift and go to state 103
-    LE              shift and go to state 104
+    ID              shift and go to state 179
 
-    comparator                     shift and go to state 157
 
 state 154
 
-    (23) aggregate_comparison -> aggregate_func LPAREN ID RPAREN . comparator NUMBER
-    (63) comparator -> . EQUAL
-    (64) comparator -> . GT
-    (65) comparator -> . LT
-    (66) comparator -> . GE
-    (67) comparator -> . LE
+    (12) optional_join -> JOIN ID ON join_condition .
 
-    EQUAL           shift and go to state 100
-    GT              shift and go to state 101
-    LT              shift and go to state 102
-    GE              shift and go to state 103
-    LE              shift and go to state 104
+    WHERE           reduce using rule 12 (optional_join -> JOIN ID ON join_condition .)
+    GROUP           reduce using rule 12 (optional_join -> JOIN ID ON join_condition .)
+    HAVING          reduce using rule 12 (optional_join -> JOIN ID ON join_condition .)
+    ORDER           reduce using rule 12 (optional_join -> JOIN ID ON join_condition .)
+    LIMIT           reduce using rule 12 (optional_join -> JOIN ID ON join_condition .)
+    $end            reduce using rule 12 (optional_join -> JOIN ID ON join_condition .)
 
-    comparator                     shift and go to state 158
 
 state 155
 
-    (29) order_by_expr -> COUNT LPAREN STAR . RPAREN
-    (30) order_by_expr -> COUNT LPAREN STAR . RPAREN ASC
-    (31) order_by_expr -> COUNT LPAREN STAR . RPAREN DESC
+    (14) join_condition -> column_ref . EQUAL column_ref
 
-    RPAREN          shift and go to state 159
+    EQUAL           shift and go to state 180
 
 
 state 156
 
-    (32) order_by_expr -> aggregate_func LPAREN ID . RPAREN
-    (33) order_by_expr -> aggregate_func LPAREN ID . RPAREN ASC
-    (34) order_by_expr -> aggregate_func LPAREN ID . RPAREN DESC
+    (5) select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where optional_group .
 
-    RPAREN          shift and go to state 160
+    $end            reduce using rule 5 (select_stmt -> SELECT COUNT LPAREN STAR RPAREN FROM ID optional_where optional_group .)
 
 
 state 157
 
-    (22) aggregate_comparison -> COUNT LPAREN STAR RPAREN comparator . NUMBER
+    (6) select_stmt -> SELECT SUM LPAREN ID RPAREN FROM ID optional_where optional_group .
 
-    NUMBER          shift and go to state 161
+    $end            reduce using rule 6 (select_stmt -> SELECT SUM LPAREN ID RPAREN FROM ID optional_where optional_group .)
 
 
 state 158
 
-    (23) aggregate_comparison -> aggregate_func LPAREN ID RPAREN comparator . NUMBER
+    (7) select_stmt -> SELECT AVG LPAREN ID RPAREN FROM ID optional_where optional_group .
 
-    NUMBER          shift and go to state 162
+    $end            reduce using rule 7 (select_stmt -> SELECT AVG LPAREN ID RPAREN FROM ID optional_where optional_group .)
 
 
 state 159
 
-    (29) order_by_expr -> COUNT LPAREN STAR RPAREN .
-    (30) order_by_expr -> COUNT LPAREN STAR RPAREN . ASC
-    (31) order_by_expr -> COUNT LPAREN STAR RPAREN . DESC
+    (8) select_stmt -> SELECT MIN LPAREN ID RPAREN FROM ID optional_where optional_group .
 
-    LIMIT           reduce using rule 29 (order_by_expr -> COUNT LPAREN STAR RPAREN .)
-    $end            reduce using rule 29 (order_by_expr -> COUNT LPAREN STAR RPAREN .)
-    ASC             shift and go to state 163
-    DESC            shift and go to state 164
+    $end            reduce using rule 8 (select_stmt -> SELECT MIN LPAREN ID RPAREN FROM ID optional_where optional_group .)
 
 
 state 160
 
-    (32) order_by_expr -> aggregate_func LPAREN ID RPAREN .
-    (33) order_by_expr -> aggregate_func LPAREN ID RPAREN . ASC
-    (34) order_by_expr -> aggregate_func LPAREN ID RPAREN . DESC
+    (9) select_stmt -> SELECT MAX LPAREN ID RPAREN FROM ID optional_where optional_group .
 
-    LIMIT           reduce using rule 32 (order_by_expr -> aggregate_func LPAREN ID RPAREN .)
-    $end            reduce using rule 32 (order_by_expr -> aggregate_func LPAREN ID RPAREN .)
-    ASC             shift and go to state 165
-    DESC            shift and go to state 166
+    $end            reduce using rule 9 (select_stmt -> SELECT MAX LPAREN ID RPAREN FROM ID optional_where optional_group .)
 
 
 state 161
 
-    (22) aggregate_comparison -> COUNT LPAREN STAR RPAREN comparator NUMBER .
+    (83) column_def -> ID VARCHAR LPAREN NUMBER RPAREN .
+    (84) column_def -> ID VARCHAR LPAREN NUMBER RPAREN . NOT NULL
+    (85) column_def -> ID VARCHAR LPAREN NUMBER RPAREN . PRIMARY KEY
 
-    ORDER           reduce using rule 22 (aggregate_comparison -> COUNT LPAREN STAR RPAREN comparator NUMBER .)
-    LIMIT           reduce using rule 22 (aggregate_comparison -> COUNT LPAREN STAR RPAREN comparator NUMBER .)
-    $end            reduce using rule 22 (aggregate_comparison -> COUNT LPAREN STAR RPAREN comparator NUMBER .)
+    RPAREN          reduce using rule 83 (column_def -> ID VARCHAR LPAREN NUMBER RPAREN .)
+    COMMA           reduce using rule 83 (column_def -> ID VARCHAR LPAREN NUMBER RPAREN .)
+    NOT             shift and go to state 181
+    PRIMARY         shift and go to state 182
 
 
 state 162
 
-    (23) aggregate_comparison -> aggregate_func LPAREN ID RPAREN comparator NUMBER .
+    (86) insert_stmt -> INSERT INTO ID LPAREN column_name_list RPAREN VALUES LPAREN value_list . RPAREN
+    (91) value_list -> value_list . COMMA value
 
-    ORDER           reduce using rule 23 (aggregate_comparison -> aggregate_func LPAREN ID RPAREN comparator NUMBER .)
-    LIMIT           reduce using rule 23 (aggregate_comparison -> aggregate_func LPAREN ID RPAREN comparator NUMBER .)
-    $end            reduce using rule 23 (aggregate_comparison -> aggregate_func LPAREN ID RPAREN comparator NUMBER .)
+    RPAREN          shift and go to state 183
+    COMMA           shift and go to state 114
 
 
 state 163
 
-    (30) order_by_expr -> COUNT LPAREN STAR RPAREN ASC .
+    (4) select_stmt -> SELECT optional_distinct select_list FROM ID optional_join optional_where optional_group optional_having optional_order . optional_limit
+    (41) optional_limit -> . LIMIT NUMBER
+    (42) optional_limit -> . empty
+    (43) empty -> .
 
-    LIMIT           reduce using rule 30 (order_by_expr -> COUNT LPAREN STAR RPAREN ASC .)
-    $end            reduce using rule 30 (order_by_expr -> COUNT LPAREN STAR RPAREN ASC .)
+    LIMIT           shift and go to state 185
+    $end            reduce using rule 43 (empty -> .)
 
+    optional_limit                 shift and go to state 184
+    empty                          shift and go to state 186
 
 state 164
 
-    (31) order_by_expr -> COUNT LPAREN STAR RPAREN DESC .
+    (26) optional_order -> ORDER . BY order_by_expr
 
-    LIMIT           reduce using rule 31 (order_by_expr -> COUNT LPAREN STAR RPAREN DESC .)
-    $end            reduce using rule 31 (order_by_expr -> COUNT LPAREN STAR RPAREN DESC .)
+    BY              shift and go to state 187
 
 
 state 165
 
-    (33) order_by_expr -> aggregate_func LPAREN ID RPAREN ASC .
+    (27) optional_order -> empty .
 
-    LIMIT           reduce using rule 33 (order_by_expr -> aggregate_func LPAREN ID RPAREN ASC .)
-    $end            reduce using rule 33 (order_by_expr -> aggregate_func LPAREN ID RPAREN ASC .)
+    LIMIT           reduce using rule 27 (optional_order -> empty .)
+    $end            reduce using rule 27 (optional_order -> empty .)
 
 
 state 166
 
-    (34) order_by_expr -> aggregate_func LPAREN ID RPAREN DESC .
+    (21) optional_having -> HAVING having_condition .
 
-    LIMIT           reduce using rule 34 (order_by_expr -> aggregate_func LPAREN ID RPAREN DESC .)
-    $end            reduce using rule 34 (order_by_expr -> aggregate_func LPAREN ID RPAREN DESC .)
+    ORDER           reduce using rule 21 (optional_having -> HAVING having_condition .)
+    LIMIT           reduce using rule 21 (optional_having -> HAVING having_condition .)
+    $end            reduce using rule 21 (optional_having -> HAVING having_condition .)
+
+
+state 167
+
+    (23) having_condition -> aggregate_comparison .
+
+    ORDER           reduce using rule 23 (having_condition -> aggregate_comparison .)
+    LIMIT           reduce using rule 23 (having_condition -> aggregate_comparison .)
+    $end            reduce using rule 23 (having_condition -> aggregate_comparison .)
+
+
+state 168
+
+    (24) aggregate_comparison -> COUNT . LPAREN STAR RPAREN comparator NUMBER
+
+    LPAREN          shift and go to state 188
+
+
+state 169
+
+    (25) aggregate_comparison -> aggregate_func . LPAREN ID RPAREN comparator NUMBER
+
+    LPAREN          shift and go to state 189
+
+
+state 170
+
+    (37) aggregate_func -> SUM .
+
+    LPAREN          reduce using rule 37 (aggregate_func -> SUM .)
+
+
+state 171
+
+    (38) aggregate_func -> AVG .
+
+    LPAREN          reduce using rule 38 (aggregate_func -> AVG .)
+
+
+state 172
+
+    (39) aggregate_func -> MIN .
+
+    LPAREN          reduce using rule 39 (aggregate_func -> MIN .)
+
+
+state 173
+
+    (40) aggregate_func -> MAX .
+
+    LPAREN          reduce using rule 40 (aggregate_func -> MAX .)
+
+
+state 174
+
+    (17) optional_group -> GROUP BY group_by_list .
+    (20) group_by_list -> group_by_list . COMMA column_ref
+
+    HAVING          reduce using rule 17 (optional_group -> GROUP BY group_by_list .)
+    ORDER           reduce using rule 17 (optional_group -> GROUP BY group_by_list .)
+    LIMIT           reduce using rule 17 (optional_group -> GROUP BY group_by_list .)
+    $end            reduce using rule 17 (optional_group -> GROUP BY group_by_list .)
+    COMMA           shift and go to state 190
+
+
+state 175
+
+    (19) group_by_list -> column_ref .
+
+    COMMA           reduce using rule 19 (group_by_list -> column_ref .)
+    HAVING          reduce using rule 19 (group_by_list -> column_ref .)
+    ORDER           reduce using rule 19 (group_by_list -> column_ref .)
+    LIMIT           reduce using rule 19 (group_by_list -> column_ref .)
+    $end            reduce using rule 19 (group_by_list -> column_ref .)
+
+
+state 176
+
+    (59) or_condition -> or_condition OR and_condition .
+    (61) and_condition -> and_condition . AND not_condition
+
+    OR              reduce using rule 59 (or_condition -> or_condition OR and_condition .)
+    GROUP           reduce using rule 59 (or_condition -> or_condition OR and_condition .)
+    HAVING          reduce using rule 59 (or_condition -> or_condition OR and_condition .)
+    ORDER           reduce using rule 59 (or_condition -> or_condition OR and_condition .)
+    LIMIT           reduce using rule 59 (or_condition -> or_condition OR and_condition .)
+    $end            reduce using rule 59 (or_condition -> or_condition OR and_condition .)
+    AND             shift and go to state 145
+
+
+state 177
+
+    (61) and_condition -> and_condition AND not_condition .
+
+    AND             reduce using rule 61 (and_condition -> and_condition AND not_condition .)
+    OR              reduce using rule 61 (and_condition -> and_condition AND not_condition .)
+    GROUP           reduce using rule 61 (and_condition -> and_condition AND not_condition .)
+    HAVING          reduce using rule 61 (and_condition -> and_condition AND not_condition .)
+    ORDER           reduce using rule 61 (and_condition -> and_condition AND not_condition .)
+    LIMIT           reduce using rule 61 (and_condition -> and_condition AND not_condition .)
+    $end            reduce using rule 61 (and_condition -> and_condition AND not_condition .)
+
+
+state 178
+
+    (64) simple_condition -> column_ref comparator value .
+
+    AND             reduce using rule 64 (simple_condition -> column_ref comparator value .)
+    OR              reduce using rule 64 (simple_condition -> column_ref comparator value .)
+    GROUP           reduce using rule 64 (simple_condition -> column_ref comparator value .)
+    HAVING          reduce using rule 64 (simple_condition -> column_ref comparator value .)
+    ORDER           reduce using rule 64 (simple_condition -> column_ref comparator value .)
+    LIMIT           reduce using rule 64 (simple_condition -> column_ref comparator value .)
+    $end            reduce using rule 64 (simple_condition -> column_ref comparator value .)
+
+
+state 179
+
+    (16) column_ref -> ID DOT ID .
+
+    EQUAL           reduce using rule 16 (column_ref -> ID DOT ID .)
+    GT              reduce using rule 16 (column_ref -> ID DOT ID .)
+    LT              reduce using rule 16 (column_ref -> ID DOT ID .)
+    GE              reduce using rule 16 (column_ref -> ID DOT ID .)
+    LE              reduce using rule 16 (column_ref -> ID DOT ID .)
+    COMMA           reduce using rule 16 (column_ref -> ID DOT ID .)
+    HAVING          reduce using rule 16 (column_ref -> ID DOT ID .)
+    ORDER           reduce using rule 16 (column_ref -> ID DOT ID .)
+    LIMIT           reduce using rule 16 (column_ref -> ID DOT ID .)
+    $end            reduce using rule 16 (column_ref -> ID DOT ID .)
+    WHERE           reduce using rule 16 (column_ref -> ID DOT ID .)
+    GROUP           reduce using rule 16 (column_ref -> ID DOT ID .)
+    ASC             reduce using rule 16 (column_ref -> ID DOT ID .)
+    DESC            reduce using rule 16 (column_ref -> ID DOT ID .)
+
+
+state 180
+
+    (14) join_condition -> column_ref EQUAL . column_ref
+    (15) column_ref -> . ID
+    (16) column_ref -> . ID DOT ID
+
+    ID              shift and go to state 126
+
+    column_ref                     shift and go to state 191
+
+state 181
+
+    (84) column_def -> ID VARCHAR LPAREN NUMBER RPAREN NOT . NULL
+
+    NULL            shift and go to state 192
+
+
+state 182
+
+    (85) column_def -> ID VARCHAR LPAREN NUMBER RPAREN PRIMARY . KEY
+
+    KEY             shift and go to state 193
+
+
+state 183
+
+    (86) insert_stmt -> INSERT INTO ID LPAREN column_name_list RPAREN VALUES LPAREN value_list RPAREN .
+
+    $end            reduce using rule 86 (insert_stmt -> INSERT INTO ID LPAREN column_name_list RPAREN VALUES LPAREN value_list RPAREN .)
+
+
+state 184
+
+    (4) select_stmt -> SELECT optional_distinct select_list FROM ID optional_join optional_where optional_group optional_having optional_order optional_limit .
+
+    $end            reduce using rule 4 (select_stmt -> SELECT optional_distinct select_list FROM ID optional_join optional_where optional_group optional_having optional_order optional_limit .)
+
+
+state 185
+
+    (41) optional_limit -> LIMIT . NUMBER
+
+    NUMBER          shift and go to state 194
+
+
+state 186
+
+    (42) optional_limit -> empty .
+
+    $end            reduce using rule 42 (optional_limit -> empty .)
+
+
+state 187
+
+    (26) optional_order -> ORDER BY . order_by_expr
+    (28) order_by_expr -> . column_ref
+    (29) order_by_expr -> . column_ref ASC
+    (30) order_by_expr -> . column_ref DESC
+    (31) order_by_expr -> . COUNT LPAREN STAR RPAREN
+    (32) order_by_expr -> . COUNT LPAREN STAR RPAREN ASC
+    (33) order_by_expr -> . COUNT LPAREN STAR RPAREN DESC
+    (34) order_by_expr -> . aggregate_func LPAREN ID RPAREN
+    (35) order_by_expr -> . aggregate_func LPAREN ID RPAREN ASC
+    (36) order_by_expr -> . aggregate_func LPAREN ID RPAREN DESC
+    (15) column_ref -> . ID
+    (16) column_ref -> . ID DOT ID
+    (37) aggregate_func -> . SUM
+    (38) aggregate_func -> . AVG
+    (39) aggregate_func -> . MIN
+    (40) aggregate_func -> . MAX
+
+    COUNT           shift and go to state 197
+    ID              shift and go to state 126
+    SUM             shift and go to state 170
+    AVG             shift and go to state 171
+    MIN             shift and go to state 172
+    MAX             shift and go to state 173
+
+    order_by_expr                  shift and go to state 195
+    column_ref                     shift and go to state 196
+    aggregate_func                 shift and go to state 198
+
+state 188
+
+    (24) aggregate_comparison -> COUNT LPAREN . STAR RPAREN comparator NUMBER
+
+    STAR            shift and go to state 199
+
+
+state 189
+
+    (25) aggregate_comparison -> aggregate_func LPAREN . ID RPAREN comparator NUMBER
+
+    ID              shift and go to state 200
+
+
+state 190
+
+    (20) group_by_list -> group_by_list COMMA . column_ref
+    (15) column_ref -> . ID
+    (16) column_ref -> . ID DOT ID
+
+    ID              shift and go to state 126
+
+    column_ref                     shift and go to state 201
+
+state 191
+
+    (14) join_condition -> column_ref EQUAL column_ref .
+
+    WHERE           reduce using rule 14 (join_condition -> column_ref EQUAL column_ref .)
+    GROUP           reduce using rule 14 (join_condition -> column_ref EQUAL column_ref .)
+    HAVING          reduce using rule 14 (join_condition -> column_ref EQUAL column_ref .)
+    ORDER           reduce using rule 14 (join_condition -> column_ref EQUAL column_ref .)
+    LIMIT           reduce using rule 14 (join_condition -> column_ref EQUAL column_ref .)
+    $end            reduce using rule 14 (join_condition -> column_ref EQUAL column_ref .)
+
+
+state 192
+
+    (84) column_def -> ID VARCHAR LPAREN NUMBER RPAREN NOT NULL .
+
+    RPAREN          reduce using rule 84 (column_def -> ID VARCHAR LPAREN NUMBER RPAREN NOT NULL .)
+    COMMA           reduce using rule 84 (column_def -> ID VARCHAR LPAREN NUMBER RPAREN NOT NULL .)
+
+
+state 193
+
+    (85) column_def -> ID VARCHAR LPAREN NUMBER RPAREN PRIMARY KEY .
+
+    RPAREN          reduce using rule 85 (column_def -> ID VARCHAR LPAREN NUMBER RPAREN PRIMARY KEY .)
+    COMMA           reduce using rule 85 (column_def -> ID VARCHAR LPAREN NUMBER RPAREN PRIMARY KEY .)
+
+
+state 194
+
+    (41) optional_limit -> LIMIT NUMBER .
+
+    $end            reduce using rule 41 (optional_limit -> LIMIT NUMBER .)
+
+
+state 195
+
+    (26) optional_order -> ORDER BY order_by_expr .
+
+    LIMIT           reduce using rule 26 (optional_order -> ORDER BY order_by_expr .)
+    $end            reduce using rule 26 (optional_order -> ORDER BY order_by_expr .)
+
+
+state 196
+
+    (28) order_by_expr -> column_ref .
+    (29) order_by_expr -> column_ref . ASC
+    (30) order_by_expr -> column_ref . DESC
+
+    LIMIT           reduce using rule 28 (order_by_expr -> column_ref .)
+    $end            reduce using rule 28 (order_by_expr -> column_ref .)
+    ASC             shift and go to state 202
+    DESC            shift and go to state 203
+
+
+state 197
+
+    (31) order_by_expr -> COUNT . LPAREN STAR RPAREN
+    (32) order_by_expr -> COUNT . LPAREN STAR RPAREN ASC
+    (33) order_by_expr -> COUNT . LPAREN STAR RPAREN DESC
+
+    LPAREN          shift and go to state 204
+
+
+state 198
+
+    (34) order_by_expr -> aggregate_func . LPAREN ID RPAREN
+    (35) order_by_expr -> aggregate_func . LPAREN ID RPAREN ASC
+    (36) order_by_expr -> aggregate_func . LPAREN ID RPAREN DESC
+
+    LPAREN          shift and go to state 205
+
+
+state 199
+
+    (24) aggregate_comparison -> COUNT LPAREN STAR . RPAREN comparator NUMBER
+
+    RPAREN          shift and go to state 206
+
+
+state 200
+
+    (25) aggregate_comparison -> aggregate_func LPAREN ID . RPAREN comparator NUMBER
+
+    RPAREN          shift and go to state 207
+
+
+state 201
+
+    (20) group_by_list -> group_by_list COMMA column_ref .
+
+    COMMA           reduce using rule 20 (group_by_list -> group_by_list COMMA column_ref .)
+    HAVING          reduce using rule 20 (group_by_list -> group_by_list COMMA column_ref .)
+    ORDER           reduce using rule 20 (group_by_list -> group_by_list COMMA column_ref .)
+    LIMIT           reduce using rule 20 (group_by_list -> group_by_list COMMA column_ref .)
+    $end            reduce using rule 20 (group_by_list -> group_by_list COMMA column_ref .)
+
+
+state 202
+
+    (29) order_by_expr -> column_ref ASC .
+
+    LIMIT           reduce using rule 29 (order_by_expr -> column_ref ASC .)
+    $end            reduce using rule 29 (order_by_expr -> column_ref ASC .)
+
+
+state 203
+
+    (30) order_by_expr -> column_ref DESC .
+
+    LIMIT           reduce using rule 30 (order_by_expr -> column_ref DESC .)
+    $end            reduce using rule 30 (order_by_expr -> column_ref DESC .)
+
+
+state 204
+
+    (31) order_by_expr -> COUNT LPAREN . STAR RPAREN
+    (32) order_by_expr -> COUNT LPAREN . STAR RPAREN ASC
+    (33) order_by_expr -> COUNT LPAREN . STAR RPAREN DESC
+
+    STAR            shift and go to state 208
+
+
+state 205
+
+    (34) order_by_expr -> aggregate_func LPAREN . ID RPAREN
+    (35) order_by_expr -> aggregate_func LPAREN . ID RPAREN ASC
+    (36) order_by_expr -> aggregate_func LPAREN . ID RPAREN DESC
+
+    ID              shift and go to state 209
+
+
+state 206
+
+    (24) aggregate_comparison -> COUNT LPAREN STAR RPAREN . comparator NUMBER
+    (65) comparator -> . EQUAL
+    (66) comparator -> . GT
+    (67) comparator -> . LT
+    (68) comparator -> . GE
+    (69) comparator -> . LE
+
+    EQUAL           shift and go to state 148
+    GT              shift and go to state 149
+    LT              shift and go to state 150
+    GE              shift and go to state 151
+    LE              shift and go to state 152
+
+    comparator                     shift and go to state 210
+
+state 207
+
+    (25) aggregate_comparison -> aggregate_func LPAREN ID RPAREN . comparator NUMBER
+    (65) comparator -> . EQUAL
+    (66) comparator -> . GT
+    (67) comparator -> . LT
+    (68) comparator -> . GE
+    (69) comparator -> . LE
+
+    EQUAL           shift and go to state 148
+    GT              shift and go to state 149
+    LT              shift and go to state 150
+    GE              shift and go to state 151
+    LE              shift and go to state 152
+
+    comparator                     shift and go to state 211
+
+state 208
+
+    (31) order_by_expr -> COUNT LPAREN STAR . RPAREN
+    (32) order_by_expr -> COUNT LPAREN STAR . RPAREN ASC
+    (33) order_by_expr -> COUNT LPAREN STAR . RPAREN DESC
+
+    RPAREN          shift and go to state 212
+
+
+state 209
+
+    (34) order_by_expr -> aggregate_func LPAREN ID . RPAREN
+    (35) order_by_expr -> aggregate_func LPAREN ID . RPAREN ASC
+    (36) order_by_expr -> aggregate_func LPAREN ID . RPAREN DESC
+
+    RPAREN          shift and go to state 213
+
+
+state 210
+
+    (24) aggregate_comparison -> COUNT LPAREN STAR RPAREN comparator . NUMBER
+
+    NUMBER          shift and go to state 214
+
+
+state 211
+
+    (25) aggregate_comparison -> aggregate_func LPAREN ID RPAREN comparator . NUMBER
+
+    NUMBER          shift and go to state 215
+
+
+state 212
+
+    (31) order_by_expr -> COUNT LPAREN STAR RPAREN .
+    (32) order_by_expr -> COUNT LPAREN STAR RPAREN . ASC
+    (33) order_by_expr -> COUNT LPAREN STAR RPAREN . DESC
+
+    LIMIT           reduce using rule 31 (order_by_expr -> COUNT LPAREN STAR RPAREN .)
+    $end            reduce using rule 31 (order_by_expr -> COUNT LPAREN STAR RPAREN .)
+    ASC             shift and go to state 216
+    DESC            shift and go to state 217
+
+
+state 213
+
+    (34) order_by_expr -> aggregate_func LPAREN ID RPAREN .
+    (35) order_by_expr -> aggregate_func LPAREN ID RPAREN . ASC
+    (36) order_by_expr -> aggregate_func LPAREN ID RPAREN . DESC
+
+    LIMIT           reduce using rule 34 (order_by_expr -> aggregate_func LPAREN ID RPAREN .)
+    $end            reduce using rule 34 (order_by_expr -> aggregate_func LPAREN ID RPAREN .)
+    ASC             shift and go to state 218
+    DESC            shift and go to state 219
+
+
+state 214
+
+    (24) aggregate_comparison -> COUNT LPAREN STAR RPAREN comparator NUMBER .
+
+    ORDER           reduce using rule 24 (aggregate_comparison -> COUNT LPAREN STAR RPAREN comparator NUMBER .)
+    LIMIT           reduce using rule 24 (aggregate_comparison -> COUNT LPAREN STAR RPAREN comparator NUMBER .)
+    $end            reduce using rule 24 (aggregate_comparison -> COUNT LPAREN STAR RPAREN comparator NUMBER .)
+
+
+state 215
+
+    (25) aggregate_comparison -> aggregate_func LPAREN ID RPAREN comparator NUMBER .
+
+    ORDER           reduce using rule 25 (aggregate_comparison -> aggregate_func LPAREN ID RPAREN comparator NUMBER .)
+    LIMIT           reduce using rule 25 (aggregate_comparison -> aggregate_func LPAREN ID RPAREN comparator NUMBER .)
+    $end            reduce using rule 25 (aggregate_comparison -> aggregate_func LPAREN ID RPAREN comparator NUMBER .)
+
+
+state 216
+
+    (32) order_by_expr -> COUNT LPAREN STAR RPAREN ASC .
+
+    LIMIT           reduce using rule 32 (order_by_expr -> COUNT LPAREN STAR RPAREN ASC .)
+    $end            reduce using rule 32 (order_by_expr -> COUNT LPAREN STAR RPAREN ASC .)
+
+
+state 217
+
+    (33) order_by_expr -> COUNT LPAREN STAR RPAREN DESC .
+
+    LIMIT           reduce using rule 33 (order_by_expr -> COUNT LPAREN STAR RPAREN DESC .)
+    $end            reduce using rule 33 (order_by_expr -> COUNT LPAREN STAR RPAREN DESC .)
+
+
+state 218
+
+    (35) order_by_expr -> aggregate_func LPAREN ID RPAREN ASC .
+
+    LIMIT           reduce using rule 35 (order_by_expr -> aggregate_func LPAREN ID RPAREN ASC .)
+    $end            reduce using rule 35 (order_by_expr -> aggregate_func LPAREN ID RPAREN ASC .)
+
+
+state 219
+
+    (36) order_by_expr -> aggregate_func LPAREN ID RPAREN DESC .
+
+    LIMIT           reduce using rule 36 (order_by_expr -> aggregate_func LPAREN ID RPAREN DESC .)
+    $end            reduce using rule 36 (order_by_expr -> aggregate_func LPAREN ID RPAREN DESC .)
 
 WARNING: 
 WARNING: Conflicts:
 WARNING: 
-WARNING: shift/reduce conflict for COUNT in state 3 resolved as shift
-WARNING: shift/reduce conflict for SUM in state 3 resolved as shift
-WARNING: shift/reduce conflict for AVG in state 3 resolved as shift
-WARNING: shift/reduce conflict for MIN in state 3 resolved as shift
-WARNING: shift/reduce conflict for MAX in state 3 resolved as shift
+WARNING: shift/reduce conflict for COUNT in state 5 resolved as shift
+WARNING: shift/reduce conflict for SUM in state 5 resolved as shift
+WARNING: shift/reduce conflict for AVG in state 5 resolved as shift
+WARNING: shift/reduce conflict for MIN in state 5 resolved as shift
+WARNING: shift/reduce conflict for MAX in state 5 resolved as shift

@@ -31,6 +31,7 @@ class SQLLexer:
         'ID',
         'STAR',
         'COMMA',
+        'MINUS',
         'EQUAL',
         'GT',
         'LT',
@@ -53,7 +54,8 @@ class SQLLexer:
         'KEY',
         'NULL',
         'INTO',
-        'VALUES'
+        'VALUES',
+        'INSERT',
     )
     
     # Reserved words
@@ -90,6 +92,7 @@ class SQLLexer:
         'NULL':    'NULL',
         'INTO':    'INTO',
         'VALUES':  'VALUES',
+        'INSERT': 'INSERT',
     }
     
     # Regular expression rules for simple tokens
@@ -100,6 +103,7 @@ class SQLLexer:
     t_LPAREN = r'\('
     t_RPAREN = r'\)'
     t_COMMA  = r','
+    t_MINUS = r'-'
     t_DOT    = r'\.'
     t_EQUAL  = r'='
     t_GE     = r'>='

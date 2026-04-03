@@ -3,7 +3,10 @@
 
 import ply.yacc as yacc
 from lexer import SQLLexer
-from ast_nodes import SelectQuery, Condition, LogicalCondition, NotCondition, CountQuery, SumQuery, AvgQuery, MinQuery, MaxQuery
+from ast_nodes import (SelectQuery, CountQuery, SumQuery, AvgQuery,
+                       MinQuery, MaxQuery, Condition, LogicalCondition,
+                       NotCondition, CreateTableQuery, ColumnDef,
+                       InsertQuery)
 
 class SQLParser:
     """SQL Parser that builds AST from tokens"""
@@ -29,7 +32,9 @@ class SQLParser:
     # Grammar rules
     
     def p_query(self, p):
-        'query : select_stmt'
+        '''query : select_stmt
+                | create_stmt
+                | insert_stmt'''
         p[0] = p[1]
     
     def p_select_stmt(self, p):
@@ -302,10 +307,95 @@ class SQLParser:
         'value : NUMBER'
         p[0] = p[1]
     
+    def p_value_negative(self, p):
+        'value : MINUS NUMBER'
+        p[0] = -p[2]
+        
     def p_value_string(self, p):
         'value : STRING'
         p[0] = p[1]
     
+    def p_create_stmt(self, p):
+        'create_stmt : CREATE TABLE ID LPAREN column_def_list RPAREN'
+        p[0] = CreateTableQuery(table_name=p[3], columns=p[5])
+
+    def p_column_def_list_single(self, p):
+        'column_def_list : column_def'
+        p[0] = [p[1]]
+
+    def p_column_def_list_multiple(self, p):
+        'column_def_list : column_def_list COMMA column_def'
+        p[0] = p[1] + [p[3]]
+
+    def p_column_def_int(self, p):
+        'column_def : ID INT'
+        p[0] = ColumnDef(name=p[1], col_type='INT', max_size=4)
+
+    def p_column_def_int_pk(self, p):
+        'column_def : ID INT PRIMARY KEY'
+        p[0] = ColumnDef(name=p[1], col_type='INT', max_size=4,
+                        nullable=False, primary_key=True)
+
+    def p_column_def_int_not_null(self, p):
+        'column_def : ID INT NOT NULL'
+        p[0] = ColumnDef(name=p[1], col_type='INT', max_size=4, nullable=False)
+
+    def p_column_def_float(self, p):
+        'column_def : ID FLOAT'
+        p[0] = ColumnDef(name=p[1], col_type='FLOAT', max_size=4)
+
+    def p_column_def_float_not_null(self, p):
+        'column_def : ID FLOAT NOT NULL'
+        p[0] = ColumnDef(name=p[1], col_type='FLOAT', max_size=4, nullable=False)
+
+    def p_column_def_bool(self, p):
+        'column_def : ID BOOL'
+        p[0] = ColumnDef(name=p[1], col_type='BOOL', max_size=1)
+
+    def p_column_def_bool_not_null(self, p):
+        'column_def : ID BOOL NOT NULL'
+        p[0] = ColumnDef(name=p[1], col_type='BOOL', max_size=1, nullable=False)
+
+    def p_column_def_varchar(self, p):
+        'column_def : ID VARCHAR LPAREN NUMBER RPAREN'
+        p[0] = ColumnDef(name=p[1], col_type='VARCHAR', max_size=p[4])
+
+    def p_column_def_varchar_not_null(self, p):
+        'column_def : ID VARCHAR LPAREN NUMBER RPAREN NOT NULL'
+        p[0] = ColumnDef(name=p[1], col_type='VARCHAR', max_size=p[4],
+                        nullable=False)
+
+    def p_column_def_varchar_pk(self, p):
+        'column_def : ID VARCHAR LPAREN NUMBER RPAREN PRIMARY KEY'
+        p[0] = ColumnDef(name=p[1], col_type='VARCHAR', max_size=p[4],
+                        nullable=False, primary_key=True)
+    
+    def p_insert_stmt(self, p):
+        '''insert_stmt : INSERT INTO ID LPAREN column_name_list RPAREN VALUES LPAREN value_list RPAREN
+                    | INSERT INTO ID VALUES LPAREN value_list RPAREN'''
+        if len(p) == 11:
+            # INSERT INTO tabla (col1, col2) VALUES (v1, v2)
+            p[0] = InsertQuery(table_name=p[3], columns=p[5], values=p[9])
+        else:
+            # INSERT INTO tabla VALUES (v1, v2)
+            p[0] = InsertQuery(table_name=p[3], columns=None, values=p[6])
+
+    def p_column_name_list_single(self, p):
+        'column_name_list : ID'
+        p[0] = [p[1]]
+
+    def p_column_name_list_multiple(self, p):
+        'column_name_list : column_name_list COMMA ID'
+        p[0] = p[1] + [p[3]]
+
+    def p_value_list_single(self, p):
+        'value_list : value'
+        p[0] = [p[1]]
+
+    def p_value_list_multiple(self, p):
+        'value_list : value_list COMMA value'
+        p[0] = p[1] + [p[3]]
+
     # Error handling
     def p_error(self, p):
         if p:

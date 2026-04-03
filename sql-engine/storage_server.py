@@ -213,6 +213,7 @@ class ServerStorage:
         result_columns = []
         result_rows    = []
         metrics        = {}
+        lines          = [] 
 
         while True:
             line = self._recv_line(sock)
@@ -258,12 +259,15 @@ class ServerStorage:
                         result_rows.append(row)
                 continue
 
+            lines.append(line)
+
         return {
             "status":   status,
             "err_line": err_line,
             "columns":  result_columns,
             "rows":     result_rows,
             "metrics":  metrics,
+            "lines":    lines,
         }
 
     # =========================================================================
@@ -330,3 +334,97 @@ class ServerStorage:
             )
 
         return resp
+
+    def insert_row(self, table_name: str, columns: list, values: list) -> int:
+        """
+        Serialize a row and send INSERT <table> <size>\n<bytes>.
+        columns: list of column names  ["id", "nombre", "salario"]
+        values:  list of values        [1, "Juan", 2500.0]
+        Returns row_id assigned by the server.
+        """
+        # 1. Get schema to know column types and order
+        schema_cols = self._fetch_schema(table_name)
+
+        # 2. Build value dict: column_name -> value
+        if columns is None:
+            col_names = [col["name"] for col in schema_cols]
+        else:
+            col_names = columns
+        val_dict = dict(zip(col_names, values))
+
+        # 3. Serialize row in binary (same format as schema.c row_serialize)
+        row_bytes = self._serialize_row(schema_cols, val_dict)
+
+        # 4. Send INSERT <table> <size>\n<bytes>
+        sock = self._connect()
+        try:
+            header = f"INSERT {table_name} {len(row_bytes)}\n"
+            sock.sendall(header.encode())
+            sock.sendall(row_bytes)
+            resp = self._read_response(sock)
+            print(f"[DEBUG] resp = {resp}")
+        finally:
+            sock.close()
+
+        if resp["status"] == "ERR":
+            raise RuntimeError(
+                f"INSERT {table_name} failed: {resp.get('err_line', '')}"
+            )
+
+        # Parse ROW_ID from response lines
+        for line in resp["lines"]:
+            if line.startswith("ROW_ID "):
+                return int(line.split()[1])
+        return -1
+
+
+    def _serialize_row(self, schema_cols: list, val_dict: dict) -> bytes:
+        """
+        Serialize a row dict to binary using schema.c row_serialize format:
+        [null_bitmap: ceil(n_cols/8) bytes]
+        per column (if not NULL):
+            INT:     4 bytes little-endian int32
+            FLOAT:   4 bytes little-endian float32  ← 4 bytes, not 8
+            BOOL:    1 byte
+            VARCHAR: 2 bytes uint16 (length) + N bytes UTF-8
+        """
+        n_cols          = len(schema_cols)
+        null_bitmap_len = math.ceil(n_cols / 8)
+
+        # Build null bitmap
+        null_bitmap = bytearray(null_bitmap_len)
+        for i, col in enumerate(schema_cols):
+            val = val_dict.get(col["name"])
+            if val is None:
+                null_bitmap[i // 8] |= (1 << (i % 8))
+
+        # Serialize each column
+        data = bytearray()
+        for i, col in enumerate(schema_cols):
+            val      = val_dict.get(col["name"])
+            col_type = col["type"]
+
+            if val is None:
+                continue  # NULL — already marked in bitmap
+
+            if col_type == "INT":
+                data += struct.pack("<i", int(val))
+
+            elif col_type == "FLOAT":
+                data += struct.pack("<f", float(val))  # 4 bytes float32
+
+            elif col_type == "BOOL":
+                data += struct.pack("B", 1 if val else 0)
+
+            elif col_type == "VARCHAR":
+                encoded = str(val).encode("utf-8")
+                max_size = col["max_size"]
+                if len(encoded) > max_size:
+                    encoded = encoded[:max_size]
+                data += struct.pack("<H", len(encoded))  # 2 bytes length
+                data += encoded
+
+            else:
+                raise ValueError(f"Unknown type: {col_type}")
+
+        return bytes(null_bitmap) + bytes(data)
