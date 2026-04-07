@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # test_lexer_tokens.py — verifica que el lexer tokeniza correctamente
-# Run desde sql-engine/: python3 test_lexer_tokens.py
+# Run desde sql-engine/: python3 tests/test_lexer_tokens.py
 
 import sys
-sys.path.insert(0, '..')
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from lexer import get_lexer
 
 tests_passed = 0
