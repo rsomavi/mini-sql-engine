@@ -3,6 +3,9 @@
 CC      = gcc
 CFLAGS  = -Wall -Wextra -g -I..
 STORAGE = ../storage-engine
+DATA_DIR ?= ../data
+NUM_FRAMES ?= 64
+POLICY ?= lru
 
 # All storage engine object files needed
 STORAGE_OBJS = \
@@ -81,7 +84,7 @@ clean:
 	@echo "Cleaned"
 
 run: minidbms-server
-	mkdir -p ../data
-	./minidbms-server ../data 64
+	mkdir -p $(DATA_DIR)
+	./minidbms-server $(DATA_DIR) $(NUM_FRAMES) $(POLICY)
 
 .PHONY: all clean run

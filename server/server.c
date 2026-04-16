@@ -22,6 +22,19 @@ static void handle_signal(int sig) {
     exit(0);
 }
 
+static EvictionPolicy *create_policy(const char *name, int num_frames) {
+    if (!name || strcmp(name, "lru") == 0) {
+        return policy_lru_create();
+    }
+    if (strcmp(name, "clock") == 0) {
+        return policy_clock_create(num_frames);
+    }
+    if (strcmp(name, "nocache") == 0) {
+        return policy_nocache_create();
+    }
+    return NULL;
+}
+
 
 // ============================================================================
 // server_init
@@ -169,23 +182,33 @@ void server_destroy(Server *srv) {
 int main(int argc, char *argv[]) {
     const char *data_dir  = "../data";
     int         num_frames = 64;
+    const char *policy_name = "lru";
 
     if (argc >= 2) data_dir   = argv[1];
     if (argc >= 3) num_frames = atoi(argv[2]);
+    if (argc >= 4) policy_name = argv[3];
 
     // Ignore SIGPIPE — don't crash when client disconnects mid-write
     signal(SIGPIPE, SIG_IGN);
     signal(SIGINT,  handle_signal);
     signal(SIGTERM, handle_signal);
 
+    EvictionPolicy *policy = create_policy(policy_name, num_frames);
+    if (!policy) {
+        fprintf(stderr,
+                "[server] unknown policy '%s' (supported: lru, clock, nocache)\n",
+                policy_name);
+        return 1;
+    }
 
     Server srv;
     g_srv = &srv;
-    if (server_init(&srv, data_dir, num_frames, policy_lru_create()) != 0) {
+    if (server_init(&srv, data_dir, num_frames, policy) != 0) {
         fprintf(stderr, "[server] init failed\n");
         return 1;
     }
 
+    printf("[server] eviction policy: %s\n", policy_name);
     server_run(&srv);
     server_destroy(&srv);
     return 0;

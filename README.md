@@ -53,6 +53,15 @@ cd server/
 make run
 ```
 
+Choose a policy explicitly:
+
+```bash
+cd server/
+make run POLICY=clock
+# or:
+./minidbms-server ../data 64 nocache
+```
+
 Start the SQL client in a separate terminal:
 
 ```bash

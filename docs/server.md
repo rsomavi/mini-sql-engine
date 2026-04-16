@@ -17,7 +17,8 @@ The C server is a TCP daemon that listens on port 5433, accepts SQL engine conne
 ```bash
 cd server/
 make          # builds minidbms-server
-make run      # builds and runs with ../data and 64 frames
+make run      # builds and runs with ../data, 64 frames, LRU policy
+make run POLICY=clock
 make clean    # removes all .o files and the binary
 ```
 
@@ -26,8 +27,16 @@ The Makefile compiles the server objects (`server.o`, `protocol.o`, `handlers.o`
 Command line arguments:
 
 ```bash
-./minidbms-server [data_dir] [num_frames]
-# defaults: data_dir=../data  num_frames=64
+./minidbms-server [data_dir] [num_frames] [policy]
+# defaults: data_dir=../data  num_frames=64  policy=lru
+```
+
+Supported startup policies:
+
+```bash
+./minidbms-server ../data 64 lru
+./minidbms-server ../data 64 clock
+./minidbms-server ../data 64 nocache
 ```
 
 ---
@@ -45,7 +54,7 @@ signal(SIGTERM, handle_signal); // kill
 
 Server srv;
 g_srv = &srv;
-server_init(&srv, data_dir, num_frames, policy_lru_create());
+server_init(&srv, data_dir, num_frames, create_policy(policy_name, num_frames));
 server_run(&srv);
 server_destroy(&srv);
 ```
