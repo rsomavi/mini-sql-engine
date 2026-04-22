@@ -28,4 +28,6 @@ void handler_create(Server *srv, int client_fd, Request *req);
 
 void handler_insert(Server *srv, int client_fd, Request *req);
 
+void handler_delete(Server *srv, int client_fd, Request *req);
+
 #endif

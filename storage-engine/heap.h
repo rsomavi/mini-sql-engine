@@ -36,6 +36,11 @@ int scan_table_raw(const char *data_dir, const char *table,
 // Returns RowID = (page_id << 16) | slot_id, or -1 on error
 int heap_insert_bm(const char *data_dir, const char *table_name,
                    const void *data, int size, BufferManager *bm);
+
+int heap_delete_bm(const char *data_dir, const char *table_name,
+                   BufferManager *bm,
+                   int (*predicate)(const char *row, int size, void *ctx),
+                   void *ctx);
                    
 void debug_print_table(const char *data_dir, const char *table);
 

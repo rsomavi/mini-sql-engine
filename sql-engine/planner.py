@@ -123,6 +123,37 @@ class QueryPlanner:
         max_column = None
         
         columns = select_node.columns
+        group_by = getattr(select_node, 'group_by', None)
+
+        # Detect standalone aggregate without GROUP BY — redirect to dedicated plan
+        if isinstance(columns, list) and len(columns) == 1 and isinstance(columns[0], dict):
+            col = columns[0]
+            if col.get('type') == 'aggregate' and not group_by:
+                func = col.get('func')
+                col_name = col.get('column')
+                where = select_node.where
+                table = select_node.table
+                if func == 'count':
+                    return self._plan_count(
+                        type('CountQuery', (), {'table': table, 'where': where, 'group_by': None})()
+                    )
+                elif func == 'sum':
+                    return self._plan_sum(
+                        type('SumQuery', (), {'column': col_name, 'table': table, 'where': where, 'group_by': None})()
+                    )
+                elif func == 'avg':
+                    return self._plan_avg(
+                        type('AvgQuery', (), {'column': col_name, 'table': table, 'where': where, 'group_by': None})()
+                    )
+                elif func == 'min':
+                    return self._plan_min(
+                        type('MinQuery', (), {'column': col_name, 'table': table, 'where': where, 'group_by': None})()
+                    )
+                elif func == 'max':
+                    return self._plan_max(
+                        type('MaxQuery', (), {'column': col_name, 'table': table, 'where': where, 'group_by': None})()
+                    )
+
         if isinstance(columns, list):
             for col in columns:
                 if isinstance(col, dict):
@@ -145,7 +176,7 @@ class QueryPlanner:
             order_by=select_node.order_by,
             limit=select_node.limit,
             distinct=getattr(select_node, 'distinct', False),
-            group_by=getattr(select_node, 'group_by', None),
+            group_by=group_by,
             having=getattr(select_node, 'having', None),
             join_table=getattr(select_node, 'join_table', None),
             join_condition=getattr(select_node, 'join_condition', None)

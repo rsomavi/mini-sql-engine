@@ -377,6 +377,48 @@ class ServerStorage:
                 return int(line.split()[1])
         return -1
 
+    def delete_rows(self, table_name: str, where) -> int:
+        """
+        Send DELETE <table> [WHERE <condition>] to the server.
+        Returns the number of rows deleted.
+        """
+        from ast_nodes import Condition, LogicalCondition, NotCondition
+
+        def serialize_condition(cond) -> str:
+            if cond is None:
+                return ""
+            if isinstance(cond, Condition):
+                return f"{cond.column} {cond.operator} {repr(cond.value)}"
+            if isinstance(cond, LogicalCondition):
+                left  = serialize_condition(cond.left)
+                right = serialize_condition(cond.right)
+                return f"({left}) {cond.operator.upper()} ({right})"
+            if isinstance(cond, NotCondition):
+                return f"NOT ({serialize_condition(cond.condition)})"
+            return ""
+
+        where_str = serialize_condition(where)
+        if where_str:
+            cmd = f"DELETE {table_name} WHERE {where_str}"
+        else:
+            cmd = f"DELETE {table_name}"
+
+        sock = self._connect()
+        try:
+            self._send(sock, cmd)
+            resp = self._read_response(sock)
+        finally:
+            sock.close()
+
+        if resp["status"] == "ERR":
+            raise RuntimeError(
+                f"DELETE {table_name} failed: {resp.get('err_line', '')}"
+            )
+
+        for line in resp["lines"]:
+            if line.startswith("DELETED "):
+                return int(line.split()[1])
+        return 0
 
     def _serialize_row(self, schema_cols: list, val_dict: dict) -> bytes:
         """

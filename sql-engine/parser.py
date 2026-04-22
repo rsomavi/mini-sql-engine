@@ -6,7 +6,7 @@ from lexer import SQLLexer
 from ast_nodes import (SelectQuery, CountQuery, SumQuery, AvgQuery,
                        MinQuery, MaxQuery, Condition, LogicalCondition,
                        NotCondition, CreateTableQuery, ColumnDef,
-                       InsertQuery)
+                       InsertQuery, DeleteQuery)
 
 class SQLParser:
     """SQL Parser that builds AST from tokens"""
@@ -34,7 +34,8 @@ class SQLParser:
     def p_query(self, p):
         '''query : select_stmt
                 | create_stmt
-                | insert_stmt'''
+                | insert_stmt
+                | delete_stmt'''
         p[0] = p[1]
     
     def p_select_stmt(self, p):
@@ -395,6 +396,16 @@ class SQLParser:
     def p_value_list_multiple(self, p):
         'value_list : value_list COMMA value'
         p[0] = p[1] + [p[3]]
+
+    def p_delete_stmt(self, p):
+        '''delete_stmt : DELETE FROM ID WHERE condition
+                       | DELETE FROM ID'''
+        if len(p) == 6:
+            # DELETE FROM tabla WHERE condicion
+            p[0] = DeleteQuery(table_name=p[3], where=p[5])
+        else:
+            # DELETE FROM tabla  (sin WHERE — borra todo)
+            p[0] = DeleteQuery(table_name=p[3], where=None)
 
     # Error handling
     def p_error(self, p):

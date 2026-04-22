@@ -521,7 +521,7 @@ class QueryExecutor:
         if plan.group_by:
             return self._execute_count_with_group_by(rows, plan)
         
-        return len(rows)
+        return [{"count": len(rows)}]
     
     def _execute_count_with_group_by(self, rows, plan: CountPlan):
         """Execute COUNT(*) with GROUP BY (supports multiple columns)."""
@@ -585,7 +585,7 @@ class QueryExecutor:
         for row in rows:
             total += row[plan.column]
         
-        return total
+        return [{"sum": total}]
     
     def _execute_sum_with_group_by(self, rows, plan: SumPlan):
         """Execute SUM(column) with GROUP BY (supports multiple columns)."""
@@ -646,10 +646,10 @@ class QueryExecutor:
             return self._execute_avg_with_group_by(rows, plan)
         
         if not rows:
-            return 0
+            return [{"avg": 0}]
         
         total = sum(row[plan.column] for row in rows)
-        return total / len(rows)
+        return [{"avg": total / len(rows)}]
     
     def _execute_avg_with_group_by(self, rows, plan: AvgPlan):
         """Execute AVG(column) with GROUP BY (supports multiple columns)."""
@@ -706,10 +706,10 @@ class QueryExecutor:
             return self._execute_min_with_group_by(rows, plan)
         
         if not rows:
-            return 0
+            return [{"min": 0}]
         
         min_value = min(row[plan.column] for row in rows)
-        return min_value
+        return [{"min": min_value}]
     
     def _execute_min_with_group_by(self, rows, plan: MinPlan):
         """Execute MIN(column) with GROUP BY (supports multiple columns)."""
@@ -765,10 +765,10 @@ class QueryExecutor:
             return self._execute_max_with_group_by(rows, plan)
         
         if not rows:
-            return 0
+            return [{"max": 0}]
         
         max_value = max(row[plan.column] for row in rows)
-        return max_value
+        return [{"max": max_value}]
     
     def _execute_max_with_group_by(self, rows, plan: MaxPlan):
         """Execute MAX(column) with GROUP BY (supports multiple columns)."""

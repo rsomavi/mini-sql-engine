@@ -191,3 +191,41 @@ void debug_print_table(const char *data_dir, const char *table) {
         printf("\n");
     }
 }
+
+int heap_delete_bm(const char *data_dir, const char *table_name,
+                   BufferManager *bm,
+                   int (*predicate)(const char *row, int size, void *ctx),
+                   void *ctx) {
+    if (!data_dir || !table_name || !bm || !predicate)
+        return -1;
+
+    int num_pages = get_num_pages(data_dir, table_name);
+    int deleted   = 0;
+
+    for (int page_id = 1; page_id < num_pages; page_id++) {
+        char *page = bm_fetch_page(bm, table_name, page_id);
+        if (!page) continue;
+
+        PageHeader *header   = (PageHeader *)page;
+        int        *slot_dir = (int *)(page + sizeof(PageHeader));
+        int         dirty    = 0;
+
+        for (int slot_id = 0; slot_id < header->num_slots; slot_id++) {
+            if (slot_dir[slot_id] == -1) continue;
+
+            int   row_size = get_row_size(page, slot_id);
+            char *row      = read_row(page, slot_id);
+            if (!row || row_size <= 0) continue;
+
+            if (predicate(row, row_size, ctx)) {
+                delete_row(page, slot_id);
+                deleted++;
+                dirty = 1;
+            }
+        }
+
+        bm_unpin_page(bm, table_name, page_id, dirty);
+    }
+
+    return deleted;
+}

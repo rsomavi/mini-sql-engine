@@ -95,7 +95,21 @@ int protocol_read_request(int client_fd, Request *req) {
         }
 
         return 0;
+    } else if (strncmp(line, "DELETE ", 7) == 0) {
+        req->op = OP_DELETE;
+        req->table_name[0] = '\0';
+        req->args[0]       = '\0';
+
+        sscanf(line + 7, "%63s", req->table_name);
+
+        int skip = 7 + (int)strlen(req->table_name) + 1;
+        if (skip < (int)strlen(line)) {
+            strncpy(req->args, line + skip, sizeof(req->args) - 1);
+            req->args[sizeof(req->args) - 1] = '\0';
+        }
+        return 0;
     }
+
 
     req->op = OP_UNKNOWN;
     return 0;

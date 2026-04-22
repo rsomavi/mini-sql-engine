@@ -13,6 +13,7 @@ typedef enum {
     OP_SCHEMA,
     OP_CREATE,
     OP_INSERT,
+    OP_DELETE,
     OP_UNKNOWN
 } OperationType;
 
