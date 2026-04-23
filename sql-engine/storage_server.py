@@ -247,17 +247,15 @@ class ServerStorage:
                     })
                 continue
 
-            # ---- ROWS (SCAN response) ----
-            if line.startswith("ROWS "):
-                row_count = int(line.split()[1])
-                for _ in range(row_count):
-                    size_line = self._recv_line(sock)
-                    row_size  = int(size_line.strip())
-                    row_data  = self._recv_bytes(sock, row_size)
-                    if columns:
-                        row = self._deserialize_row(row_data, columns)
-                        result_rows.append(row)
-                continue
+            # ---- ROW (SCAN response) — line is the decimal row size ----
+            if columns is not None:
+                try:
+                    row_size = int(line)
+                    row_data = self._recv_bytes(sock, row_size)
+                    result_rows.append(self._deserialize_row(row_data, columns))
+                    continue
+                except ValueError:
+                    pass
 
             lines.append(line)
 

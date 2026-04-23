@@ -84,7 +84,6 @@ void handler_scan(Server *srv, int client_fd, Request *req) {
     ResponseBuf rb;
     protocol_response_init(&rb);
 
-    // Validate table name
     if (req->table_name[0] == '\0') {
         protocol_response_append(&rb, "ERR INVALID_ARGS missing table name\n");
         append_metrics(&rb, srv);
@@ -94,12 +93,9 @@ void handler_scan(Server *srv, int client_fd, Request *req) {
         return;
     }
 
-    // Get number of pages for this table
     int num_pages = get_num_pages(srv->data_dir, req->table_name);
     if (num_pages <= 1) {
-        // No data pages (page 0 is schema only)
         protocol_response_append(&rb, "OK\n");
-        protocol_response_append(&rb, "ROWS 0\n");
         append_metrics(&rb, srv);
         protocol_response_append(&rb, "END\n");
         protocol_response_send(&rb, client_fd);
@@ -107,8 +103,24 @@ void handler_scan(Server *srv, int client_fd, Request *req) {
         return;
     }
 
-    // First pass: count rows to send ROWS <count> header
-    int total_rows = 0;
+    // Single pass: copy every row to heap and unpin each page before sending,
+    // so the second traversal (sending) does not register artificial cache hits.
+    int    cap       = 256;
+    int    n_rows    = 0;
+    char **row_data  = malloc(cap * sizeof(char *));
+    int   *row_sizes = malloc(cap * sizeof(int));
+
+    if (!row_data || !row_sizes) {
+        free(row_data);
+        free(row_sizes);
+        protocol_response_append(&rb, "ERR INTERNAL out of memory\n");
+        append_metrics(&rb, srv);
+        protocol_response_append(&rb, "END\n");
+        protocol_response_send(&rb, client_fd);
+        protocol_response_free(&rb);
+        return;
+    }
+
     for (int page_id = 1; page_id < num_pages; page_id++) {
         char *page = bm_fetch_page(&srv->bm, req->table_name, page_id);
         if (!page) continue;
@@ -117,54 +129,65 @@ void handler_scan(Server *srv, int client_fd, Request *req) {
         int        *slot_dir = (int *)(page + sizeof(PageHeader));
 
         for (int slot_id = 0; slot_id < header->num_slots; slot_id++) {
-            if (slot_dir[slot_id] != -1)
-                total_rows++;
+            if (slot_dir[slot_id] == -1) continue;
+
+            int   sz  = get_row_size(page, slot_id);
+            char *row = read_row(page, slot_id);
+            if (!row || sz <= 0) continue;
+
+            if (n_rows == cap) {
+                int    new_cap = cap * 2;
+                char **d       = realloc(row_data,  new_cap * sizeof(char *));
+                int   *s       = realloc(row_sizes, new_cap * sizeof(int));
+                if (!d || !s) {
+                    char **cd = d ? d : row_data;
+                    int   *cs = s ? s : row_sizes;
+                    for (int i = 0; i < n_rows; i++) free(cd[i]);
+                    free(cd);
+                    free(cs);
+                    bm_unpin_page(&srv->bm, req->table_name, page_id, 0);
+                    protocol_response_append(&rb, "ERR INTERNAL out of memory\n");
+                    append_metrics(&rb, srv);
+                    protocol_response_append(&rb, "END\n");
+                    protocol_response_send(&rb, client_fd);
+                    protocol_response_free(&rb);
+                    return;
+                }
+                row_data  = d;
+                row_sizes = s;
+                cap       = new_cap;
+            }
+
+            char *copy = malloc(sz);
+            if (!copy) continue;
+            memcpy(copy, row, sz);
+            row_data[n_rows]  = copy;
+            row_sizes[n_rows] = sz;
+            n_rows++;
         }
+
         bm_unpin_page(&srv->bm, req->table_name, page_id, 0);
     }
 
-    // Send header
+    // All pages unpinned. Build and send response from heap copies.
     protocol_response_append(&rb, "OK\n");
-
-    char rows_line[64];
-    snprintf(rows_line, sizeof(rows_line), "ROWS %d\n", total_rows);
-    protocol_response_append(&rb, rows_line);
     protocol_response_send(&rb, client_fd);
     protocol_response_free(&rb);
 
-    // Second pass: send rows via buffer pool
-    for (int page_id = 1; page_id < num_pages; page_id++) {
-        char *page = bm_fetch_page(&srv->bm, req->table_name, page_id);
-        if (!page) continue;
-
-        PageHeader *header   = (PageHeader *)page;
-        int        *slot_dir = (int *)(page + sizeof(PageHeader));
-
-        for (int slot_id = 0; slot_id < header->num_slots; slot_id++) {
-            if (slot_dir[slot_id] == -1) continue;  // deleted slot
-
-            int   row_size = get_row_size(page, slot_id);
-            char *row      = read_row(page, slot_id);
-
-            if (!row || row_size <= 0) continue;
-
-            // Send: "<row_size>\n<binary row data>"
-            ResponseBuf row_rb;
-            protocol_response_init(&row_rb);
-
-            char size_line[32];
-            snprintf(size_line, sizeof(size_line), "%d\n", row_size);
-            protocol_response_append(&row_rb, size_line);
-            protocol_response_append_binary(&row_rb, row, row_size);
-
-            protocol_response_send(&row_rb, client_fd);
-            protocol_response_free(&row_rb);
-        }
-
-        bm_unpin_page(&srv->bm, req->table_name, page_id, 0);
+    for (int i = 0; i < n_rows; i++) {
+        ResponseBuf row_rb;
+        protocol_response_init(&row_rb);
+        char size_line[32];
+        snprintf(size_line, sizeof(size_line), "%d\n", row_sizes[i]);
+        protocol_response_append(&row_rb, size_line);
+        protocol_response_append_binary(&row_rb, row_data[i], row_sizes[i]);
+        protocol_response_send(&row_rb, client_fd);
+        protocol_response_free(&row_rb);
+        free(row_data[i]);
     }
+    free(row_data);
+    free(row_sizes);
 
-    // Send metrics and END
     ResponseBuf end_rb;
     protocol_response_init(&end_rb);
     append_metrics(&end_rb, srv);
