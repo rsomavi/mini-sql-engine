@@ -57,6 +57,8 @@ class SQLLexer:
         'VALUES',
         'INSERT',
         'DELETE',
+        'UPDATE',
+        'SET',
     )
     
     # Reserved words
@@ -95,6 +97,8 @@ class SQLLexer:
         'VALUES':  'VALUES',
         'INSERT':  'INSERT',
         'DELETE':  'DELETE',
+        'UPDATE':  'UPDATE',
+        'SET':     'SET',
     }
     
     # Regular expression rules for simple tokens

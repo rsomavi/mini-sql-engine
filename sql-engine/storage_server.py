@@ -212,8 +212,9 @@ class ServerStorage:
 
         result_columns = []
         result_rows    = []
+        result_row_ids = []
         metrics        = {}
-        lines          = [] 
+        lines          = []
 
         while True:
             line = self._recv_line(sock)
@@ -247,14 +248,23 @@ class ServerStorage:
                     })
                 continue
 
-            # ---- ROW (SCAN response) — line is the decimal row size ----
+            # ---- ROW (SCAN response) — line is "<row_id> <size>" ----
             if columns is not None:
                 try:
-                    row_size = int(line)
+                    parts = line.split()
+                    if len(parts) == 2:
+                        row_id_val = int(parts[0])
+                        row_size   = int(parts[1])
+                    elif len(parts) == 1:
+                        row_id_val = -1
+                        row_size   = int(parts[0])
+                    else:
+                        raise ValueError
                     row_data = self._recv_bytes(sock, row_size)
                     result_rows.append(self._deserialize_row(row_data, columns))
+                    result_row_ids.append(row_id_val)
                     continue
-                except ValueError:
+                except (ValueError, IndexError):
                     pass
 
             lines.append(line)
@@ -264,6 +274,7 @@ class ServerStorage:
             "err_line": err_line,
             "columns":  result_columns,
             "rows":     result_rows,
+            "row_ids":  result_row_ids,
             "metrics":  metrics,
             "lines":    lines,
         }
@@ -360,7 +371,6 @@ class ServerStorage:
             sock.sendall(header.encode())
             sock.sendall(row_bytes)
             resp = self._read_response(sock)
-            print(f"[DEBUG] resp = {resp}")
         finally:
             sock.close()
 
@@ -468,3 +478,109 @@ class ServerStorage:
                 raise ValueError(f"Unknown type: {col_type}")
 
         return bytes(null_bitmap) + bytes(data)
+
+    # =========================================================================
+    # Row-level UPDATE — single row by row_id
+    # =========================================================================
+
+    def _update_row_bytes(self, table_name: str, row_id: int, row_bytes: bytes):
+        """Send UPDATE <table> <row_id> <size>\n<bytes> to the server."""
+        sock = self._connect()
+        try:
+            header = f"UPDATE {table_name} {row_id} {len(row_bytes)}\n"
+            sock.sendall(header.encode())
+            sock.sendall(row_bytes)
+            resp = self._read_response(sock)
+        finally:
+            sock.close()
+
+        if resp["status"] == "ERR":
+            raise RuntimeError(
+                f"UPDATE {table_name} failed: {resp.get('err_line', '')}"
+            )
+
+    def update_row(self, table_name: str, row_id: int,
+                   columns: list, values: list) -> int:
+        """
+        Serialize a row and send UPDATE <table> <row_id> <size>\n<bytes>.
+        columns: list of column names (or None to use schema order)
+        values:  list of values (same order as columns)
+        Returns row_id.
+        """
+        schema_cols = self._fetch_schema(table_name)
+        col_names   = columns if columns is not None else [c["name"] for c in schema_cols]
+        val_dict    = dict(zip(col_names, values))
+        row_bytes   = self._serialize_row(schema_cols, val_dict)
+        self._update_row_bytes(table_name, row_id, row_bytes)
+        return row_id
+
+    def _fetch_rows_with_ids(self, table_name: str, columns: list) -> list:
+        """
+        Send SCAN <table>, return list of (row_dict, row_id) pairs.
+        """
+        sock = self._connect()
+        try:
+            self._send(sock, f"SCAN {table_name}")
+            resp = self._read_response(sock, columns=columns)
+        finally:
+            sock.close()
+
+        if resp["status"] == "ERR":
+            raise RuntimeError(
+                f"SCAN {table_name} failed: {resp.get('err_line', '')}"
+            )
+
+        return list(zip(resp["rows"], resp["row_ids"]))
+
+    def _evaluate_condition(self, row: dict, condition) -> bool:
+        """Evaluate a WHERE condition against a row dict."""
+        from ast_nodes import Condition, LogicalCondition, NotCondition
+
+        if isinstance(condition, Condition):
+            val  = row.get(condition.column)
+            op   = condition.operator
+            cval = condition.value
+            if op == '=':  return val == cval
+            if op == '>':  return val is not None and val > cval
+            if op == '<':  return val is not None and val < cval
+            if op == '>=': return val is not None and val >= cval
+            if op == '<=': return val is not None and val <= cval
+            return False
+
+        if isinstance(condition, LogicalCondition):
+            left  = self._evaluate_condition(row, condition.left)
+            right = self._evaluate_condition(row, condition.right)
+            op    = condition.operator.upper()
+            if op == 'AND': return left and right
+            if op == 'OR':  return left or right
+            return False
+
+        if isinstance(condition, NotCondition):
+            return not self._evaluate_condition(row, condition.condition)
+
+        return True
+
+    def update_rows(self, table_name: str, assignments, where) -> int:
+        """
+        Scan table, filter by WHERE, apply assignments, update each matching row.
+        assignments: list of (column_name, value) tuples
+        where: optional Condition/LogicalCondition/NotCondition
+        Returns count of updated rows.
+        """
+        schema_cols    = self._fetch_schema(table_name)
+        rows_with_ids  = self._fetch_rows_with_ids(table_name, schema_cols)
+
+        updated = 0
+        for row, row_id in rows_with_ids:
+            if where is not None and not self._evaluate_condition(row, where):
+                continue
+
+            new_values = dict(row)
+            for col, val in assignments:
+                new_values[col] = val
+
+            row_bytes = self._serialize_row(schema_cols, new_values)
+            self._update_row_bytes(table_name, row_id, row_bytes)
+            updated += 1
+
+        return updated

@@ -143,9 +143,9 @@ SCAN <table_name>\n
 **Response:**
 ```
 OK\n
-<row_size>\n
+<row_id> <row_size>\n
 <binary row data>
-<row_size>\n
+<row_id> <row_size>\n
 <binary row data>
 ...
 METRICS hits=<n> misses=<n> evictions=<n> hit_rate=<f>\n
@@ -165,6 +165,8 @@ END\n
 - There is no `ROWS <count>` header. The client reads rows until it
   encounters the `METRICS` line. This ensures a single buffer pool pass
   and eliminates artificial cache hits from a preliminary count scan.
+- Each row line contains `<row_id> <size>` — the RowID allows the client
+  to perform UPDATE and DELETE operations without a second scan.
 
 **Design decision (v1.4):**
 The original protocol (v1.0–v1.3) sent `ROWS <count>` before the rows,
@@ -181,9 +183,9 @@ counts rows as it receives them.
 ```
 → SCAN users\n
 ← OK\n
-  12\n
+  65536 12\n
   <12 bytes: row 1>
-  12\n
+  65537 12\n
   <12 bytes: row 2>
   METRICS hits=0 misses=2 evictions=0 hit_rate=0.000\n
   END\n
@@ -455,9 +457,21 @@ END\n
 - `payload_size` — size of the new binary row in bytes
 
 **Notes:**
-- The new row must have the same size as the original (fixed-size schema).
-- The page is marked dirty in the buffer pool after the update.
-- UPDATED 0 means the row was not found.
+- If the new payload has the same size as the existing row, the update
+  is performed in-place — bytes overwritten directly in the buffer pool page.
+- If the new payload has a different size, a HOT update is performed:
+  the new row is inserted in a free slot (same page if space allows,
+  otherwise a new page), and the original slot is marked `SLOT_REDIRECT`
+  pointing to the new location. The original RowID remains valid.
+- SLOT_REDIRECT chains are followed transparently by SCAN and UPDATE.
+- UPDATED 0 means the row was not found or the slot was already deleted.
+- The page is marked dirty in the buffer pool after any update.
+
+**Design decision:**
+HOT updates follow the same principle as PostgreSQL Heap Only Tuples —
+the original RowID is preserved by leaving a forwarding pointer in the
+original slot. This avoids invalidating any reference to the row held
+by the client, at the cost of an extra indirection on subsequent reads.
 
 **Errors:**
 - `TABLE_NOT_FOUND` if the table does not exist.
@@ -580,3 +594,4 @@ Future versions may add:
 | v1.2 | 2026-03 | SCHEMA column format includes pk field |
 | v1.3 | 2026-04 | DELETE by ROW_ID — logical delete, slot marked in slotted page. WHERE evaluation delegated to storage engine |
 | v1.4 | 2026-04 | Remove ROWS count header from SCAN — single buffer pool pass eliminates artificial cache hits |
+| v1.5 | 2026-04 | SCAN row lines include RowID — format changed from `<size>` to `<row_id> <size>`. Add UPDATE with HOT update support via SLOT_REDIRECT chains |

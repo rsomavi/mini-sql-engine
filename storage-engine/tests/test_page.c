@@ -401,9 +401,9 @@ static int test_header_tracks_free_space(void) {
     int end_before   = h->free_space_end;
     char d[] = "test"; // 4 bytes
     insert_row(page, d, 4);
-    // free_space_start debe crecer en sizeof(int) (entrada de slot)
-    ASSERT_INT(start_before + (int)sizeof(int), h->free_space_start,
-               "free_space_start crece en sizeof(int) tras insert");
+    // free_space_start debe crecer en sizeof(SlotEntry) (entrada de slot)
+    ASSERT_INT(start_before + (int)sizeof(SlotEntry), h->free_space_start,
+               "free_space_start crece en sizeof(SlotEntry) tras insert");
     // free_space_end debe decrecer en sizeof(int)+4 (size header + datos)
     ASSERT_INT(end_before - (int)(sizeof(int) + 4), h->free_space_end,
                "free_space_end decrece en sizeof(int)+4 tras insert");

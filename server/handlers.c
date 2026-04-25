@@ -49,6 +49,9 @@ void handler_dispatch(Server *srv, int client_fd, Request *req) {
         case OP_RESET_METRICS:
             handler_reset_metrics(srv, client_fd);
             break;
+        case OP_UPDATE:
+            handler_update(srv, client_fd, req);
+            break;
         case OP_UNKNOWN:
         default: {
             ResponseBuf rb;
@@ -109,10 +112,12 @@ void handler_scan(Server *srv, int client_fd, Request *req) {
     int    n_rows    = 0;
     char **row_data  = malloc(cap * sizeof(char *));
     int   *row_sizes = malloc(cap * sizeof(int));
+    int   *row_ids   = malloc(cap * sizeof(int));
 
-    if (!row_data || !row_sizes) {
+    if (!row_data || !row_sizes || !row_ids) {
         free(row_data);
         free(row_sizes);
+        free(row_ids);
         protocol_response_append(&rb, "ERR INTERNAL out of memory\n");
         append_metrics(&rb, srv);
         protocol_response_append(&rb, "END\n");
@@ -129,7 +134,8 @@ void handler_scan(Server *srv, int client_fd, Request *req) {
         SlotEntry  *slot_dir = (SlotEntry *)(page + sizeof(PageHeader));
 
         for (int slot_id = 0; slot_id < header->num_slots; slot_id++) {
-            if (slot_dir[slot_id].state == SLOT_DELETED) continue;
+            if (slot_dir[slot_id].state == SLOT_DELETED)  continue;
+            if (slot_dir[slot_id].state == SLOT_REDIRECT) continue;
 
             int   sz  = get_row_size(page, slot_id);
             char *row = read_row(page, slot_id);
@@ -137,14 +143,17 @@ void handler_scan(Server *srv, int client_fd, Request *req) {
 
             if (n_rows == cap) {
                 int    new_cap = cap * 2;
-                char **d       = realloc(row_data,  new_cap * sizeof(char *));
-                int   *s       = realloc(row_sizes, new_cap * sizeof(int));
-                if (!d || !s) {
-                    char **cd = d ? d : row_data;
-                    int   *cs = s ? s : row_sizes;
+                char **d  = realloc(row_data,  new_cap * sizeof(char *));
+                int   *s  = realloc(row_sizes, new_cap * sizeof(int));
+                int   *ri = realloc(row_ids,   new_cap * sizeof(int));
+                if (!d || !s || !ri) {
+                    char **cd  = d  ? d  : row_data;
+                    int   *cs  = s  ? s  : row_sizes;
+                    int   *cri = ri ? ri : row_ids;
                     for (int i = 0; i < n_rows; i++) free(cd[i]);
                     free(cd);
                     free(cs);
+                    free(cri);
                     bm_unpin_page(&srv->bm, req->table_name, page_id, 0);
                     protocol_response_append(&rb, "ERR INTERNAL out of memory\n");
                     append_metrics(&rb, srv);
@@ -155,6 +164,7 @@ void handler_scan(Server *srv, int client_fd, Request *req) {
                 }
                 row_data  = d;
                 row_sizes = s;
+                row_ids   = ri;
                 cap       = new_cap;
             }
 
@@ -163,6 +173,7 @@ void handler_scan(Server *srv, int client_fd, Request *req) {
             memcpy(copy, row, sz);
             row_data[n_rows]  = copy;
             row_sizes[n_rows] = sz;
+            row_ids[n_rows]   = encode_rowid(page_id, slot_id);
             n_rows++;
         }
 
@@ -177,8 +188,8 @@ void handler_scan(Server *srv, int client_fd, Request *req) {
     for (int i = 0; i < n_rows; i++) {
         ResponseBuf row_rb;
         protocol_response_init(&row_rb);
-        char size_line[32];
-        snprintf(size_line, sizeof(size_line), "%d\n", row_sizes[i]);
+        char size_line[48];
+        snprintf(size_line, sizeof(size_line), "%d %d\n", row_ids[i], row_sizes[i]);
         protocol_response_append(&row_rb, size_line);
         protocol_response_append_binary(&row_rb, row_data[i], row_sizes[i]);
         protocol_response_send(&row_rb, client_fd);
@@ -187,6 +198,7 @@ void handler_scan(Server *srv, int client_fd, Request *req) {
     }
     free(row_data);
     free(row_sizes);
+    free(row_ids);
 
     ResponseBuf end_rb;
     protocol_response_init(&end_rb);
@@ -562,6 +574,184 @@ void handler_reset_metrics(Server *srv, int client_fd) {
     protocol_response_init(&rb);
     bm_reset_metrics(&srv->bm);
     protocol_response_append(&rb, "OK\n");
+    append_metrics(&rb, srv);
+    protocol_response_append(&rb, "END\n");
+    protocol_response_send(&rb, client_fd);
+    protocol_response_free(&rb);
+}
+
+void handler_update(Server *srv, int client_fd, Request *req) {
+    ResponseBuf rb;
+    protocol_response_init(&rb);
+
+    if (req->table_name[0] == '\0') {
+        protocol_response_append(&rb, "ERR INVALID_ARGS missing table name\n");
+        append_metrics(&rb, srv);
+        protocol_response_append(&rb, "END\n");
+        protocol_response_send(&rb, client_fd);
+        protocol_response_free(&rb);
+        return;
+    }
+
+    if (req->payload_size <= 0) {
+        protocol_response_append(&rb, "ERR INVALID_ARGS missing payload\n");
+        append_metrics(&rb, srv);
+        protocol_response_append(&rb, "END\n");
+        protocol_response_send(&rb, client_fd);
+        protocol_response_free(&rb);
+        return;
+    }
+
+    if (get_num_pages(srv->data_dir, req->table_name) == 0) {
+        protocol_response_append(&rb, "ERR TABLE_NOT_FOUND table does not exist\n");
+        append_metrics(&rb, srv);
+        protocol_response_append(&rb, "END\n");
+        protocol_response_send(&rb, client_fd);
+        protocol_response_free(&rb);
+        return;
+    }
+
+    int row_id  = atoi(req->args);
+    int page_id = decode_rowid_page(row_id);
+    int slot_id = decode_rowid_slot(row_id);
+
+    if (page_id <= 0) {
+        protocol_response_append(&rb, "OK\nUPDATED 0\n");
+        append_metrics(&rb, srv);
+        protocol_response_append(&rb, "END\n");
+        protocol_response_send(&rb, client_fd);
+        protocol_response_free(&rb);
+        return;
+    }
+
+    char *page = bm_fetch_page(&srv->bm, req->table_name, page_id);
+    if (!page) {
+        protocol_response_append(&rb, "OK\nUPDATED 0\n");
+        append_metrics(&rb, srv);
+        protocol_response_append(&rb, "END\n");
+        protocol_response_send(&rb, client_fd);
+        protocol_response_free(&rb);
+        return;
+    }
+
+    PageHeader *header   = (PageHeader *)page;
+    SlotEntry  *slot_dir = (SlotEntry *)(page + sizeof(PageHeader));
+
+    if (slot_id < 0 || slot_id >= header->num_slots) {
+        bm_unpin_page(&srv->bm, req->table_name, page_id, 0);
+        protocol_response_append(&rb, "OK\nUPDATED 0\n");
+        append_metrics(&rb, srv);
+        protocol_response_append(&rb, "END\n");
+        protocol_response_send(&rb, client_fd);
+        protocol_response_free(&rb);
+        return;
+    }
+
+    if (slot_dir[slot_id].state == SLOT_DELETED) {
+        bm_unpin_page(&srv->bm, req->table_name, page_id, 0);
+        protocol_response_append(&rb, "OK\nUPDATED 0\n");
+        append_metrics(&rb, srv);
+        protocol_response_append(&rb, "END\n");
+        protocol_response_send(&rb, client_fd);
+        protocol_response_free(&rb);
+        return;
+    }
+
+    // Follow SLOT_REDIRECT chain to find the current live slot.
+    // SLOT_REDIRECT.offset encodes the target as encode_rowid(page_id, slot_id).
+    int depth = 0;
+    while (slot_dir[slot_id].state == SLOT_REDIRECT) {
+        if (++depth > 64) {
+            bm_unpin_page(&srv->bm, req->table_name, page_id, 0);
+            protocol_response_append(&rb, "OK\nUPDATED 0\n");
+            append_metrics(&rb, srv);
+            protocol_response_append(&rb, "END\n");
+            protocol_response_send(&rb, client_fd);
+            protocol_response_free(&rb);
+            return;
+        }
+
+        int target   = slot_dir[slot_id].offset;
+        int tgt_page = decode_rowid_page(target);
+        int tgt_slot = decode_rowid_slot(target);
+
+        if (tgt_page == page_id) {
+            slot_id = tgt_slot;
+        } else {
+            bm_unpin_page(&srv->bm, req->table_name, page_id, 0);
+            page_id  = tgt_page;
+            page     = bm_fetch_page(&srv->bm, req->table_name, page_id);
+            if (!page) {
+                protocol_response_append(&rb, "OK\nUPDATED 0\n");
+                append_metrics(&rb, srv);
+                protocol_response_append(&rb, "END\n");
+                protocol_response_send(&rb, client_fd);
+                protocol_response_free(&rb);
+                return;
+            }
+            header   = (PageHeader *)page;
+            slot_dir = (SlotEntry *)(page + sizeof(PageHeader));
+            slot_id  = tgt_slot;
+        }
+
+        if (slot_id < 0 || slot_id >= header->num_slots) {
+            bm_unpin_page(&srv->bm, req->table_name, page_id, 0);
+            protocol_response_append(&rb, "OK\nUPDATED 0\n");
+            append_metrics(&rb, srv);
+            protocol_response_append(&rb, "END\n");
+            protocol_response_send(&rb, client_fd);
+            protocol_response_free(&rb);
+            return;
+        }
+    }
+
+    // slot_dir[slot_id].state is SLOT_NORMAL — perform the update.
+    int existing_size = get_row_size(page, slot_id);
+
+    if (existing_size == req->payload_size) {
+        // Same size: overwrite in place
+        char *row_ptr = read_row(page, slot_id);
+        if (!row_ptr) {
+            bm_unpin_page(&srv->bm, req->table_name, page_id, 0);
+            protocol_response_append(&rb, "OK\nUPDATED 0\n");
+            append_metrics(&rb, srv);
+            protocol_response_append(&rb, "END\n");
+            protocol_response_send(&rb, client_fd);
+            protocol_response_free(&rb);
+            return;
+        }
+        memcpy(row_ptr, req->payload, req->payload_size);
+        bm_unpin_page(&srv->bm, req->table_name, page_id, 1);
+    } else {
+        // Different size: HOT update — insert new row, redirect old slot
+        int new_slot = insert_row(page, req->payload, req->payload_size);
+
+        if (new_slot >= 0) {
+            // Inserted on the same page
+            slot_dir[slot_id].state  = SLOT_REDIRECT;
+            slot_dir[slot_id].offset = encode_rowid(page_id, new_slot);
+            bm_unpin_page(&srv->bm, req->table_name, page_id, 1);
+        } else {
+            // No space on this page — insert via heap (may create a new page)
+            int new_row_id = heap_insert_bm(srv->data_dir, req->table_name,
+                                             req->payload, req->payload_size,
+                                             &srv->bm);
+            if (new_row_id < 0) {
+                bm_unpin_page(&srv->bm, req->table_name, page_id, 0);
+                protocol_response_append(&rb, "ERR IO_ERROR failed to insert updated row\n");
+                append_metrics(&rb, srv);
+                protocol_response_append(&rb, "END\n");
+                protocol_response_send(&rb, client_fd);
+                protocol_response_free(&rb);
+                return;
+            }
+            slot_dir[slot_id].state  = SLOT_REDIRECT;
+            slot_dir[slot_id].offset = new_row_id;
+            bm_unpin_page(&srv->bm, req->table_name, page_id, 1);
+        }
+    }
+
+    protocol_response_append(&rb, "OK\nUPDATED 1\n");
     append_metrics(&rb, srv);
     protocol_response_append(&rb, "END\n");
     protocol_response_send(&rb, client_fd);

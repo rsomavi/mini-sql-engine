@@ -12,6 +12,7 @@ ALL_SRCS = $(BASE_SRCS) $(BM_SRCS)
 
 TESTS = test_disk \
         test_page \
+        test_slot_entry \
         test_heap \
         test_schema \
         test_integration \
@@ -26,6 +27,9 @@ test_disk: test_disk.c $(SRC)/disk.c
 	$(CC) $(CFLAGS) -o $@ $^
 
 test_page: test_page.c $(SRC)/page.c $(SRC)/disk.c
+	$(CC) $(CFLAGS) -o $@ $^
+
+test_slot_entry: test_slot_entry.c $(SRC)/page.c $(SRC)/disk.c
 	$(CC) $(CFLAGS) -o $@ $^
 
 test_heap: test_heap.c $(ALL_SRCS)
@@ -54,6 +58,7 @@ test_buffer_manager: test_buffer_manager.c $(ALL_SRCS)
 run: all
 	@echo "\n=== test_disk ===" && ./test_disk
 	@echo "\n=== test_page ===" && ./test_page
+	@echo "\n=== test_slot_entry ===" && ./test_slot_entry
 	@echo "\n=== test_heap ===" && ./test_heap
 	@echo "\n=== test_schema ===" && ./test_schema
 	@echo "\n=== test_integration ===" && ./test_integration

@@ -32,4 +32,6 @@ void handler_delete(Server *srv, int client_fd, Request *req);
 
 void handler_reset_metrics(Server *srv, int client_fd);
 
+void handler_update(Server *srv, int client_fd, Request *req);
+
 #endif

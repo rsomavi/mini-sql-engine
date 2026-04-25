@@ -6,7 +6,7 @@ from lexer import SQLLexer
 from ast_nodes import (SelectQuery, CountQuery, SumQuery, AvgQuery,
                        MinQuery, MaxQuery, Condition, LogicalCondition,
                        NotCondition, CreateTableQuery, ColumnDef,
-                       InsertQuery, DeleteQuery)
+                       InsertQuery, DeleteQuery, UpdateQuery)
 
 class SQLParser:
     """SQL Parser that builds AST from tokens"""
@@ -35,7 +35,8 @@ class SQLParser:
         '''query : select_stmt
                 | create_stmt
                 | insert_stmt
-                | delete_stmt'''
+                | delete_stmt
+                | update_stmt'''
         p[0] = p[1]
     
     def p_select_stmt(self, p):
@@ -406,6 +407,26 @@ class SQLParser:
         else:
             # DELETE FROM tabla  (sin WHERE — borra todo)
             p[0] = DeleteQuery(table_name=p[3], where=None)
+
+    def p_update_stmt(self, p):
+        '''update_stmt : UPDATE ID SET assignment_list WHERE condition
+                       | UPDATE ID SET assignment_list'''
+        if len(p) == 7:
+            p[0] = UpdateQuery(table_name=p[2], assignments=p[4], where=p[6])
+        else:
+            p[0] = UpdateQuery(table_name=p[2], assignments=p[4], where=None)
+
+    def p_assignment_list_single(self, p):
+        'assignment_list : assignment'
+        p[0] = [p[1]]
+
+    def p_assignment_list_multiple(self, p):
+        'assignment_list : assignment_list COMMA assignment'
+        p[0] = p[1] + [p[3]]
+
+    def p_assignment(self, p):
+        'assignment : ID EQUAL value'
+        p[0] = (p[1], p[3])
 
     # Error handling
     def p_error(self, p):

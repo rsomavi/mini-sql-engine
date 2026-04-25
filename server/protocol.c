@@ -111,6 +111,27 @@ int protocol_read_request(int client_fd, Request *req) {
     } else if (strcmp(line, "RESET_METRICS") == 0) {
         req->op = OP_RESET_METRICS;
         return 0;
+    } else if (strncmp(line, "UPDATE ", 7) == 0) { // UPDATE <table_name> <row_id> <payload_size>\n
+        req->op            = OP_UPDATE;             // <binary serialized row>
+        req->table_name[0] = '\0';
+        req->args[0]       = '\0';
+        req->payload_size  = 0;
+
+        int row_id = 0;
+        sscanf(line + 7, "%63s %d %d", req->table_name, &row_id, &req->payload_size);
+        snprintf(req->args, sizeof(req->args), "%d", row_id);
+
+        if (req->payload_size > 0 &&
+            req->payload_size < (int)sizeof(req->payload)) {
+            int  total = 0;
+            while (total < req->payload_size) {
+                int r = read(client_fd, req->payload + total,
+                            req->payload_size - total);
+                if (r <= 0) return -1;
+                total += r;
+            }
+        }
+        return 0;
     }
 
 
