@@ -12,3 +12,6 @@ class QueryService:
 
     def execute(self, query: str) -> QueryExecutionResult:
         return self.adapter.execute_query(query)
+
+    def reset_metrics(self) -> dict[str, float | int]:
+        return self.adapter.reset_metrics()

@@ -244,7 +244,14 @@ class MainWindow(tk.Tk):
         messagebox.showerror("Query execution failed", str(exc))
 
     def _on_reset_telemetry(self):
-        totals = self.controller.reset_telemetry()
+        if not self.server_service.is_available(self.current_config.host, self.current_config.port):
+            messagebox.showwarning("Server not running", "Start the server before resetting metrics.")
+            return
+        try:
+            totals = self.controller.reset_metrics(self.current_config)
+        except Exception as exc:
+            messagebox.showerror("Reset metrics failed", str(exc))
+            return
         self.metrics_frame.update_metrics(QueryMetrics(), totals)
         self.refresh_telemetry_history()
 

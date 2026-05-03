@@ -295,14 +295,17 @@ class ServerStorage:
             sock.close()
         return resp.get("metrics", {})
 
-    def reset_metrics(self):
-        """Send RESET_METRICS to clear buffer pool counters."""
+    def reset_metrics(self) -> dict:
+        """Send RESET_METRICS to the server. Returns the zeroed metrics dict."""
         sock = self._connect()
         try:
             self._send(sock, "RESET_METRICS")
-            self._read_response(sock)
+            resp = self._read_response(sock)
         finally:
             sock.close()
+        if resp["status"] != "OK":
+            raise RuntimeError(f"RESET_METRICS failed: {resp.get('err_line', '')}")
+        return resp.get("metrics", {})
 
     def ping(self) -> bool:
         """Returns True if server is alive."""

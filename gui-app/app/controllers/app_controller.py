@@ -29,6 +29,12 @@ class AppController:
     def reset_telemetry(self):
         return self.telemetry_history_service.reset()
 
+    def reset_metrics(self, config: ServerConfig):
+        """Send RESET_METRICS to the server, then reset Python-side telemetry totals."""
+        query_service = self.query_service_factory(config)
+        query_service.reset_metrics()
+        return self.telemetry_history_service.reset()
+
     def telemetry_history_rows(self):
         return self.telemetry_history_service.history_rows()
 

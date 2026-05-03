@@ -62,6 +62,10 @@ class SQLEngineAdapter:
 
         return TrackingServerStorage(host=host, port=port)
 
+    def reset_metrics(self) -> dict[str, float | int]:
+        """Send RESET_METRICS to server and return the zeroed metrics dict."""
+        return self.storage.reset_metrics()
+
     def execute_query(self, query: str) -> QueryExecutionResult:
         stripped = query.strip()
         if not stripped:
