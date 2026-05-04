@@ -210,11 +210,12 @@ class ServerStorage:
             status   = "ERR"
             err_line = status_line
 
-        result_columns = []
-        result_rows    = []
-        result_row_ids = []
-        metrics        = {}
-        lines          = []
+        result_columns      = []
+        result_rows         = []
+        result_row_ids      = []
+        result_trace_events = []
+        metrics             = {}
+        lines               = []
 
         while True:
             line = self._recv_line(sock)
@@ -248,6 +249,22 @@ class ServerStorage:
                     })
                 continue
 
+            # ---- TRACE_EVENTS (TRACE_STOP response) ----
+            if line.startswith("TRACE_EVENTS "):
+                event_count = int(line.split()[1])
+                for _ in range(event_count):
+                    ev_line = self._recv_line(sock)
+                    parts   = ev_line.split()
+                    if len(parts) == 5:
+                        result_trace_events.append({
+                            "timestamp": int(parts[0]),
+                            "table":     parts[1],
+                            "page_id":   int(parts[2]),
+                            "hit":       int(parts[3]),
+                            "frame_id":  int(parts[4]),
+                        })
+                continue
+
             # ---- ROW (SCAN response) — line is "<row_id> <size>" ----
             if columns is not None:
                 try:
@@ -270,13 +287,14 @@ class ServerStorage:
             lines.append(line)
 
         return {
-            "status":   status,
-            "err_line": err_line,
-            "columns":  result_columns,
-            "rows":     result_rows,
-            "row_ids":  result_row_ids,
-            "metrics":  metrics,
-            "lines":    lines,
+            "status":        status,
+            "err_line":      err_line,
+            "columns":       result_columns,
+            "rows":          result_rows,
+            "row_ids":       result_row_ids,
+            "trace_events":  result_trace_events,
+            "metrics":       metrics,
+            "lines":         lines,
         }
 
     # =========================================================================
@@ -306,6 +324,45 @@ class ServerStorage:
         if resp["status"] != "OK":
             raise RuntimeError(f"RESET_METRICS failed: {resp.get('err_line', '')}")
         return resp.get("metrics", {})
+
+    def trace_start(self) -> None:
+        """Send TRACE_START — clear any existing trace and begin recording."""
+        sock = self._connect()
+        try:
+            self._send(sock, "TRACE_START")
+            resp = self._read_response(sock)
+        finally:
+            sock.close()
+        if resp["status"] != "OK":
+            raise RuntimeError(f"TRACE_START failed: {resp.get('err_line', '')}")
+
+    def trace_stop(self) -> list:
+        """Send TRACE_STOP — stop recording and return all events.
+
+        Returns a list of dicts:
+          {"timestamp": int, "table": str, "page_id": int,
+           "hit": int, "frame_id": int}
+        """
+        sock = self._connect()
+        try:
+            self._send(sock, "TRACE_STOP")
+            resp = self._read_response(sock)
+        finally:
+            sock.close()
+        if resp["status"] != "OK":
+            raise RuntimeError(f"TRACE_STOP failed: {resp.get('err_line', '')}")
+        return resp.get("trace_events", [])
+
+    def trace_clear(self) -> None:
+        """Send TRACE_CLEAR — stop recording and discard all events."""
+        sock = self._connect()
+        try:
+            self._send(sock, "TRACE_CLEAR")
+            resp = self._read_response(sock)
+        finally:
+            sock.close()
+        if resp["status"] != "OK":
+            raise RuntimeError(f"TRACE_CLEAR failed: {resp.get('err_line', '')}")
 
     def ping(self) -> bool:
         """Returns True if server is alive."""

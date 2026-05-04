@@ -39,7 +39,8 @@ EvictionPolicy *policy_nocache_create(void) {
     p->on_unpin = nocache_on_unpin;
     p->evict    = nocache_evict;
     p->destroy  = nocache_destroy;
-    p->data     = NULL;  // no private state needed
+    p->advance  = NULL;
+    p->data     = NULL;
     return p;
 }
 
@@ -105,6 +106,7 @@ EvictionPolicy *policy_clock_create(int num_frames) {
     p->on_unpin = clock_on_unpin;
     p->evict    = clock_evict;
     p->destroy  = clock_destroy;
+    p->advance  = NULL;
     p->data     = cd;
     return p;
 }
@@ -149,6 +151,7 @@ EvictionPolicy *policy_lru_create(void) {
     p->on_unpin = lru_on_unpin;
     p->evict    = lru_evict;
     p->destroy  = lru_destroy;
+    p->advance  = NULL;
     p->data     = NULL;
     return p;
 }
@@ -210,6 +213,13 @@ static int opt_evict(void *data, BufferPool *pool) {
     return victim;
 }
 
+static void opt_advance_cb(void *data) {
+    if (!data) return;
+    OPTData *od = (OPTData *)data;
+    if (od->pos < od->trace_len)
+        od->pos++;
+}
+
 static void opt_destroy(void *data) {
     free(data);  // free OPTData but NOT the trace (caller owns it)
 }
@@ -231,6 +241,7 @@ EvictionPolicy *policy_opt_create(const OPTAccess *trace, int trace_len) {
     p->on_unpin = opt_on_unpin;
     p->evict    = opt_evict;
     p->destroy  = opt_destroy;
+    p->advance  = opt_advance_cb;
     p->data     = od;
     return p;
 }

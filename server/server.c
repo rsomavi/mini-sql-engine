@@ -11,7 +11,8 @@
 #include "protocol.h"
 #include "handlers.h"
 
-static Server *g_srv = NULL;
+static Server     *g_srv       = NULL;
+static OPTAccess  *g_opt_trace = NULL;   // owned by server process; freed on destroy
 
 static void handle_signal(int sig) {
     fprintf(stderr, "\n[server] signal %d — flushing and shutting down\n", sig);
@@ -22,7 +23,66 @@ static void handle_signal(int sig) {
     exit(0);
 }
 
-static EvictionPolicy *create_policy(const char *name, int num_frames) {
+// Read opt_trace.txt from data_dir and build the OPT policy.
+// Returns NULL if the file is missing or empty.
+static EvictionPolicy *create_opt_policy(const char *data_dir) {
+    char path[512];
+    snprintf(path, sizeof(path), "%s/opt_trace.txt", data_dir);
+
+    FILE *f = fopen(path, "r");
+    if (!f) {
+        fprintf(stderr, "[server] opt: cannot open trace file '%s'\n", path);
+        return NULL;
+    }
+
+    // Count lines to allocate exact array
+    int capacity = 4096;
+    int count    = 0;
+    OPTAccess *trace = malloc(sizeof(OPTAccess) * capacity);
+    if (!trace) { fclose(f); return NULL; }
+
+    char line[128];
+    while (fgets(line, sizeof(line), f)) {
+        // Strip trailing newline
+        int len = (int)strlen(line);
+        while (len > 0 && (line[len-1] == '\n' || line[len-1] == '\r'))
+            line[--len] = '\0';
+        if (len == 0) continue;
+
+        // Parse "table:page_id"
+        char *colon = strrchr(line, ':');
+        if (!colon) continue;
+        *colon = '\0';
+        const char *table   = line;
+        int         page_id = atoi(colon + 1);
+
+        if (count == capacity) {
+            capacity *= 2;
+            OPTAccess *tmp = realloc(trace, sizeof(OPTAccess) * capacity);
+            if (!tmp) { free(trace); fclose(f); return NULL; }
+            trace = tmp;
+        }
+
+        strncpy(trace[count].table_name, table, MAX_TABLE_NAME_LEN - 1);
+        trace[count].table_name[MAX_TABLE_NAME_LEN - 1] = '\0';
+        trace[count].page_id = page_id;
+        count++;
+    }
+    fclose(f);
+
+    if (count == 0) {
+        fprintf(stderr, "[server] opt: trace file is empty\n");
+        free(trace);
+        return NULL;
+    }
+
+    g_opt_trace = trace;   // save for cleanup in server_destroy
+    printf("[server] opt: loaded %d trace entries from '%s'\n", count, path);
+    return policy_opt_create(trace, count);
+}
+
+static EvictionPolicy *create_policy(const char *name, int num_frames,
+                                     const char *data_dir) {
     if (!name || strcmp(name, "lru") == 0) {
         return policy_lru_create();
     }
@@ -31,6 +91,9 @@ static EvictionPolicy *create_policy(const char *name, int num_frames) {
     }
     if (strcmp(name, "nocache") == 0) {
         return policy_nocache_create();
+    }
+    if (strcmp(name, "opt") == 0) {
+        return create_opt_policy(data_dir);
     }
     return NULL;
 }
@@ -54,6 +117,16 @@ int server_init(Server *srv, const char *data_dir,
     srv->data_dir[255] = '\0';
     srv->running   = 0;
     srv->client_fd = -1;
+
+    // Allocate trace buffer and link it into the buffer manager
+    srv->trace = malloc(sizeof(Trace));
+    if (!srv->trace) {
+        fprintf(stderr, "[server] failed to allocate trace buffer\n");
+        bm_destroy(&srv->bm);
+        return -1;
+    }
+    trace_init(srv->trace);
+    srv->bm.trace = srv->trace;
 
     // Create TCP socket
     srv->listen_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -173,6 +246,10 @@ void server_destroy(Server *srv) {
     if (srv->listen_fd >= 0) close(srv->listen_fd);
     srv->client_fd = -1;
     srv->listen_fd = -1;
+    free(srv->trace);
+    srv->trace = NULL;
+    free(g_opt_trace);
+    g_opt_trace = NULL;
 }
 
 // ============================================================================
@@ -193,10 +270,11 @@ int main(int argc, char *argv[]) {
     signal(SIGINT,  handle_signal);
     signal(SIGTERM, handle_signal);
 
-    EvictionPolicy *policy = create_policy(policy_name, num_frames);
+    EvictionPolicy *policy = create_policy(policy_name, num_frames, data_dir);
     if (!policy) {
         fprintf(stderr,
-                "[server] unknown policy '%s' (supported: lru, clock, nocache)\n",
+                "[server] unknown or invalid policy '%s' "
+                "(supported: lru, clock, nocache, opt)\n",
                 policy_name);
         return 1;
     }

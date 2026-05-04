@@ -21,6 +21,7 @@ typedef struct {
     void (*on_unpin)(void *data, int frame_id);
     int  (*evict)   (void *data, BufferPool *pool);
     void (*destroy) (void *data);
+    void (*advance) (void *data);   // advance trace position after each access (OPT only)
     void *data;
 } EvictionPolicy;
 
@@ -32,6 +33,7 @@ typedef struct {
 #define POLICY_ON_UNPIN(p, fid) do { if ((p) && ((EvictionPolicy*)(p))->on_unpin)  ((EvictionPolicy*)(p))->on_unpin(((EvictionPolicy*)(p))->data, (fid)); } while(0)
 #define POLICY_EVICT(p, pool)   (((p) && ((EvictionPolicy*)(p))->evict) ? ((EvictionPolicy*)(p))->evict(((EvictionPolicy*)(p))->data, (pool)) : -1)
 #define POLICY_DESTROY(p)       do { if ((p) && ((EvictionPolicy*)(p))->destroy)   ((EvictionPolicy*)(p))->destroy(((EvictionPolicy*)(p))->data); } while(0)
+#define POLICY_ADVANCE(p)       do { if ((p) && ((EvictionPolicy*)(p))->advance)   ((EvictionPolicy*)(p))->advance(((EvictionPolicy*)(p))->data);          } while(0)
 // ============================================================================
 // NoCache — always evicts the first OCCUPIED frame found
 // Baseline: hit rate = 0%, no data structures needed

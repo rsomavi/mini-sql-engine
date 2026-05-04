@@ -574,6 +574,103 @@ END\n
 
 ---
 
+### TRACE_START
+
+Clear any existing trace buffer and start recording every buffer pool page access.
+
+**Request:**
+```
+TRACE_START\n
+```
+
+**Response:**
+```
+OK\n
+TRACE_STARTED\n
+METRICS hits=<n> misses=<n> evictions=<n> hit_rate=<f>\n
+END\n
+```
+
+**Notes:**
+- Calling TRACE_START while already recording discards the previous trace and restarts from zero.
+- Each subsequent `bm_fetch_page` call (hit or miss) appends one event to the internal buffer.
+- Recording stops silently when the buffer reaches 65 536 events (MAX_TRACE_EVENTS).
+- Metrics are not reset; use RESET_METRICS beforehand if clean metrics are needed.
+
+---
+
+### TRACE_STOP
+
+Stop recording and return all collected events.
+
+**Request:**
+```
+TRACE_STOP\n
+```
+
+**Response:**
+```
+OK\n
+TRACE_EVENTS <count>\n
+<timestamp> <table> <page_id> <hit> <frame_id>\n
+<timestamp> <table> <page_id> <hit> <frame_id>\n
+...
+METRICS hits=<n> misses=<n> evictions=<n> hit_rate=<f>\n
+END\n
+```
+
+**Event line fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `timestamp` | int64 | Monotonic access counter (pool.access_clock at time of access) |
+| `table` | string | Table name |
+| `page_id` | int | Page number within the table |
+| `hit` | 0 or 1 | 1 = page was already in the buffer pool; 0 = miss (disk load) |
+| `frame_id` | int | Frame assigned, or −1 if a victim eviction was required |
+
+**Notes:**
+- Recording stops before the events are sent; further page accesses are not recorded.
+- The event list is preserved in the server; call TRACE_CLEAR to release it.
+- Primary use: feed the OPT offline policy. Extract `table:page_id` pairs in order,
+  save to `data/opt_trace.txt`, then restart the server with `opt` policy.
+
+**Example:**
+```
+→ TRACE_STOP\n
+← OK\n
+  TRACE_EVENTS 3\n
+  1 users 1 0 0\n
+  2 users 2 0 1\n
+  3 users 1 1 0\n
+  METRICS hits=1 misses=2 evictions=0 hit_rate=0.333\n
+  END\n
+```
+
+---
+
+### TRACE_CLEAR
+
+Stop recording and discard all collected events without returning them.
+
+**Request:**
+```
+TRACE_CLEAR\n
+```
+
+**Response:**
+```
+OK\n
+TRACE_CLEARED\n
+METRICS hits=<n> misses=<n> evictions=<n> hit_rate=<f>\n
+END\n
+```
+
+**Notes:**
+- Equivalent to TRACE_STOP followed by discarding the events.
+- Useful for aborting a trace run without the overhead of transmitting events.
+
+---
+
 ## Versioning
 
 This document describes **MINIDBMS-RESP v1**.
@@ -595,3 +692,4 @@ Future versions may add:
 | v1.3 | 2026-04 | DELETE by ROW_ID — logical delete, slot marked in slotted page. WHERE evaluation delegated to storage engine |
 | v1.4 | 2026-04 | Remove ROWS count header from SCAN — single buffer pool pass eliminates artificial cache hits |
 | v1.5 | 2026-04 | SCAN row lines include RowID — format changed from `<size>` to `<row_id> <size>`. Add UPDATE with HOT update support via SLOT_REDIRECT chains |
+| v1.6 | 2026-05 | Add TRACE_START, TRACE_STOP, TRACE_CLEAR — generic trace mode for OPT offline feeding, workload reproduction and access pattern analysis |

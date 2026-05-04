@@ -16,6 +16,9 @@ typedef enum {
     OP_DELETE,
     OP_RESET_METRICS,
     OP_UPDATE,
+    OP_TRACE_START,
+    OP_TRACE_STOP,
+    OP_TRACE_CLEAR,
     OP_UNKNOWN
 } OperationType;
 

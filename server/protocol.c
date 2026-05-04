@@ -111,6 +111,15 @@ int protocol_read_request(int client_fd, Request *req) {
     } else if (strcmp(line, "RESET_METRICS") == 0) {
         req->op = OP_RESET_METRICS;
         return 0;
+    } else if (strcmp(line, "TRACE_START") == 0) {
+        req->op = OP_TRACE_START;
+        return 0;
+    } else if (strcmp(line, "TRACE_STOP") == 0) {
+        req->op = OP_TRACE_STOP;
+        return 0;
+    } else if (strcmp(line, "TRACE_CLEAR") == 0) {
+        req->op = OP_TRACE_CLEAR;
+        return 0;
     } else if (strncmp(line, "UPDATE ", 7) == 0) { // UPDATE <table_name> <row_id> <payload_size>\n
         req->op            = OP_UPDATE;             // <binary serialized row>
         req->table_name[0] = '\0';

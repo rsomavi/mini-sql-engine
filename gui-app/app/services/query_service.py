@@ -15,3 +15,12 @@ class QueryService:
 
     def reset_metrics(self) -> dict[str, float | int]:
         return self.adapter.reset_metrics()
+
+    def trace_start(self) -> None:
+        self.adapter.storage.trace_start()
+
+    def trace_stop(self) -> list[dict]:
+        return self.adapter.storage.trace_stop()
+
+    def trace_clear(self) -> None:
+        self.adapter.storage.trace_clear()

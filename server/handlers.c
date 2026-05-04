@@ -6,6 +6,7 @@
 #include "../storage-engine/page.h"
 #include "../storage-engine/disk.h"
 #include "../storage-engine/schema.h"
+#include "../storage-engine/trace.h"
 
 // ============================================================================
 // Internal helper: append metrics footer to response
@@ -51,6 +52,15 @@ void handler_dispatch(Server *srv, int client_fd, Request *req) {
             break;
         case OP_UPDATE:
             handler_update(srv, client_fd, req);
+            break;
+        case OP_TRACE_START:
+            handler_trace_start(srv, client_fd);
+            break;
+        case OP_TRACE_STOP:
+            handler_trace_stop(srv, client_fd);
+            break;
+        case OP_TRACE_CLEAR:
+            handler_trace_clear(srv, client_fd);
             break;
         case OP_UNKNOWN:
         default: {
@@ -752,6 +762,71 @@ void handler_update(Server *srv, int client_fd, Request *req) {
     }
 
     protocol_response_append(&rb, "OK\nUPDATED 1\n");
+    append_metrics(&rb, srv);
+    protocol_response_append(&rb, "END\n");
+    protocol_response_send(&rb, client_fd);
+    protocol_response_free(&rb);
+}
+
+// ============================================================================
+// handler_trace_start
+// ============================================================================
+
+void handler_trace_start(Server *srv, int client_fd) {
+    ResponseBuf rb;
+    protocol_response_init(&rb);
+    trace_start(srv->trace);
+    protocol_response_append(&rb, "OK\n");
+    protocol_response_append(&rb, "TRACE_STARTED\n");
+    append_metrics(&rb, srv);
+    protocol_response_append(&rb, "END\n");
+    protocol_response_send(&rb, client_fd);
+    protocol_response_free(&rb);
+}
+
+// ============================================================================
+// handler_trace_stop
+// ============================================================================
+
+void handler_trace_stop(Server *srv, int client_fd) {
+    trace_stop(srv->trace);
+
+    ResponseBuf rb;
+    protocol_response_init(&rb);
+
+    protocol_response_append(&rb, "OK\n");
+
+    char count_line[64];
+    snprintf(count_line, sizeof(count_line),
+             "TRACE_EVENTS %d\n", srv->trace->count);
+    protocol_response_append(&rb, count_line);
+
+    for (int i = 0; i < srv->trace->count; i++) {
+        TraceEvent *ev = &srv->trace->events[i];
+        char event_line[160];
+        snprintf(event_line, sizeof(event_line),
+                 "%lld %s %d %d %d\n",
+                 ev->timestamp, ev->table, ev->page_id,
+                 ev->hit, ev->frame_id);
+        protocol_response_append(&rb, event_line);
+    }
+
+    append_metrics(&rb, srv);
+    protocol_response_append(&rb, "END\n");
+    protocol_response_send(&rb, client_fd);
+    protocol_response_free(&rb);
+}
+
+// ============================================================================
+// handler_trace_clear
+// ============================================================================
+
+void handler_trace_clear(Server *srv, int client_fd) {
+    ResponseBuf rb;
+    protocol_response_init(&rb);
+    trace_clear(srv->trace);
+    protocol_response_append(&rb, "OK\n");
+    protocol_response_append(&rb, "TRACE_CLEARED\n");
     append_metrics(&rb, srv);
     protocol_response_append(&rb, "END\n");
     protocol_response_send(&rb, client_fd);

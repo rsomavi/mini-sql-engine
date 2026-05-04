@@ -4,6 +4,7 @@
 #include "buffer_frame.h"
 #include "page_table.h"
 #include "eviction_policy.h"
+#include "trace.h"
 
 // ============================================================================
 // BufferManager — public API that unites the three buffer pool components:
@@ -21,6 +22,7 @@ typedef struct {
     PageTable       pt;
     EvictionPolicy *policy;
     char            data_dir[256];
+    Trace          *trace;   // borrowed pointer — NULL when not recording
 } BufferManager;
 
 // ============================================================================

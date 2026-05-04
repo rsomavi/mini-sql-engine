@@ -16,7 +16,8 @@ STORAGE_OBJS = \
     $(STORAGE)/heap.o \
     $(STORAGE)/page.o \
     $(STORAGE)/disk.o \
-    $(STORAGE)/schema.o
+    $(STORAGE)/schema.o \
+    $(STORAGE)/trace.o
 
 # Server object files
 SERVER_OBJS = \
@@ -74,6 +75,9 @@ $(STORAGE)/disk.o: $(STORAGE)/disk.c
 
 $(STORAGE)/schema.o: $(STORAGE)/schema.c
 	$(CC) $(CFLAGS) -c $(STORAGE)/schema.c -o $(STORAGE)/schema.o
+
+$(STORAGE)/trace.o: $(STORAGE)/trace.c $(STORAGE)/trace.h
+	$(CC) $(CFLAGS) -c $(STORAGE)/trace.c -o $(STORAGE)/trace.o
 
 # ============================================================================
 # Utilities

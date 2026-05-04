@@ -4,7 +4,7 @@ from pathlib import Path
 APP_NAME = "minidbms GUI"
 DEFAULT_POLICY = "lru"
 DEFAULT_FRAMES = 64
-SUPPORTED_POLICIES = ("lru", "clock", "nocache")
+SUPPORTED_POLICIES = ("lru", "clock", "nocache", "opt")
 DEFAULT_SERVER_HOST = "localhost"
 DEFAULT_SERVER_PORT = 5433
 DEFAULT_RESULTS_DIRNAME = "results"

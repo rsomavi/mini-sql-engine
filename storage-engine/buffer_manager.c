@@ -18,6 +18,7 @@ int bm_init(BufferManager *bm, int num_frames,
     bm->policy = policy;
     strncpy(bm->data_dir, data_dir, 255);
     bm->data_dir[255] = '\0';
+    bm->trace  = NULL;
 
     return 0;
 }
@@ -58,6 +59,9 @@ static int bm_get_frame(BufferManager *bm,
         // HIT: page already in pool
         bp_pin_frame(&bm->pool, frame_id);
         POLICY_ON_PIN(bm->policy, frame_id);
+        POLICY_ADVANCE(bm->policy);
+        trace_record(bm->trace, bm->pool.access_clock,
+                     table_name, page_id, 1, frame_id);
         return frame_id;
     }
 
@@ -65,8 +69,9 @@ static int bm_get_frame(BufferManager *bm,
 
     // Step 2: find a free frame
     frame_id = bp_find_free_frame(&bm->pool);
+    int evicted = (frame_id < 0);
 
-    if (frame_id < 0) {
+    if (evicted) {
         // No free frame — need to evict
         frame_id = POLICY_EVICT(bm->policy, &bm->pool);
         if (frame_id < 0) return -1;  // all frames pinned
@@ -91,6 +96,9 @@ static int bm_get_frame(BufferManager *bm,
     pt_insert(&bm->pt, table_name, page_id, frame_id);
 
     POLICY_ON_PIN(bm->policy, frame_id);
+    POLICY_ADVANCE(bm->policy);
+    trace_record(bm->trace, bm->pool.access_clock,
+                 table_name, page_id, 0, evicted ? -1 : frame_id);
     return frame_id;
 }
 

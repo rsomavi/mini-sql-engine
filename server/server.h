@@ -24,6 +24,7 @@ typedef struct {
     BufferManager  bm;             // buffer manager — owns the buffer pool
     int            running;        // 1 while server is running, 0 to stop
     char           data_dir[256];  // directory where .db files are stored
+    Trace         *trace;          // heap-allocated trace buffer (owned by server)
 } Server;
 
 // ============================================================================
