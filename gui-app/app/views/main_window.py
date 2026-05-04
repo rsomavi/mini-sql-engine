@@ -17,6 +17,7 @@ from app.services.telemetry_history_service import TelemetryHistoryService
 from app.utils.paths import ensure_runtime_paths, results_dir_path
 from app.widgets.benchmark_charts_frame import BenchmarkChartsFrame
 from app.widgets.benchmark_frame import BenchmarkFrame
+from app.widgets.benchmark_sweep_frame import BenchmarkSweepFrame
 from app.widgets.metrics_frame import MetricsFrame
 from app.widgets.query_editor_frame import QueryEditorFrame
 from app.widgets.results_table import ResultsTable
@@ -137,8 +138,28 @@ class MainWindow(tk.Tk):
         )
         self.benchmark_frame.grid(row=0, column=0, sticky="nsew")
 
-        self.chart_frame = BenchmarkChartsFrame(charts_panel)
+        charts_notebook = ttk.Notebook(charts_panel, style="Dashboard.TNotebook")
+        charts_notebook.grid(row=0, column=0, sticky="nsew")
+
+        policy_tab = ttk.Frame(charts_notebook, style="Panel.TFrame")
+        policy_tab.columnconfigure(0, weight=1)
+        policy_tab.rowconfigure(0, weight=1)
+
+        sweep_tab = ttk.Frame(charts_notebook, style="Panel.TFrame")
+        sweep_tab.columnconfigure(0, weight=1)
+        sweep_tab.rowconfigure(0, weight=1)
+
+        self.chart_frame = BenchmarkChartsFrame(policy_tab)
         self.chart_frame.grid(row=0, column=0, sticky="nsew")
+
+        self.benchmark_sweep_frame = BenchmarkSweepFrame(
+            sweep_tab,
+            on_run_sweep=self._on_run_benchmark_sweep,
+        )
+        self.benchmark_sweep_frame.grid(row=0, column=0, sticky="nsew")
+
+        charts_notebook.add(policy_tab, text="Policy Charts")
+        charts_notebook.add(sweep_tab, text="Sweep Analysis")
 
         self.main_notebook.add(tab, text="Benchmark")
 
@@ -324,6 +345,68 @@ class MainWindow(tk.Tk):
         self.benchmark_frame.set_info("Benchmark failed.")
         self.server_frame.set_status("Stopped")
         messagebox.showerror("Benchmark failed", str(exc))
+
+    def _on_run_benchmark_sweep(self, frames_list: list[int], policies: list[str]):
+        if not policies:
+            messagebox.showwarning("No policies selected", "Select at least one policy.")
+            return
+        if not frames_list:
+            messagebox.showwarning("No frame sizes", "Enter at least one valid frame size.")
+            return
+
+        queries = [line.strip() for line in self.benchmark_frame.queries_text.get("1.0", "end").splitlines()]
+        self.benchmark_sweep_frame.begin_sweep(frames_list, policies)
+        self.server_frame.set_status("Sweep executing")
+
+        def worker():
+            sweep_rows = []
+            try:
+                for frames in frames_list:
+                    benchmark_run, _ = self.controller.run_benchmark(
+                        queries=queries,
+                        policies=policies,
+                        frames=frames,
+                    )
+                    summary = self.benchmark_service.summarize_by_policy(benchmark_run)
+                    for policy, metrics in summary.items():
+                        sweep_rows.append(
+                            {
+                                "frames": frames,
+                                "policy": policy,
+                                "hit_rate": metrics["hit_rate"],
+                                "misses": metrics["misses"],
+                                "evictions": metrics["evictions"],
+                            }
+                        )
+                    self.after(
+                        0,
+                        lambda current_frames=frames, current_summary=summary: self.benchmark_sweep_frame.add_result(
+                            current_frames,
+                            current_summary,
+                        ),
+                    )
+
+                csv_path = self.results_repository.save_sweep_csv(
+                    name=f"sweep_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                    rows=sweep_rows,
+                )
+                self.after(0, lambda: self._apply_sweep_result(csv_path))
+            except Exception as exc:
+                self.after(0, lambda e=exc: self._handle_sweep_error(e))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _apply_sweep_result(self, csv_path):
+        self.benchmark_sweep_frame.finish_sweep(csv_path)
+        if self.server_service.is_available(self.current_config.host, self.current_config.port):
+            self.server_frame.set_status("Running (sweep complete)")
+        else:
+            self.server_frame.set_status("Stopped")
+
+    def _handle_sweep_error(self, exc: Exception):
+        self.benchmark_sweep_frame.fail_sweep()
+        self.server_frame.set_status("Stopped")
+        messagebox.showerror("Sweep failed", str(exc))
 
 
 def launch_app():

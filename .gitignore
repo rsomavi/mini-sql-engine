@@ -12,4 +12,7 @@ sql-engine/parsetab.py
 sql-engine/parser.out
 
 # Datos
+data/*.dbgui-app/results/
 data/*.db
+data/opt_trace.txt
+storage-engine/disk

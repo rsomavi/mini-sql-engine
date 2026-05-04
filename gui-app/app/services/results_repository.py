@@ -43,3 +43,17 @@ class ResultsRepository:
                 writer.writerow(record.to_dict())
 
         return json_path, csv_path
+
+    def save_sweep_csv(self, name: str, rows: list[dict]) -> Path:
+        safe_name = name.replace(" ", "_")
+        csv_path = (self.results_dir / safe_name).with_suffix(".csv")
+
+        with csv_path.open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(
+                handle,
+                fieldnames=["frames", "policy", "hit_rate", "misses", "evictions"],
+            )
+            writer.writeheader()
+            writer.writerows(rows)
+
+        return csv_path
