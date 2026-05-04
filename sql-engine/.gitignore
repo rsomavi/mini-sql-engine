@@ -1,4 +1,0 @@
-gui-app/results/
-data/*.db
-data/opt_trace.txt
-storage-engine/disk

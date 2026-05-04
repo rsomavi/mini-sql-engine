@@ -1,4 +1,0 @@
-policy,query,hits,misses,evictions,hit_rate,elapsed_time,ok,error
-lru,SELECT * FROM users LIMIT 5;,1,1,0,0.5,0.0022194490002220846,True,
-lru,SELECT * FROM products LIMIT 5;,1,1,0,0.5,0.0017314769993390655,True,
-lru,SELECT * FROM orders LIMIT 5;,1,1,0,0.5,0.0015603789997840067,True,
