@@ -18,6 +18,7 @@ from app.utils.paths import ensure_runtime_paths, results_dir_path
 from app.widgets.benchmark_charts_frame import BenchmarkChartsFrame
 from app.widgets.benchmark_frame import BenchmarkFrame
 from app.widgets.benchmark_sweep_frame import BenchmarkSweepFrame
+from app.widgets.cache_inspector_frame import CacheInspectorFrame
 from app.widgets.metrics_frame import MetricsFrame
 from app.widgets.query_editor_frame import QueryEditorFrame
 from app.widgets.results_table import ResultsTable
@@ -89,6 +90,7 @@ class MainWindow(tk.Tk):
 
         self.create_query_runner_tab()
         self.create_benchmark_tab()
+        self.create_cache_inspector_tab()
         self.create_telemetry_tab()
         self.refresh_telemetry_history()
 
@@ -197,6 +199,16 @@ class MainWindow(tk.Tk):
 
         self.main_notebook.add(tab, text="Telemetry")
 
+    def create_cache_inspector_tab(self):
+        tab = ttk.Frame(self.main_notebook, padding=10, style="Dashboard.TFrame")
+        tab.columnconfigure(0, weight=1)
+        tab.rowconfigure(0, weight=1)
+
+        self.cache_inspector = CacheInspectorFrame(tab)
+        self.cache_inspector.grid(row=0, column=0, sticky="nsew")
+
+        self.main_notebook.add(tab, text="Cache Inspector")
+
     def refresh_telemetry_history(self):
         self.telemetry_table.set_rows(self.controller.telemetry_history_rows())
 
@@ -229,7 +241,7 @@ class MainWindow(tk.Tk):
             return
         self.server_frame.set_status("Stopped")
 
-    def _on_run_query(self, query: str):
+    def _on_run_query(self, query: str, record_trace: bool):
         if not self.server_service.is_available(self.current_config.host, self.current_config.port):
             messagebox.showwarning("Server not running", "Start the server first.")
             return
@@ -242,7 +254,7 @@ class MainWindow(tk.Tk):
 
         def worker():
             try:
-                result = self.controller.execute_query(self.current_config, query)
+                result = self.controller.execute_query(self.current_config, query, record_trace=record_trace)
                 self.after(0, lambda: self._apply_query_result(result))
             except Exception as exc:
                 self.after(0, lambda e=exc: self._handle_query_error(e))
@@ -252,6 +264,16 @@ class MainWindow(tk.Tk):
     def _apply_query_result(self, result):
         self.query_frame.show_result(result.rows, result.error)
         self.metrics_frame.update_metrics(result.metrics, result.total_metrics)
+        if result.trace_recorded:
+            self.cache_inspector.load_trace(
+                events=result.trace_events,
+                policy=self.current_config.policy,
+                n_frames=(
+                    len(result.trace_events[0].get("frames", []))
+                    if result.trace_events
+                    else self.current_config.frames
+                ),
+            )
         self.refresh_telemetry_history()
         self.server_frame.set_status(
             f"Running ({self.current_config.policy}, {self.current_config.frames} frames)"
@@ -319,6 +341,10 @@ class MainWindow(tk.Tk):
                     queries=queries,
                     policies=policies,
                     frames=self.current_config.frames,
+                    on_trace_ready=lambda policy, events, n_frames: self.after(
+                        0,
+                        lambda p=policy, ev=events, nf=n_frames: self.cache_inspector.load_trace(ev, p, nf),
+                    ),
                 )
                 summary = self.benchmark_service.summarize_by_policy(benchmark_run)
                 self.after(

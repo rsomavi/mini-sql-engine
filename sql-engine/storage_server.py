@@ -251,18 +251,44 @@ class ServerStorage:
 
             # ---- TRACE_EVENTS (TRACE_STOP response) ----
             if line.startswith("TRACE_EVENTS "):
-                event_count = int(line.split()[1])
+                header_parts = line.split()
+                event_count = int(header_parts[1])
+                frame_count = int(header_parts[2]) if len(header_parts) > 2 else 0
                 for _ in range(event_count):
                     ev_line = self._recv_line(sock)
-                    parts   = ev_line.split()
-                    if len(parts) == 5:
-                        result_trace_events.append({
-                            "timestamp": int(parts[0]),
-                            "table":     parts[1],
-                            "page_id":   int(parts[2]),
-                            "hit":       int(parts[3]),
-                            "frame_id":  int(parts[4]),
+                    parts = ev_line.split()
+                    if len(parts) != 7 or parts[0] != "EVENT":
+                        continue
+
+                    frames = []
+                    for _ in range(frame_count):
+                        frame_line = self._recv_line(sock)
+                        frame_parts = frame_line.split()
+                        if len(frame_parts) != 9 or frame_parts[0] != "FRAME":
+                            continue
+
+                        state = int(frame_parts[2])
+                        table_name = "" if frame_parts[3] == "." and state == 0 else frame_parts[3]
+                        frames.append({
+                            "frame_id": int(frame_parts[1]),
+                            "state": state,
+                            "table": table_name,
+                            "page_id": int(frame_parts[4]),
+                            "dirty": bool(int(frame_parts[5])),
+                            "pin_count": int(frame_parts[6]),
+                            "ref_bit": int(frame_parts[7]),
+                            "last_access": int(frame_parts[8]),
                         })
+
+                    result_trace_events.append({
+                        "timestamp": int(parts[1]),
+                        "table": parts[2],
+                        "page_id": int(parts[3]),
+                        "hit": bool(int(parts[4])),
+                        "frame_id": int(parts[5]),
+                        "evicted_frame": int(parts[6]),
+                        "frames": frames,
+                    })
                 continue
 
             # ---- ROW (SCAN response) — line is "<row_id> <size>" ----
@@ -341,7 +367,8 @@ class ServerStorage:
 
         Returns a list of dicts:
           {"timestamp": int, "table": str, "page_id": int,
-           "hit": int, "frame_id": int}
+           "hit": bool, "frame_id": int, "evicted_frame": int,
+           "frames": [...]}
         """
         sock = self._connect()
         try:

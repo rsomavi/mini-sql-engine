@@ -10,6 +10,7 @@ class QueryEditorFrame(ttk.Frame):
         super().__init__(master, style="Panel.TFrame")
         self.on_execute = on_execute
         self.error_var = tk.StringVar(value="")
+        self.record_trace_var = tk.BooleanVar(value=False)
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(3, weight=1)
@@ -32,11 +33,14 @@ class QueryEditorFrame(ttk.Frame):
         ttk.Button(toolbar, text="Run Query", command=self._run_query, style="Primary.TButton").grid(
             row=0, column=0, sticky="w"
         )
+        ttk.Checkbutton(toolbar, text="Record trace", variable=self.record_trace_var).grid(
+            row=0, column=1, sticky="w", padx=(12, 0)
+        )
         ttk.Label(
             toolbar,
             text="The telemetry cards capture the last execution and cumulative totals.",
             style="Muted.TLabel",
-        ).grid(row=0, column=1, sticky="w", padx=(10, 0))
+        ).grid(row=0, column=2, sticky="w", padx=(12, 0))
 
         editor_frame = tk.Frame(
             self,
@@ -80,7 +84,7 @@ class QueryEditorFrame(ttk.Frame):
 
     def _run_query(self):
         query = self.query_text.get("1.0", "end").strip()
-        self.on_execute(query)
+        self.on_execute(query, self.record_trace_var.get())
 
     def show_result(self, rows: list[dict], error: str | None):
         self.error_var.set(error or "")

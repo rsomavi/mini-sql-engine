@@ -594,7 +594,7 @@ END\n
 **Notes:**
 - Calling TRACE_START while already recording discards the previous trace and restarts from zero.
 - Each subsequent `bm_fetch_page` call (hit or miss) appends one event to the internal buffer.
-- Recording stops silently when the buffer reaches 65 536 events (MAX_TRACE_EVENTS).
+- Recording stops silently when the buffer reaches 512 events (`MAX_TRACE_EVENTS`).
 - Metrics are not reset; use RESET_METRICS beforehand if clean metrics are needed.
 
 ---
@@ -611,26 +611,47 @@ TRACE_STOP\n
 **Response:**
 ```
 OK\n
-TRACE_EVENTS <count>\n
-<timestamp> <table> <page_id> <hit> <frame_id>\n
-<timestamp> <table> <page_id> <hit> <frame_id>\n
+TRACE_EVENTS <count> <n_frames>\n
+EVENT <timestamp> <table> <page_id> <hit> <frame_id> <evicted_frame>\n
+FRAME <frame_id> <state> <table> <page_id> <dirty> <pin_count> <ref_bit> <last_access>\n
+FRAME <frame_id> <state> <table> <page_id> <dirty> <pin_count> <ref_bit> <last_access>\n
 ...
 METRICS hits=<n> misses=<n> evictions=<n> hit_rate=<f>\n
 END\n
 ```
 
-**Event line fields:**
+**Header fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `count` | int | Number of recorded events returned |
+| `n_frames` | int | Number of frames in the buffer pool for this trace |
+
+**EVENT line fields:**
 | Field | Type | Description |
 |-------|------|-------------|
 | `timestamp` | int64 | Monotonic access counter (pool.access_clock at time of access) |
 | `table` | string | Table name |
 | `page_id` | int | Page number within the table |
 | `hit` | 0 or 1 | 1 = page was already in the buffer pool; 0 = miss (disk load) |
-| `frame_id` | int | Frame assigned, or −1 if a victim eviction was required |
+| `frame_id` | int | Frame that served the access, or -1 if the access failed because all frames were pinned |
+| `evicted_frame` | int | Victim frame id, or -1 if no eviction happened |
+
+**FRAME line fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `frame_id` | int | Frame number within the pool |
+| `state` | 0, 1 or 2 | 0 = FREE, 1 = OCCUPIED, 2 = PINNED |
+| `table` | string | Table name, or `.` when the frame is FREE |
+| `page_id` | int | Page id stored in the frame, or -1 when FREE |
+| `dirty` | 0 or 1 | 1 if the frame is dirty |
+| `pin_count` | int | Current pin count |
+| `ref_bit` | 0 or 1 | Clock replacement metadata |
+| `last_access` | int64 | Monotonic last-access counter used by LRU/OPT visualisation |
 
 **Notes:**
 - Recording stops before the events are sent; further page accesses are not recorded.
 - The event list is preserved in the server; call TRACE_CLEAR to release it.
+- Each `EVENT` is followed by exactly `n_frames` `FRAME` lines describing the full buffer pool state after that access.
 - Primary use: feed the OPT offline policy. Extract `table:page_id` pairs in order,
   save to `data/opt_trace.txt`, then restart the server with `opt` policy.
 
@@ -638,10 +659,13 @@ END\n
 ```
 → TRACE_STOP\n
 ← OK\n
-  TRACE_EVENTS 3\n
-  1 users 1 0 0\n
-  2 users 2 0 1\n
-  3 users 1 1 0\n
+  TRACE_EVENTS 2 2\n
+  EVENT 1 users 1 0 0 -1\n
+  FRAME 0 1 users 1 0 1 1 1\n
+  FRAME 1 0 . -1 0 0 0 0\n
+  EVENT 2 users 1 1 0 -1\n
+  FRAME 0 2 users 1 0 2 1 2\n
+  FRAME 1 0 . -1 0 0 0 0\n
   METRICS hits=1 misses=2 evictions=0 hit_rate=0.333\n
   END\n
 ```
@@ -693,3 +717,4 @@ Future versions may add:
 | v1.4 | 2026-04 | Remove ROWS count header from SCAN — single buffer pool pass eliminates artificial cache hits |
 | v1.5 | 2026-04 | SCAN row lines include RowID — format changed from `<size>` to `<row_id> <size>`. Add UPDATE with HOT update support via SLOT_REDIRECT chains |
 | v1.6 | 2026-05 | Add TRACE_START, TRACE_STOP, TRACE_CLEAR — generic trace mode for OPT offline feeding, workload reproduction and access pattern analysis |
+| v1.7 | 2026-05 | Enrich TRACE_STOP with per-event frame snapshots, eviction metadata and pool-size header for cache inspection playback |

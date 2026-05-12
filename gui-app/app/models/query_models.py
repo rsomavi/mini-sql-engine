@@ -17,4 +17,6 @@ class QueryExecutionResult:
     rows: list[dict[str, Any]] = field(default_factory=list)
     metrics: QueryMetrics = field(default_factory=QueryMetrics)
     total_metrics: QueryMetrics = field(default_factory=QueryMetrics)
+    trace_events: list[dict[str, Any]] = field(default_factory=list)
+    trace_recorded: bool = False
     error: str | None = None

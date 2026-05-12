@@ -52,6 +52,8 @@ int bm_destroy(BufferManager *bm) {
 
 static int bm_get_frame(BufferManager *bm,
                         const char *table_name, int page_id) {
+    int evicted_frame = -1;
+
     // Step 1: check page table — O(1) lookup
     int frame_id = pt_lookup(&bm->pt, table_name, page_id);
 
@@ -60,8 +62,9 @@ static int bm_get_frame(BufferManager *bm,
         bp_pin_frame(&bm->pool, frame_id);
         POLICY_ON_PIN(bm->policy, frame_id);
         POLICY_ADVANCE(bm->policy);
-        trace_record(bm->trace, bm->pool.access_clock,
-                     table_name, page_id, 1, frame_id);
+        trace_record_full(bm->trace, bm->pool.access_clock,
+                          table_name, page_id, 1, frame_id, -1,
+                          &bm->pool);
         return frame_id;
     }
 
@@ -75,6 +78,7 @@ static int bm_get_frame(BufferManager *bm,
         // No free frame — need to evict
         frame_id = POLICY_EVICT(bm->policy, &bm->pool);
         if (frame_id < 0) return -1;  // all frames pinned
+        evicted_frame = frame_id;
 
         // Remove evicted page from page table
         pt_remove(&bm->pt,
@@ -97,8 +101,9 @@ static int bm_get_frame(BufferManager *bm,
 
     POLICY_ON_PIN(bm->policy, frame_id);
     POLICY_ADVANCE(bm->policy);
-    trace_record(bm->trace, bm->pool.access_clock,
-                 table_name, page_id, 0, evicted ? -1 : frame_id);
+    trace_record_full(bm->trace, bm->pool.access_clock,
+                      table_name, page_id, 0, frame_id, evicted_frame,
+                      &bm->pool);
     return frame_id;
 }
 

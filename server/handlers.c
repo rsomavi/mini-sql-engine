@@ -798,17 +798,28 @@ void handler_trace_stop(Server *srv, int client_fd) {
 
     char count_line[64];
     snprintf(count_line, sizeof(count_line),
-             "TRACE_EVENTS %d\n", srv->trace->count);
+             "TRACE_EVENTS %d %d\n", srv->trace->count, srv->bm.pool.num_frames);
     protocol_response_append(&rb, count_line);
 
     for (int i = 0; i < srv->trace->count; i++) {
         TraceEvent *ev = &srv->trace->events[i];
-        char event_line[160];
+        char event_line[192];
         snprintf(event_line, sizeof(event_line),
-                 "%lld %s %d %d %d\n",
+                 "EVENT %lld %s %d %d %d %d\n",
                  ev->timestamp, ev->table, ev->page_id,
-                 ev->hit, ev->frame_id);
+                 ev->hit, ev->frame_id, ev->evicted_frame);
         protocol_response_append(&rb, event_line);
+
+        for (int j = 0; j < ev->n_frames; j++) {
+            FrameSnapshot *frame = &ev->frames[j];
+            char frame_line[256];
+            const char *table_name = (frame->state == FRAME_FREE) ? "." : frame->table;
+            snprintf(frame_line, sizeof(frame_line),
+                     "FRAME %d %d %s %d %d %d %d %lld\n",
+                     frame->frame_id, frame->state, table_name, frame->page_id,
+                     frame->dirty, frame->pin_count, frame->ref_bit, frame->last_access);
+            protocol_response_append(&rb, frame_line);
+        }
     }
 
     append_metrics(&rb, srv);
