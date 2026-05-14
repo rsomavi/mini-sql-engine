@@ -78,18 +78,27 @@ class MainWindow(tk.Tk):
             style="Subheading.TLabel",
         ).grid(row=1, column=0, sticky="w", pady=(4, 10))
 
+        server_available = self.server_service.is_available(self.current_config.host, self.current_config.port)
         self.server_frame = ServerControlFrame(
             hero,
             on_start=self._on_start_server,
             on_stop=self._on_stop_server,
+            start_collapsed=server_available,
         )
         self.server_frame.grid(row=2, column=0, sticky="ew")
+        if server_available:
+            self.server_frame.set_status(
+                f"Running ({self.current_config.policy}, {self.current_config.frames} frames)"
+            )
+        else:
+            self.server_frame.set_status("Stopped")
 
         self.main_notebook = ttk.Notebook(shell, style="Dashboard.TNotebook")
         self.main_notebook.grid(row=1, column=0, sticky="nsew")
 
         self.create_query_runner_tab()
         self.create_benchmark_tab()
+        self.create_sweep_analysis_tab()
         self.create_cache_inspector_tab()
         self.create_telemetry_tab()
         self.refresh_telemetry_history()
@@ -140,30 +149,23 @@ class MainWindow(tk.Tk):
         )
         self.benchmark_frame.grid(row=0, column=0, sticky="nsew")
 
-        charts_notebook = ttk.Notebook(charts_panel, style="Dashboard.TNotebook")
-        charts_notebook.grid(row=0, column=0, sticky="nsew")
-
-        policy_tab = ttk.Frame(charts_notebook, style="Panel.TFrame")
-        policy_tab.columnconfigure(0, weight=1)
-        policy_tab.rowconfigure(0, weight=1)
-
-        sweep_tab = ttk.Frame(charts_notebook, style="Panel.TFrame")
-        sweep_tab.columnconfigure(0, weight=1)
-        sweep_tab.rowconfigure(0, weight=1)
-
-        self.chart_frame = BenchmarkChartsFrame(policy_tab)
+        self.chart_frame = BenchmarkChartsFrame(charts_panel)
         self.chart_frame.grid(row=0, column=0, sticky="nsew")
 
+        self.main_notebook.add(tab, text="Benchmark")
+
+    def create_sweep_analysis_tab(self):
+        tab = ttk.Frame(self.main_notebook, padding=10, style="Dashboard.TFrame")
+        tab.columnconfigure(0, weight=1)
+        tab.rowconfigure(0, weight=1)
+
         self.benchmark_sweep_frame = BenchmarkSweepFrame(
-            sweep_tab,
+            tab,
             on_run_sweep=self._on_run_benchmark_sweep,
         )
         self.benchmark_sweep_frame.grid(row=0, column=0, sticky="nsew")
 
-        charts_notebook.add(policy_tab, text="Policy Charts")
-        charts_notebook.add(sweep_tab, text="Sweep Analysis")
-
-        self.main_notebook.add(tab, text="Benchmark")
+        self.main_notebook.add(tab, text="Sweep Analysis")
 
     def create_telemetry_tab(self):
         tab = ttk.Frame(self.main_notebook, padding=10, style="Dashboard.TFrame")
