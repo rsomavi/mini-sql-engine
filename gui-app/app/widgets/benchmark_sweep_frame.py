@@ -34,15 +34,17 @@ class BenchmarkSweepFrame(tk.Frame):
         self.on_run_sweep = on_run_sweep
         self.frames_var = tk.StringVar(value="3, 8, 16, 32, 64")
         self.info_var = tk.StringVar(value="Run a sweep to compare hit rate by buffer pool size.")
+        self.metric_var = tk.StringVar(value="hit_rate")
         self.policy_vars = {policy: tk.BooleanVar(value=True) for policy in SUPPORTED_POLICIES}
         self.selected_policies = list(SUPPORTED_POLICIES)
         self.rows_by_frame = []
 
         self.columnconfigure(0, weight=1)
-        self.rowconfigure(1, weight=2)
-        self.rowconfigure(2, weight=1)
+        self.rowconfigure(2, weight=2)
+        self.rowconfigure(3, weight=1)
 
         self._build_controls()
+        self._build_metric_toolbar()
         self._build_chart()
         self._build_table()
         self._redraw_chart()
@@ -93,6 +95,35 @@ class BenchmarkSweepFrame(tk.Frame):
             font=("TkDefaultFont", 10),
         ).grid(row=2, column=0, columnspan=3, sticky="ew", pady=(8, 0))
 
+    def _build_metric_toolbar(self):
+        toolbar = tk.Frame(self, bg=COLORS["panel"])
+        toolbar.grid(row=1, column=0, sticky="ew", padx=10, pady=(0, 10))
+
+        tk.Label(
+            toolbar,
+            text="Metric:",
+            bg=COLORS["panel"],
+            fg=COLORS["text"],
+            anchor="w",
+            font=("TkDefaultFont", 10),
+        ).grid(row=0, column=0, sticky="w")
+
+        ttk.Radiobutton(
+            toolbar,
+            text="Hit Rate",
+            value="hit_rate",
+            variable=self.metric_var,
+            command=self._on_metric_changed,
+        ).grid(row=0, column=1, sticky="w", padx=(12, 10))
+
+        ttk.Radiobutton(
+            toolbar,
+            text="Distance to OPT",
+            value="distance_to_opt",
+            variable=self.metric_var,
+            command=self._on_metric_changed,
+        ).grid(row=0, column=2, sticky="w")
+
     def _build_chart(self):
         chart_card = tk.Frame(
             self,
@@ -102,7 +133,7 @@ class BenchmarkSweepFrame(tk.Frame):
             highlightcolor=COLORS["border"],
             bd=0,
         )
-        chart_card.grid(row=1, column=0, sticky="nsew", padx=10, pady=(0, 10))
+        chart_card.grid(row=2, column=0, sticky="nsew", padx=10, pady=(0, 10))
         chart_card.columnconfigure(0, weight=1)
         chart_card.rowconfigure(0, weight=1)
 
@@ -121,7 +152,7 @@ class BenchmarkSweepFrame(tk.Frame):
             highlightcolor=COLORS["border"],
             bd=0,
         )
-        table_card.grid(row=2, column=0, sticky="nsew", padx=10, pady=(0, 10))
+        table_card.grid(row=3, column=0, sticky="nsew", padx=10, pady=(0, 10))
         table_card.columnconfigure(0, weight=1)
         table_card.rowconfigure(1, weight=1)
 
@@ -191,6 +222,11 @@ class BenchmarkSweepFrame(tk.Frame):
     def set_running(self, is_running: bool):
         self.run_button.configure(state="disabled" if is_running else "normal")
 
+    def _on_metric_changed(self):
+        self._configure_table_columns(self.selected_policies)
+        self._replace_table_rows()
+        self._redraw_chart()
+
     def _configure_table_columns(self, policies: list[str]):
         columns = ["frames", *policies]
         self.table.configure(columns=columns)
@@ -201,7 +237,10 @@ class BenchmarkSweepFrame(tk.Frame):
         for policy in SUPPORTED_POLICIES:
             if policy not in columns:
                 continue
-            self.table.heading(policy, text=self.POLICY_LABELS[policy])
+            heading = self.POLICY_LABELS[policy]
+            if self.metric_var.get() == "distance_to_opt":
+                heading = f"\u0394 {heading}"
+            self.table.heading(policy, text=heading)
             self.table.column(policy, width=110, minwidth=110, anchor="center")
 
     def _replace_table_rows(self):
@@ -211,16 +250,19 @@ class BenchmarkSweepFrame(tk.Frame):
         for row in self.rows_by_frame:
             values = [row["frames"]]
             for policy in self.selected_policies:
-                metric = row["summary"].get(policy, {}).get("hit_rate")
+                metric = self._get_metric_value(row, policy)
                 values.append("" if metric is None else f"{metric:.3f}")
             self.table.insert("", "end", values=values)
 
     def _redraw_chart(self):
         self.axes.clear()
         self.axes.set_facecolor(COLORS["panel_alt"])
-        self.axes.set_title("Hit Rate vs Buffer Pool Size", color=COLORS["text"], pad=12)
+        is_distance_mode = self.metric_var.get() == "distance_to_opt"
+        title = "Distance to OPT vs Buffer Pool Size" if is_distance_mode else "Hit Rate vs Buffer Pool Size"
+        y_label = "Distance to OPT" if is_distance_mode else "Hit Rate"
+        self.axes.set_title(title, color=COLORS["text"], pad=12)
         self.axes.set_xlabel("Number of Frames", color=COLORS["text"])
-        self.axes.set_ylabel("Hit Rate", color=COLORS["text"])
+        self.axes.set_ylabel(y_label, color=COLORS["text"])
         self.axes.set_ylim(0.0, 1.0)
         self.axes.grid(True, color=COLORS["border"], alpha=0.45)
         self.axes.tick_params(colors=COLORS["text"])
@@ -241,16 +283,30 @@ class BenchmarkSweepFrame(tk.Frame):
             self.canvas.draw_idle()
             return
 
+        if is_distance_mode and not self._has_opt_reference_data():
+            self.axes.text(
+                0.5,
+                0.5,
+                "OPT required to compute distance. Run sweep with OPT selected.",
+                color=COLORS["text_muted"],
+                ha="center",
+                va="center",
+                transform=self.axes.transAxes,
+            )
+            self.canvas.draw_idle()
+            return
+
         self.axes.set_xticks([row["frames"] for row in self.rows_by_frame])
 
         for policy in self.selected_policies:
             xs = []
             ys = []
             for row in self.rows_by_frame:
-                if policy not in row["summary"]:
+                metric = self._get_metric_value(row, policy)
+                if metric is None:
                     continue
                 xs.append(row["frames"])
-                ys.append(row["summary"][policy]["hit_rate"])
+                ys.append(metric)
 
             if not xs:
                 continue
@@ -276,3 +332,27 @@ class BenchmarkSweepFrame(tk.Frame):
                 loc="best",
             )
         self.canvas.draw_idle()
+
+    def _has_opt_reference_data(self):
+        if "opt" not in self.selected_policies:
+            return False
+
+        for row in self.rows_by_frame:
+            if row["summary"].get("opt", {}).get("hit_rate") is not None:
+                return True
+        return False
+
+    def _get_metric_value(self, row: dict[str, object], policy: str):
+        if self.metric_var.get() == "distance_to_opt":
+            return self._get_distance_to_opt(row, policy)
+        return row["summary"].get(policy, {}).get("hit_rate")
+
+    def _get_distance_to_opt(self, row: dict[str, object], policy: str):
+        opt_hit_rate = row["summary"].get("opt", {}).get("hit_rate")
+        policy_hit_rate = row["summary"].get(policy, {}).get("hit_rate")
+
+        if opt_hit_rate is None or policy_hit_rate is None:
+            return None
+
+        distance = opt_hit_rate - policy_hit_rate
+        return max(0.0, distance)
