@@ -21,12 +21,14 @@ class CacheInspectorFrame(ttk.Frame):
         self._last_grid_columns = 0
 
         self.columnconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
 
-        self._build_toolbar()
+        self._build_header()
+        self._build_playback_controls()
+        self._build_notebook()
         self._build_grid_panel()
         self._build_log_panel()
+        self._build_page_table_panel()
         self._update_controls()
 
     def load_trace(self, events: list[dict], policy: str, n_frames: int):
@@ -43,15 +45,15 @@ class CacheInspectorFrame(ttk.Frame):
         self._stop_playback()
         self._refresh_policy_view(rebuild_cards=True)
 
-    def _build_toolbar(self):
-        toolbar = ttk.Frame(self, style="Panel.TFrame")
-        toolbar.grid(row=0, column=0, sticky="ew", padx=10, pady=(10, 0))
-        toolbar.columnconfigure(8, weight=1)
+    def _build_header(self):
+        header = ttk.Frame(self, style="Panel.TFrame")
+        header.grid(row=0, column=0, sticky="ew", padx=10, pady=(10, 0))
+        header.columnconfigure(2, weight=1)
 
-        ttk.Label(toolbar, text="Cache Inspector", style="Heading.TLabel").grid(row=0, column=0, sticky="w")
+        ttk.Label(header, text="Cache Inspector", style="Heading.TLabel").grid(row=0, column=0, sticky="w")
 
         self.policy_combo = ttk.Combobox(
-            toolbar,
+            header,
             textvariable=self.policy_var,
             state="readonly",
             style="Dashboard.TCombobox",
@@ -61,7 +63,7 @@ class CacheInspectorFrame(ttk.Frame):
         self.policy_combo.bind("<<ComboboxSelected>>", self._on_policy_selected)
 
         tk.Label(
-            toolbar,
+            header,
             textvariable=self.event_label_var,
             bg=COLORS["panel"],
             fg=COLORS["text"],
@@ -69,48 +71,67 @@ class CacheInspectorFrame(ttk.Frame):
             font=("TkDefaultFont", 10, "bold"),
         ).grid(row=1, column=1, sticky="w", padx=(12, 12), pady=(10, 0))
 
-        self.first_button = ttk.Button(toolbar, text="|<<", command=self._jump_first)
-        self.prev_button = ttk.Button(toolbar, text="<<", command=lambda: self._step(-1))
-        self.play_button = ttk.Button(toolbar, text="Play", command=self._toggle_play)
-        self.next_button = ttk.Button(toolbar, text=">>", command=lambda: self._step(1))
-        self.last_button = ttk.Button(toolbar, text=">>|", command=self._jump_last)
+    def _build_playback_controls(self):
+        controls = ttk.Frame(self, style="Panel.TFrame")
+        controls.grid(row=1, column=0, sticky="ew", padx=10, pady=(10, 0))
+        controls.columnconfigure(6, weight=1)
+
+        self.first_button = ttk.Button(controls, text="|<<", command=self._jump_first)
+        self.prev_button = ttk.Button(controls, text="<<", command=lambda: self._step(-1))
+        self.play_button = ttk.Button(controls, text="Play", command=self._toggle_play)
+        self.next_button = ttk.Button(controls, text=">>", command=lambda: self._step(1))
+        self.last_button = ttk.Button(controls, text=">>|", command=self._jump_last)
 
         for index, button in enumerate(
-            (self.first_button, self.prev_button, self.play_button, self.next_button, self.last_button),
-            start=2,
+            (self.first_button, self.prev_button, self.play_button, self.next_button, self.last_button)
         ):
-            button.grid(row=1, column=index, sticky="w", padx=(0, 6), pady=(10, 0))
+            button.grid(row=0, column=index, sticky="w", padx=(0, 6))
 
         tk.Label(
-            toolbar,
+            controls,
             text="Speed",
             bg=COLORS["panel"],
             fg=COLORS["text_muted"],
-        ).grid(row=1, column=7, sticky="w", padx=(6, 6), pady=(10, 0))
+        ).grid(row=0, column=5, sticky="w", padx=(6, 6))
 
         self.speed_scale = ttk.Scale(
-            toolbar,
+            controls,
             from_=0.1,
             to=10.0,
             variable=self.speed_var,
             orient="horizontal",
         )
-        self.speed_scale.grid(row=1, column=8, sticky="ew", pady=(10, 0))
+        self.speed_scale.grid(row=0, column=6, sticky="ew")
 
         self.speed_value_label = tk.Label(
-            toolbar,
+            controls,
             text="1.0x",
             bg=COLORS["panel"],
             fg=COLORS["text"],
             width=6,
             anchor="e",
         )
-        self.speed_value_label.grid(row=1, column=9, sticky="e", padx=(8, 0), pady=(10, 0))
+        self.speed_value_label.grid(row=0, column=7, sticky="e", padx=(8, 0))
         self.speed_var.trace_add("write", self._on_speed_changed)
 
+    def _build_notebook(self):
+        self.content_notebook = ttk.Notebook(self, style="Dashboard.TNotebook")
+        self.content_notebook.grid(row=2, column=0, sticky="nsew", padx=10, pady=10)
+
+        self.frames_tab = ttk.Frame(self.content_notebook, style="Panel.TFrame")
+        self.page_table_tab = ttk.Frame(self.content_notebook, style="Panel.TFrame")
+        self.event_log_tab = ttk.Frame(self.content_notebook, style="Panel.TFrame")
+
+        self.content_notebook.add(self.frames_tab, text="Frames")
+        self.content_notebook.add(self.page_table_tab, text="Page Table")
+        self.content_notebook.add(self.event_log_tab, text="Event Log")
+
     def _build_grid_panel(self):
-        panel = ttk.LabelFrame(self, text="Buffer Pool Frames", style="Panel.TLabelframe")
-        panel.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
+        self.frames_tab.columnconfigure(0, weight=1)
+        self.frames_tab.rowconfigure(0, weight=1)
+
+        panel = ttk.LabelFrame(self.frames_tab, text="Buffer Pool Frames", style="Panel.TLabelframe")
+        panel.grid(row=0, column=0, sticky="nsew")
         panel.columnconfigure(0, weight=1)
         panel.rowconfigure(0, weight=1)
 
@@ -141,8 +162,11 @@ class CacheInspectorFrame(ttk.Frame):
         self.grid_empty_label.grid(row=0, column=0, sticky="w")
 
     def _build_log_panel(self):
-        panel = ttk.LabelFrame(self, text="Event Log", style="Panel.TLabelframe")
-        panel.grid(row=2, column=0, sticky="nsew", padx=10, pady=(0, 10))
+        self.event_log_tab.columnconfigure(0, weight=1)
+        self.event_log_tab.rowconfigure(0, weight=1)
+
+        panel = ttk.LabelFrame(self.event_log_tab, text="Event Log", style="Panel.TLabelframe")
+        panel.grid(row=0, column=0, sticky="nsew")
         panel.columnconfigure(0, weight=1)
         panel.rowconfigure(0, weight=1)
 
@@ -164,6 +188,119 @@ class CacheInspectorFrame(ttk.Frame):
         scrollbar.grid(row=0, column=1, sticky="ns")
         self.event_listbox.configure(yscrollcommand=scrollbar.set)
 
+    def _build_page_table_panel(self):
+        self.page_table_empty_var = tk.StringVar(value="No trace loaded.")
+        self.page_table_pool_var = tk.StringVar(value="Pool: 0 frames")
+        self.page_table_occupied_var = tk.StringVar(value="Occupied: 0")
+        self.page_table_pinned_var = tk.StringVar(value="Pinned: 0")
+        self.page_table_free_var = tk.StringVar(value="Free: 0")
+
+        self.page_table_tab.columnconfigure(0, weight=1)
+        self.page_table_tab.rowconfigure(0, weight=1)
+
+        panel = ttk.LabelFrame(self.page_table_tab, text="Page Table", style="Panel.TLabelframe")
+        panel.grid(row=0, column=0, sticky="nsew")
+        panel.columnconfigure(0, weight=1)
+        panel.rowconfigure(0, weight=0)
+        panel.rowconfigure(1, weight=1)
+
+        summary = tk.Frame(panel, bg=COLORS["panel_soft"], padx=12, pady=10)
+        summary.grid(row=0, column=0, sticky="ew", columnspan=2, pady=(0, 10))
+
+        self.page_table_pool_label = tk.Label(
+            summary,
+            textvariable=self.page_table_pool_var,
+            bg=COLORS["panel_soft"],
+            fg=COLORS["text"],
+            anchor="w",
+            font=("TkDefaultFont", 10, "bold"),
+        )
+        self.page_table_pool_label.pack(side="left")
+
+        tk.Label(
+            summary,
+            text="  |  ",
+            bg=COLORS["panel_soft"],
+            fg=COLORS["text_muted"],
+        ).pack(side="left")
+
+        self.page_table_occupied_label = tk.Label(
+            summary,
+            textvariable=self.page_table_occupied_var,
+            bg=COLORS["panel_soft"],
+            fg=COLORS["accent"],
+            anchor="w",
+            font=("TkDefaultFont", 10, "bold"),
+        )
+        self.page_table_occupied_label.pack(side="left")
+
+        tk.Label(
+            summary,
+            text="  |  ",
+            bg=COLORS["panel_soft"],
+            fg=COLORS["text_muted"],
+        ).pack(side="left")
+
+        self.page_table_pinned_label = tk.Label(
+            summary,
+            textvariable=self.page_table_pinned_var,
+            bg=COLORS["panel_soft"],
+            fg=COLORS["success"],
+            anchor="w",
+            font=("TkDefaultFont", 10, "bold"),
+        )
+        self.page_table_pinned_label.pack(side="left")
+
+        tk.Label(
+            summary,
+            text="  |  ",
+            bg=COLORS["panel_soft"],
+            fg=COLORS["text_muted"],
+        ).pack(side="left")
+
+        self.page_table_free_label = tk.Label(
+            summary,
+            textvariable=self.page_table_free_var,
+            bg=COLORS["panel_soft"],
+            fg=COLORS["text_muted"],
+            anchor="w",
+            font=("TkDefaultFont", 10, "bold"),
+        )
+        self.page_table_free_label.pack(side="left")
+
+        self.page_table_empty_label = tk.Label(
+            panel,
+            textvariable=self.page_table_empty_var,
+            bg=COLORS["panel"],
+            fg=COLORS["text_muted"],
+            pady=24,
+        )
+        self.page_table_empty_label.grid(row=1, column=0, sticky="nw")
+
+        self.page_table = ttk.Treeview(
+            panel,
+            columns=("frame", "table", "page_id", "state"),
+            show="headings",
+            style="Dashboard.Treeview",
+        )
+        self.page_table.heading("frame", text="Frame")
+        self.page_table.heading("table", text="Table")
+        self.page_table.heading("page_id", text="Page ID")
+        self.page_table.heading("state", text="State")
+        self.page_table.column("frame", anchor="w", width=90, minwidth=70)
+        self.page_table.column("table", anchor="w", width=220, minwidth=140)
+        self.page_table.column("page_id", anchor="w", width=140, minwidth=100)
+        self.page_table.column("state", anchor="w", width=140, minwidth=100)
+        self.page_table.tag_configure("occupied_even", background=COLORS["panel_alt"])
+        self.page_table.tag_configure("occupied_odd", background=COLORS["panel"])
+        self.page_table.tag_configure("pinned_even", background="#163126")
+        self.page_table.tag_configure("pinned_odd", background="#1b3b2d")
+
+        self.page_table_scrollbar = ttk.Scrollbar(panel, orient="vertical", command=self.page_table.yview)
+        self.page_table_x_scrollbar = ttk.Scrollbar(panel, orient="horizontal", command=self.page_table.xview)
+        self.page_table.configure(yscrollcommand=self.page_table_scrollbar.set)
+        self.page_table.configure(xscrollcommand=self.page_table_x_scrollbar.set)
+
     def _refresh_policy_view(self, rebuild_cards: bool):
         data = self._get_current_data()
         events = data["events"] if data else []
@@ -177,6 +314,7 @@ class CacheInspectorFrame(ttk.Frame):
             self.empty_var.set("No trace loaded.")
             self.event_label_var.set("Event 0 / 0")
             self._clear_frame_cards()
+            self._show_page_table_message("No trace loaded.")
             self._update_controls()
             return
 
@@ -185,6 +323,7 @@ class CacheInspectorFrame(ttk.Frame):
             self.event_label_var.set("Event 0 / 0")
             self._clear_frame_cards()
             self._highlight_log_selection()
+            self._show_page_table_message(f"No events recorded for {self._current_policy}.")
             self._update_controls()
             return
 
@@ -219,6 +358,7 @@ class CacheInspectorFrame(ttk.Frame):
         event = events[self._current_event_index]
         self.event_label_var.set(f"Event {self._current_event_index + 1} / {len(events)}")
         self._apply_frame_snapshot(event)
+        self._update_page_table(event)
         self._highlight_log_selection()
 
     def _apply_frame_snapshot(self, event: dict):
@@ -482,6 +622,55 @@ class CacheInspectorFrame(ttk.Frame):
         self.speed_value_label.configure(text=f"{self.speed_var.get():.1f}x")
         if self._is_playing:
             self._schedule_next_tick()
+
+    def _update_page_table(self, event: dict):
+        frames = sorted(event.get("frames", []), key=lambda frame: frame["frame_id"])
+        rows = [frame for frame in frames if frame["state"] != 0]
+        total_frames = len(frames)
+        occupied_frames = sum(1 for frame in frames if frame["state"] == 1)
+        pinned_frames = sum(1 for frame in frames if frame["state"] == 2)
+        free_frames = sum(1 for frame in frames if frame["state"] == 0)
+
+        self.page_table_pool_var.set(f"Pool: {total_frames} frames")
+        self.page_table_occupied_var.set(f"Occupied: {occupied_frames}")
+        self.page_table_pinned_var.set(f"Pinned: {pinned_frames}")
+        self.page_table_free_var.set(f"Free: {free_frames}")
+
+        for item_id in self.page_table.get_children():
+            self.page_table.delete(item_id)
+
+        for index, frame in enumerate(rows):
+            state_text = "PINNED" if frame["state"] == 2 else "OCCUPIED"
+            row_style = "pinned" if frame["state"] == 2 else "occupied"
+            parity = "even" if index % 2 == 0 else "odd"
+            self.page_table.insert(
+                "",
+                tk.END,
+                values=(frame["frame_id"], frame["table"] or "-", frame["page_id"], state_text),
+                tags=(f"{row_style}_{parity}",),
+            )
+
+        self._show_page_table()
+
+    def _show_page_table(self):
+        self.page_table_empty_label.grid_remove()
+        self.page_table.grid(row=1, column=0, sticky="nsew")
+        self.page_table_scrollbar.grid(row=1, column=1, sticky="ns")
+        self.page_table_x_scrollbar.grid(row=2, column=0, sticky="ew")
+
+    def _show_page_table_message(self, message: str):
+        for item_id in self.page_table.get_children():
+            self.page_table.delete(item_id)
+
+        self.page_table_pool_var.set("Pool: 0 frames")
+        self.page_table_occupied_var.set("Occupied: 0")
+        self.page_table_pinned_var.set("Pinned: 0")
+        self.page_table_free_var.set("Free: 0")
+        self.page_table.grid_remove()
+        self.page_table_scrollbar.grid_remove()
+        self.page_table_x_scrollbar.grid_remove()
+        self.page_table_empty_var.set(message)
+        self.page_table_empty_label.grid(row=1, column=0, sticky="nw")
 
     def _sync_grid_scrollregion(self, _event=None):
         self.grid_canvas.configure(scrollregion=self.grid_canvas.bbox("all"))
